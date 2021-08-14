@@ -10,6 +10,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -41,14 +42,14 @@ public class WarpManager {
         return warpData.getWarp(qualifiedName);
     }
 
-    public Optional<WarpPoint> lookupWarp(String qualifier, String name) {
+    public Optional<WarpPoint> lookupWarp(CommandSender requester, String qualifier, String name) {
         // If the qualifier is equal to global, do a lookup in the global namespace
-        if (qualifier.toLowerCase().equals("global")) {
+        if (qualifier.equalsIgnoreCase("global")) {
             return getExactWarp(new WarpQualifiedName(name));
         }
 
         // Try and use the qualifier as a macro player name
-        UUID playerId = GeneralPlayerUtil.resolveMacroNamespace(qualifier);
+        UUID playerId = GeneralPlayerUtil.resolveMacroNamespace(requester, qualifier);
         if (playerId == null) {
             return Optional.empty();
         }

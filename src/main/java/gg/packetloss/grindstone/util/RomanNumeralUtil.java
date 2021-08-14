@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.util;
 
+import java.util.HashMap;
 import java.util.TreeMap;
 
 public class RomanNumeralUtil {
@@ -27,11 +28,47 @@ public class RomanNumeralUtil {
         INT_TO_CHAR.put(1, "I");
     }
 
+    private final static HashMap<Character, Integer> CHAR_TO_INT = new HashMap<>();
+
+    static {
+        CHAR_TO_INT.put('M', 1000);
+        CHAR_TO_INT.put('D', 500);
+        CHAR_TO_INT.put('C', 100);
+        CHAR_TO_INT.put('L', 50);
+        CHAR_TO_INT.put('X', 10);
+        CHAR_TO_INT.put('V', 5);
+        CHAR_TO_INT.put('I', 1);
+    }
+
     public static String toRoman(int number) {
         int nearestKey = INT_TO_CHAR.floorKey(number);
         if (nearestKey == number) {
             return INT_TO_CHAR.get(number);
         }
         return INT_TO_CHAR.get(nearestKey) + toRoman(number - nearestKey);
+    }
+
+    public static int fromRoman(String roman) {
+        int number = 0;
+        for (int i = 0; i < roman.length(); ++i) {
+            char curChar = roman.charAt(i);
+            int curCharValue = CHAR_TO_INT.get(curChar);
+
+            // Handle special case, we're at the end of the string
+            if (i == roman.length() - 1) {
+                number += curCharValue;
+                continue;
+            }
+
+            char nextChar = roman.charAt(i + 1);
+            int nextCharValue = CHAR_TO_INT.get(nextChar);
+
+            if (curCharValue < nextCharValue) {
+                number -= curCharValue;
+            } else {
+                number += curCharValue;
+            }
+        }
+        return number;
     }
 }

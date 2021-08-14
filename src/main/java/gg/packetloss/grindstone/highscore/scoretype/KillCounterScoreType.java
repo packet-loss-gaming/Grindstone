@@ -8,6 +8,6 @@ package gg.packetloss.grindstone.highscore.scoretype;
 
 public class KillCounterScoreType extends BasicScoreType {
     protected KillCounterScoreType(int id, boolean gobletEnabled) {
-        super(id, gobletEnabled, true, ScoreType.Order.DESC);
+        super(id, gobletEnabled, UpdateMethod.INCREMENTAL, ScoreType.Order.DESC);
     }
 }

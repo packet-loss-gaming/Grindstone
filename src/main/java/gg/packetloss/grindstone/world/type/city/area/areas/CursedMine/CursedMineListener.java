@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.city.area.areas.CursedMine;
 
+import gg.packetloss.Pitfall.bukkit.event.PitfallTriggerEvent;
 import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
 import gg.packetloss.grindstone.events.PrayerTriggerEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
@@ -21,8 +22,11 @@ import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
+import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
+import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -30,12 +34,18 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -45,6 +55,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import static gg.packetloss.grindstone.world.type.city.area.areas.CursedMine.CursedMineArea.AFFECTED_MATERIALS;
+import static org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK;
 
 public class CursedMineListener extends AreaListener<CursedMineArea> {
     public CursedMineListener(CursedMineArea parent) {
@@ -85,26 +96,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         ItemStack itemInHand = player.getItemInHand();
 
         // Get the base drop
-        ItemStack stack = EnvironmentUtil.getOreDrop(blockType, hasSilkTouch(itemInHand));
-        assert stack != null;
-
-        // Apply cursed smelting transformations if not using a silk touch pickaxe
-        if (player.hasPermission("aurora.tome.cursedsmelting") && !hasSilkTouch(itemInHand)) {
-            switch (blockType) {
-                case GOLD_ORE:
-                    stack.setType(Material.GOLD_INGOT);
-                    break;
-                case IRON_ORE:
-                    stack.setType(Material.IRON_INGOT);
-                    break;
-            }
-        }
-
-        // Apply fortune if not an ore result
-        if (hasFortune(itemInHand) && !EnvironmentUtil.isOre(stack.getType())) {
-            int modifier = ItemUtil.fortuneModifier(blockType, ItemUtil.fortuneLevel(itemInHand));
-            stack.setAmount(stack.getAmount() * modifier);
-        }
+        ItemStack stack = EnvironmentUtil.getOreDrop(blockType, itemInHand);
 
         // Distribute item stacks
         int numClones = ChanceUtil.getRandomNTimes(8, 3);
@@ -122,7 +114,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         final Player player = event.getPlayer();
         final Block block = event.getBlock();
 
-        if (player.getGameMode() != GameMode.SURVIVAL || !parent.contains(block)) {
+        if (GeneralPlayerUtil.isInBuildMode(player) || !parent.contains(block)) {
             return;
         }
 
@@ -132,22 +124,19 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
             Material type = block.getType();
 
             getMiningResult(player, type, (item) -> {
-                item = player.getInventory().addItem(item).get(0);
-                if (item != null) {
-                    parent.getWorld().dropItem(player.getLocation(), item);
-                }
+                GeneralPlayerUtil.giveItemToPlayer(player, item);
             });
 
             event.setExpToDrop((70 - player.getLocation().getBlockY()) / 2);
 
             if (ChanceUtil.getChance(3000)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");
-                player.getInventory().addItem(BookUtil.Lore.Areas.theGreatMine());
+                GeneralPlayerUtil.giveItemToPlayer(player, BookUtil.Lore.Areas.theGreatMine());
             }
 
             if (ChanceUtil.getChance(10000)) {
                 ChatUtil.sendNotice(player, "You find a dusty old book...");
-                player.getInventory().addItem(CustomItemCenter.build(CustomItems.TOME_OF_CURSED_SMELTING));
+                GeneralPlayerUtil.giveItemToPlayer(player, CustomItemCenter.build(CustomItems.TOME_OF_CURSED_SMELTING));
             }
 
             parent.eatFood(player);
@@ -163,6 +152,8 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
             } catch (UnstorableBlockStateException e) {
                 e.printStackTrace();
             }
+        } else if (!parent.isOnHitList(player) && block.getType() == Material.FIRE) {
+            return;
         }
 
         event.setCancelled(true);
@@ -173,7 +164,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
 
-        if (player.getGameMode() == GameMode.SURVIVAL && parent.contains(event.getBlock())) {
+        if (!GeneralPlayerUtil.isInBuildMode(player) && parent.contains(event.getBlock())) {
             event.setCancelled(true);
             ChatUtil.sendNotice(player, ChatColor.DARK_RED, "You don't have permission for this area.");
         }
@@ -281,6 +272,20 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
         }
     }
 
+    private static final List<String> DEATH_MESSAGES = List.of(
+        " was killed by Dave",
+        " got on Dave's bad side",
+        " was slain by an evil spirit",
+        " needs to stay away from the cursed mine",
+        " enjoys death a little too much",
+        " seriously needs to stop mining",
+        " angered an evil spirit",
+        " doesn't get a cookie from COOKIE",
+        " should stay away",
+        " needs to consider retirement",
+        "'s head is now on Dave's mantel"
+    );
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
@@ -296,41 +301,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
             }
 
             parent.removeFromHitList(player);
-            switch (ChanceUtil.getRandom(11)) {
-                case 1:
-                    event.setDeathMessage(player.getName() + " was killed by Dave");
-                    break;
-                case 2:
-                    event.setDeathMessage(player.getName() + " got on Dave's bad side");
-                    break;
-                case 3:
-                    event.setDeathMessage(player.getName() + " was slain by an evil spirit");
-                    break;
-                case 4:
-                    event.setDeathMessage(player.getName() + " needs to stay away from the cursed mine");
-                    break;
-                case 5:
-                    event.setDeathMessage(player.getName() + " enjoys death a little too much");
-                    break;
-                case 6:
-                    event.setDeathMessage(player.getName() + " seriously needs to stop mining");
-                    break;
-                case 7:
-                    event.setDeathMessage(player.getName() + " angered an evil spirit");
-                    break;
-                case 8:
-                    event.setDeathMessage(player.getName() + " doesn't get a cookie from COOKIE");
-                    break;
-                case 9:
-                    event.setDeathMessage(player.getName() + " should stay away");
-                    break;
-                case 10:
-                    event.setDeathMessage(player.getName() + " needs to consider retirement");
-                    break;
-                case 11:
-                    event.setDeathMessage(player.getName() + "'s head is now on Dave's mantel");
-                    break;
-            }
+            event.setDeathMessage(player.getName() + CollectionUtil.getElement(DEATH_MESSAGES));
             parent.addSkull(player);
         }
     }
@@ -388,5 +359,66 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
 
         targetLocation.setDirection(VectorUtil.createDirectionalVector(targetLocation, pointOfInterest));
         player.teleport(targetLocation, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+    }
+
+    private static EDBEExtractor<Zombie, Player, Projectile> GHOST_ATTACK_EXTRACTOR = new EDBEExtractor<>(
+        Zombie.class,
+        Player.class,
+        Projectile.class
+    );
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onEntityDamageEntity(EntityDamageByEntityEvent event) {
+        CombatantPair<Zombie, Player, Projectile> result = GHOST_ATTACK_EXTRACTOR.extractFrom(event);
+        if (result == null) {
+            return;
+        }
+
+        parent.tryTriggerHaunting(result.getAttacker(), result.getDefender());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPitfallTrigger(PitfallTriggerEvent event) {
+        Entity triggeringEntity = event.getEntity();
+        if (!(triggeringEntity instanceof Zombie)) {
+            return;
+        }
+
+        if (parent.isGhost((Zombie) triggeringEntity)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityDamageEntity(EntityDamageEvent event) {
+        if (event.getCause() == ENTITY_ATTACK) {
+            return;
+        }
+
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Zombie)) {
+            return;
+        }
+
+        if (parent.isGhost((Zombie) entity)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityTargetEntityEvent(EntityTargetLivingEntityEvent event) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Zombie)) {
+            return;
+        }
+
+        if (!parent.isGhost((Zombie) entity)) {
+            return;
+        }
+
+        Entity currentTarget = ((Zombie) entity).getTarget();
+        if (currentTarget != null && parent.contains(currentTarget)) {
+            event.setCancelled(true);
+        }
     }
 }

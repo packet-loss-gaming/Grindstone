@@ -27,10 +27,7 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.events.egg.EggHatchEvent;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.SpawnEgg;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -49,6 +46,8 @@ import org.bukkit.plugin.Plugin;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -169,79 +168,31 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
         }
     }
 
-    private void dropEasterEgg(Location location) {
-        SpawnEgg attemptedEgg;
-        switch (ChanceUtil.getRandom(8)) {
-            case 1:
-                attemptedEgg = SpawnEgg.BAT;
-                break;
-            case 2:
-                attemptedEgg = SpawnEgg.CHICKEN;
-                break;
-            case 3:
-                attemptedEgg = SpawnEgg.COW;
-                break;
-            case 4:
-                attemptedEgg = SpawnEgg.MUSHROOM_COW;
-                break;
-            case 5:
-                attemptedEgg = SpawnEgg.OCELOT;
-                break;
-            case 6:
-                attemptedEgg = SpawnEgg.WOLF;
-                break;
-            case 7:
-                attemptedEgg = SpawnEgg.SHEEP;
-                break;
-            case 8:
-            default:
-                attemptedEgg = SpawnEgg.PIG;
-                break;
-        }
-        attemptEggDrop(attemptedEgg, location);
-    }
-
-    private void dropHalloweenEgg(Location location) {
-        SpawnEgg attemptedEgg;
-        switch (ChanceUtil.getRandom(8)) {
-            case 1:
-                attemptedEgg = SpawnEgg.ENDERMAN;
-                break;
-            case 2:
-                attemptedEgg = SpawnEgg.SPIDER;
-                break;
-            case 3:
-                attemptedEgg = SpawnEgg.CAVE_SPIDER;
-                break;
-            case 4:
-                attemptedEgg = SpawnEgg.SLIME;
-                break;
-            case 5:
-                attemptedEgg = SpawnEgg.MAGMA_CUBE;
-                break;
-            case 6:
-                attemptedEgg = SpawnEgg.WITCH;
-                break;
-            case 7:
-                attemptedEgg = SpawnEgg.SKELETON;
-                break;
-            case 8:
-            default:
-                attemptedEgg = SpawnEgg.ZOMBIE;
-                break;
-        }
-        attemptEggDrop(attemptedEgg, location);
-    }
+    private static final Map<EggType, List<SpawnEgg>> EGGS = Map.of(
+        EggType.EASTER, List.of(
+            SpawnEgg.BAT,
+            SpawnEgg.CHICKEN,
+            SpawnEgg.COW,
+            SpawnEgg.MUSHROOM_COW,
+            SpawnEgg.OCELOT,
+            SpawnEgg.WOLF,
+            SpawnEgg.SHEEP,
+            SpawnEgg.PIG
+        ),
+        EggType.HALLOWEEN, List.of(
+            SpawnEgg.ENDERMAN,
+            SpawnEgg.SPIDER,
+            SpawnEgg.CAVE_SPIDER,
+            SpawnEgg.SLIME,
+            SpawnEgg.MAGMA_CUBE,
+            SpawnEgg.WITCH,
+            SpawnEgg.SKELETON,
+            SpawnEgg.ZOMBIE
+        )
+    );
 
     private void dropEgg(EggType eggType, Location location) {
-        switch (eggType) {
-            case EASTER:
-                dropEasterEgg(location);
-                break;
-            case HALLOWEEN:
-                dropHalloweenEgg(location);
-                break;
-        }
+        attemptEggDrop(CollectionUtil.getElement(EGGS.get(eggType)), location);
     }
 
     private void dropEasterEggs(Location location) {

@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.items.implementations.support;
+package gg.packetloss.grindstone.economic.lottery;
 
-public class CustomItemRightClickListener {
+public class LotteryState {
+    public double profitFromMarketSales = 0;
 }

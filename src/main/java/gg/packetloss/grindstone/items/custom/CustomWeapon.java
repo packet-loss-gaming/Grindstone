@@ -7,10 +7,11 @@
 package gg.packetloss.grindstone.items.custom;
 
 import com.google.common.collect.Lists;
-import gg.packetloss.hackbook.ModifierBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
+import gg.packetloss.grindstone.util.item.ItemModifierUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
@@ -64,6 +65,8 @@ public class CustomWeapon extends CustomEquipment {
                 return 6;
             case DIAMOND_SWORD:
                 return 7;
+            case NETHERITE_SWORD:
+                return 8;
             default:
                 throw new UnsupportedOperationException();
         }
@@ -75,29 +78,25 @@ public class CustomWeapon extends CustomEquipment {
     }
 
     @Override
-    public ItemStack build() {
-        ItemStack stack = super.build();
+    protected ItemStack build(CustomItems identity) {
+        ItemStack stack = super.build(identity);
 
         if (hasSpeedMod()) {
-            try {
-                stack = ModifierBook.cloneWithSpecifiedModifiers(
-                        stack,
-                        Lists.newArrayList(
-                                ModifierBook.ITEM_ATTACK_DAMAGE.get(
-                                        getDefaultDamage(),
-                                        ModifierBook.ModifierOperation.ADDITIVE,
-                                        ModifierBook.Slot.MAIN_HAND
-                                ),
-                                ModifierBook.ITEM_ATTACK_SPEED.get(
-                                        speedMod,
-                                        ModifierBook.ModifierOperation.ADDITIVE,
-                                        ModifierBook.Slot.MAIN_HAND
-                                )
-                        )
-                );
-            } catch (UnsupportedFeatureException e) {
-                return stack;
-            }
+            stack = ItemModifierUtil.cloneWithSpecifiedModifiers(
+                stack,
+                Lists.newArrayList(
+                    ItemModifierUtil.ITEM_ATTACK_DAMAGE.get(
+                        getDefaultDamage(),
+                        AttributeModifier.Operation.ADD_NUMBER,
+                        EquipmentSlot.HAND
+                    ),
+                    ItemModifierUtil.ITEM_ATTACK_SPEED.get(
+                        speedMod,
+                        AttributeModifier.Operation.ADD_NUMBER,
+                        EquipmentSlot.HAND
+                    )
+                )
+            );
         }
 
         return stack;

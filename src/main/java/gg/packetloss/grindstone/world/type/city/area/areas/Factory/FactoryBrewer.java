@@ -4,21 +4,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.world.type.city.arena.factory;
+package gg.packetloss.grindstone.world.type.city.area.areas.Factory;
 
-import com.sk89q.commandbook.CommandBook;
-import com.sk89q.util.yaml.YAMLProcessor;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.RomanNumeralUtil;
-import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.functional.TriConsumer;
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -28,21 +21,16 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 
 import java.util.*;
-import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class FactoryBrewer extends FactoryMech {
+public class FactoryBrewer implements FactoryMachine {
+    private final FactoryArea parent;
+    private final ProtectedRegion vatRegion;
 
-    private static int count = 0;
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
-    private int id;
-
-    public FactoryBrewer(World world, ProtectedRegion region, YAMLProcessor processor) {
-        super(world, region, processor, "pot-ingredients-" + count++);
-        id = count;
+    public FactoryBrewer(FactoryArea parent, ProtectedRegion vatRegion) {
+        this.parent = parent;
+        this.vatRegion = vatRegion;
     }
 
     private static final Set<Material> wanted = Set.of(
@@ -67,55 +55,58 @@ public class FactoryBrewer extends FactoryMech {
         Material.QUARTZ
     );
 
-    @Override
-    public String getName() {
-        return "Brewing Vat - " + RomanNumeralUtil.toRoman(id);
+    private void killLivingEntitiesInVat() {
+        parent.getContained(vatRegion, LivingEntity.class).forEach((entity) -> entity.setHealth(0));
     }
 
-    @Override
-    public List<ItemStack> process() {
-
-        Collection<Player> playerList = getContained(1, Player.class);
-
-        Collection<Entity> contained = getContained(Entity.class);
-        if (!contained.isEmpty()) {
-            ChatUtil.sendNotice(playerList, "[" + getName() + "] Processing...");
-
-            for (Entity e : contained) {
-
-                // Kill contained living entities
-                if (e instanceof LivingEntity) {
-                    ((LivingEntity) e).setHealth(0);
-                    continue;
-                }
-
-                // Find items and destroy those unwanted
-                if (e instanceof Item) {
-
-                    ItemStack workingStack = ((Item) e).getItemStack();
-
-                    // Add the item to the list
-                    if (wanted.contains(workingStack.getType())) {
-                        int total = workingStack.getAmount();
-                        ChatUtil.sendNotice(playerList, "Found: " + total + " " + workingStack.getType().toString() + ".");
-                        if (items.containsKey(workingStack.getType())) {
-                            total += items.get(workingStack.getType());
-                        }
-                        items.put(workingStack.getType(), total);
-                    } else if (ItemUtil.isItem(workingStack, CustomItems.MAD_MILK)) {
-                        FactoryFloor.factInst.madMilk();
-                        ChatUtil.sendWarning(playerList, "The milk is too much for the vat to handle, strange things start happening...");
-                    }
-                }
-                e.remove();
+    private Map<UUID, Map<Material, Integer>> getWantedItemMap() {
+        Map<UUID, Map<Material, Integer>> items = new HashMap<>();
+        for (Item e : parent.getContained(vatRegion, Item.class)) {
+            UUID thrower = e.getThrower();
+            if (thrower == null) {
+                continue;
             }
-            save(); // Update save for new Potion resource values
+
+            ItemStack workingStack = e.getItemStack();
+            Material itemType = workingStack.getType();
+
+            if (wanted.contains(itemType)) {
+                Map<Material, Integer> playerItems = items.computeIfAbsent(thrower, k -> new HashMap<>());
+                playerItems.merge(itemType, workingStack.getAmount(), Integer::sum);
+            }
+        }
+        return items;
+    }
+
+    private Map<Material, List<Item>> getItemsToModify(UUID owner) {
+        Map<Material, List<Item>> items = new HashMap<>();
+        for (Item item : parent.getContained(vatRegion, Item.class)) {
+            if (!owner.equals(item.getThrower())) {
+                continue;
+            }
+
+            Material itemType = item.getItemStack().getType();
+            if (wanted.contains(itemType)) {
+                items.merge(itemType, List.of(item), (a, b) -> {
+                    return Stream.of(a, b).flatMap(Collection::stream).collect(Collectors.toList());
+                });
+            }
+        }
+        return items;
+    }
+
+    private void detectNewJobsForPlayer(UUID playerID, Map<Material, Integer> items,
+                                        TriConsumer<UUID, String, Integer> jobDeclarationConsumer) {
+        if (items.isEmpty()) {
+            return;
         }
 
         // Check these to avoid doing more calculations than need be
         int bottles = items.getOrDefault(Material.GLASS_BOTTLE, 0);
         int max = items.getOrDefault(Material.NETHER_WART, 0);
-        if (bottles <= 0 || max <= 0) return new ArrayList<>();
+        if (bottles <= 0 || max <= 0) {
+            return;
+        }
 
         // Figure out the potion the player is trying to make
         List<Material> using = new ArrayList<>();
@@ -174,7 +165,9 @@ public class FactoryBrewer extends FactoryMech {
         } else if (items.containsKey(Material.PUFFERFISH)) {
             target = PotionType.WATER_BREATHING;
             using.add(Material.PUFFERFISH);
-        } else return new ArrayList<>();
+        } else {
+            return;
+        }
 
         // Always used
         using.add(Material.GLASS_BOTTLE);
@@ -202,7 +195,7 @@ public class FactoryBrewer extends FactoryMech {
             using.add(Material.QUARTZ);
         }
 
-        // Find the max amount skipping glass bottles (too be checked later)
+        // Find the max amount skipping glass bottles (to be checked later)
         for (Material used : using) {
             if (used == Material.GLASS_BOTTLE) continue;
             max = Math.min(max, items.get(used));
@@ -211,38 +204,77 @@ public class FactoryBrewer extends FactoryMech {
         // This is confusing, essentially we are dividing the bottle count into three pieces
         // That allows us to figure out how many potion sets can be made
         // We will later expand the potion sets again
-        max = (int) Math.min(max, Math.floor(bottles / 3));
+        max = Math.min(max, bottles / 3);
 
-        if (max <= 0) return new ArrayList<>();
+        if (max <= 0) {
+            return;
+        }
 
         // Remove the used ingredients from the system
-        int newAmt;
+        Map<Material, List<Item>> itemsToModify = getItemsToModify(playerID);
         for (Map.Entry<Material, Integer> entry : items.entrySet()) {
-            if (using.contains(entry.getKey())) {
-                newAmt = entry.getValue() - (entry.getKey() == Material.GLASS_BOTTLE ? max * 3 : max);
-                if (newAmt > 0) items.put(entry.getKey(), newAmt);
-                else items.remove(entry.getKey());
+            Material itemType = entry.getKey();
+            if (!using.contains(itemType)) {
+                continue;
+            }
+
+            int amountToRemove = itemType == Material.GLASS_BOTTLE ? max * 3 : max;
+            for (Item item : itemsToModify.get(itemType)) {
+                if (amountToRemove == 0) {
+                    break;
+                }
+
+                ItemStack itemStack = item.getItemStack();
+
+                // Figure out how much we're moving
+                int amountRemoved = Math.min(itemStack.getAmount(), amountToRemove);
+                int amountRemaining = itemStack.getAmount() - amountRemoved;
+
+                // Update amount to remove
+                amountToRemove -= amountRemoved;
+
+                // Update the itemstack
+                if (amountRemaining == 0) {
+                    item.remove();
+                } else {
+                    // The API under the hood does cloning on this anyways, but since it's not clear
+                    // about this, explicitly copy, update the amount, and reassign for stability.
+                    itemStack = itemStack.clone();
+                    itemStack.setAmount(amountRemaining);
+                    item.setItemStack(itemStack);
+                }
             }
         }
-        save(); // Update save for new Potion resource values
+
+        // Inflate to the correct number of potions.
+        max *= 3;
 
         // Inflate potion quantity
-        max *= (increased ? 6 : 5);
+        int modifier = (increased ? 3 : 2);
         if (ModifierComponent.getModifierCenter().isActive(ModifierType.TRIPLE_FACTORY_PRODUCTION)) {
-            max *= 3;
+            modifier *= 3;
         }
 
         // Calculate damage
         boolean upgraded = !duration && potency;
-        ItemStack potion = makePotion(target, splash, upgraded, duration);
+        ItemStack potionStack = makePotion(target, splash, upgraded, duration);
+        String itemName = ItemNameCalculator.computeItemName(potionStack).orElseThrow();
 
         // Tell the player what we are making
-        ChatUtil.sendNotice(playerList, "Brewing: " + max + " " + target.getEffectType().getName() + " "
-                + (upgraded ? "II" : "I") + (splash ? " splash" : "") + " potions.");
-        // Return the product for the que
-        List<ItemStack> product = new ArrayList<>();
-        for (int i = 0; i < max; i++) product.add(potion.clone());
-        return product;
+        Collection<Player> playerList = parent.getAudiblePlayers();
+        parent.sendProductionMessage(playerList, "Brewing", max, itemName, modifier);
+
+        jobDeclarationConsumer.accept(playerID, itemName, max * modifier);
+    }
+
+    @Override
+    public void detectNewJobs(TriConsumer<UUID, String, Integer> jobDeclarationConsumer) {
+        killLivingEntitiesInVat();
+
+        Map<UUID, Map<Material, Integer>> items = getWantedItemMap();
+        for (Map.Entry<UUID, Map<Material, Integer>> playerItemMapping : items.entrySet()) {
+            detectNewJobsForPlayer(playerItemMapping.getKey(), playerItemMapping.getValue(), jobDeclarationConsumer);
+        }
     }
 
     /**

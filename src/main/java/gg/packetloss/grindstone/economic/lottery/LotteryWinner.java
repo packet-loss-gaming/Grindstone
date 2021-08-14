@@ -10,15 +10,16 @@ import gg.packetloss.grindstone.util.PlayernameGenerator;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase.CPU_ID;
 
 public class LotteryWinner {
     private UUID playerID;
-    private double amt;
+    private BigDecimal amt;
 
-    public LotteryWinner(UUID playerID, double amt) {
+    public LotteryWinner(UUID playerID, BigDecimal amt) {
         this.playerID = playerID;
         this.amt = amt;
     }
@@ -37,13 +38,13 @@ public class LotteryWinner {
 
     public String getName() {
         if (isBot()) {
-            return new PlayernameGenerator((long) amt).generate();
+            return new PlayernameGenerator(amt.longValue()).generate();
         }
 
         return getAsOfflinePlayer().getName();
     }
 
-    public double getAmt() {
+    public BigDecimal getAmt() {
         return amt;
     }
 }

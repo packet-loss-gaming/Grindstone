@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public class PhantomPotionImpl extends AbstractItemFeatureImpl {
-    private Set<UUID> affectedPlayers = new HashSet<>();
+    private final Set<UUID> affectedPlayers = new HashSet<>();
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerDeathDropRedirectEvent(PlayerDeathDropRedirectEvent event) {
@@ -42,7 +42,8 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
         Player player = event.getPlayer();
         ItemStack stack = event.getItem();
 
-        if (ItemUtil.isItem(stack, CustomItems.PHANTOM_POTION)) {
+        if (ItemUtil.isItem(stack, CustomItems.PHANTOM_POTION) ||
+            ItemUtil.isItem(stack, CustomItems.NEWBIE_PHANTOM_POTION)) {
             Location lastLoc = getSession(player).getRecentDeathDropPoint();
             if (lastLoc != null) {
                 // Protect the player for 30 seconds
@@ -62,6 +63,7 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
                                     + lastLoc.getWorld().getName() + '.'
                     );
                 }
+                ChatUtil.sendNotice(player, "You have 30 seconds. To stay hidden don't attack anything.");
             } else {
                 ChatUtil.sendError(player, "No drop locations are known to the potion.");
                 event.setCancelled(true);
@@ -81,8 +83,7 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityTargetPlayer(EntityTargetLivingEntityEvent event) {
-        if (event.getTarget() instanceof Player) {
-            Player player = (Player) event.getTarget();
+        if (event.getTarget() instanceof Player player) {
             UUID playerID = player.getUniqueId();
 
             // If the player attacks something, remove the AI protection
@@ -99,8 +100,7 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
 
     @EventHandler(ignoreCancelled = true)
     public void onPotionApply(EntityPotionEffectEvent event) {
-        if (event.getEntity() instanceof Player) {
-            Player player = (Player) event.getEntity();
+        if (event.getEntity() instanceof Player player) {
             UUID playerID = player.getUniqueId();
 
             PotionEffect newEffect = event.getNewEffect();

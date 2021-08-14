@@ -13,7 +13,12 @@ public enum ItemFamily {
     MASTER(ChatColor.DARK_PURPLE, "Master"),
     FEAR(ChatColor.DARK_RED, "Fear"),
     UNLEASHED(ChatColor.DARK_PURPLE, "Unleashed"),
-    PARTY_BOX(ChatColor.GOLD, "Party Box");
+    PARTY_BOX(ChatColor.GOLD, "Party Box"),
+    PEACEFUL_WARRIOR(ChatColor.DARK_BLUE, "Peaceful Warrior"),
+    ANCIENT(ChatColor.GOLD, "Ancient"),
+    ANCIENT_ROYAL(ChatColor.GOLD, "Ancient Royal"),
+    NECROS(ChatColor.DARK_RED, "Necros"),
+    NETRIC(ChatColor.DARK_RED, "Nectric");
 
     private final ChatColor color;
     private final String properName;

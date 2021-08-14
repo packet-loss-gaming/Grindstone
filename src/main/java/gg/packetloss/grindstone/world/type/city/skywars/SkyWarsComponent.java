@@ -25,10 +25,10 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.bukkittext.Text;
-import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
@@ -60,7 +60,6 @@ import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.minigame.Win;
 import gg.packetloss.grindstone.world.type.city.minigame.WinType;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -83,6 +82,7 @@ import org.bukkit.util.BlockIterator;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -125,7 +125,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     @InjectComponent
     SpectatorComponent spectatorComponent;
     @InjectComponent
-    private EconomyComponent economy;
+    private WalletComponent wallet;
     @InjectComponent
     private HighScoresComponent highScores;
     @InjectComponent
@@ -188,16 +188,16 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     private void rewardPlayer(Player player, boolean won) {
-        if (!economy.isEnabled()) {
-            return;
-        }
-
         double adjustedPoints = 1.5 * gameState.get(player).getPoints();
         double amt = adjustedPoints * (won ? 1 : .5);
 
-        Economy economyHandle = economy.getHandle();
-        economyHandle.depositPlayer(player, amt);
-        ChatUtil.sendNotice(player, "You received: " + economyHandle.format(amt) + '.');
+        BigDecimal finalAmt = new BigDecimal(amt);
+        wallet.addToBalance(player, finalAmt).thenAcceptAsynchronously(
+            (newBalance) -> {
+                ChatUtil.sendNotice(player, "You received: ", wallet.format(finalAmt), '.');
+            },
+            (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+        );
     }
 
     public void died(Player player) {

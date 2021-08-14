@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.util.item;
 
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.macro.ExpansionReplacementMacro;
 import gg.packetloss.grindstone.util.macro.MacroExpander;
@@ -16,10 +17,19 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
 
 import java.util.*;
 
+import static gg.packetloss.grindstone.util.StringUtil.toUppercaseTitle;
+
 public class ItemNameCalculator {
+    protected static final String SERIALIZATION_SPLIT = "!!!";
+    protected static final String POTION_SPLIT = SERIALIZATION_SPLIT + "of_";
+    protected static final String EXTENDED_POSTFIX = "_extended";
+    protected static final String UPGRADED_POSTFIX = "_upgraded";
+
     private static Set<String> names = new HashSet<>();
 
     static {
@@ -75,6 +85,28 @@ public class ItemNameCalculator {
         return stack.getI18NDisplayName();
     }
 
+    /**
+     * Make sure to update ItemNameDeserializer#restoreItemMetadata(String, ItemMeta) when changing
+     * this method.
+     */
+    private static Optional<String> createMetadataString(ItemMeta stackMeta) {
+        if (stackMeta instanceof PotionMeta) {
+            PotionData potionData = ((PotionMeta) stackMeta).getBasePotionData();
+            StringBuilder builder = new StringBuilder();
+            builder.append(POTION_SPLIT);
+
+            builder.append(potionData.getType().name().toLowerCase());
+            if (potionData.isExtended()) {
+                builder.append(EXTENDED_POSTFIX);
+            } else if (potionData.isUpgraded()) {
+                builder.append(UPGRADED_POSTFIX);
+            }
+            return Optional.of(builder.toString());
+        }
+
+        return Optional.empty();
+    }
+
     public static Optional<String> computeItemName(ItemStack stack) {
         if (stack == null || stack.getType() == Material.AIR) {
             return Optional.empty();
@@ -94,12 +126,37 @@ public class ItemNameCalculator {
             }
         }
 
-        return Optional.of(stack.getType().getKey().toString());
+        String name = stack.getType().getKey().toString();
+        Optional<String> optExtra = createMetadataString(stackMeta);
+        if (optExtra.isPresent()) {
+            name += optExtra.get();
+        }
+        return Optional.of(name);
     }
 
     public static String getUnqualifiedName(String qualifiedName) {
         Validate.isTrue(qualifiedName.contains(":"));
-        return qualifiedName.split(":")[1];
+        return qualifiedName.split(":")[1].replace(SERIALIZATION_SPLIT, "_");
+    }
+
+    public static String getUnqualifiedName(CustomItems item) {
+        return item.getSnakecaseName();
+    }
+
+    public static String getSystemDisplayNameNoColor(String itemName) {
+        return toUppercaseTitle(getUnqualifiedName(itemName));
+    }
+
+    public static String getSystemDisplayNameNoColor(CustomItems item) {
+        return toUppercaseTitle(getUnqualifiedName(item));
+    }
+
+    public static Text getSystemDisplayName(String itemName) {
+        return Text.of(ChatColor.BLUE, getSystemDisplayNameNoColor(itemName));
+    }
+
+    public static Text getSystemDisplayName(CustomItems item) {
+        return Text.of(ChatColor.BLUE, getSystemDisplayNameNoColor(item));
     }
 
     public static Optional<String> computeBlockName(Block block) {

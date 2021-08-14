@@ -97,7 +97,8 @@ public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpeci
 
     @Override
     public void activate() {
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * (numRuns + 3), 1), true);
+        target.removePotionEffect(PotionEffectType.SLOW);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * (numRuns + 3), 1));
         createCage();
 
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1, .02F);

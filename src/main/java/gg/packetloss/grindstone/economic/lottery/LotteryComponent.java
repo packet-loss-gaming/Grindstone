@@ -6,8 +6,8 @@
 
 package gg.packetloss.grindstone.economic.lottery;
 
+import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -15,19 +15,18 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
 import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
 import gg.packetloss.grindstone.exceptions.NotFoundException;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.TimeUtil;
+import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import gg.packetloss.grindstone.util.probability.WeightedPicker;
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
+import gg.packetloss.grindstone.util.task.promise.TaskResult;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
@@ -41,16 +40,20 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.plugin.RegisteredServiceProvider;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.logging.Logger;
+
+import static gg.packetloss.grindstone.util.ChatUtil.WHOLE_NUMBER_FORMATTER;
 
 
 @ComponentInformation(friendlyName = "Lottery", desc = "Can you win it big?")
-@Depend(plugins = {"Vault"}, components = {ChatBridgeComponent.class, DataBaseComponent.class})
+@Depend(plugins = {"Vault"}, components = {ChatBridgeComponent.class, DataBaseComponent.class, WalletComponent.class})
 public class LotteryComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -59,25 +62,32 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     @InjectComponent
     private ChatBridgeComponent chatBridge;
+    @InjectComponent
+    private WalletComponent wallet;
 
     private LocalConfiguration config;
 
-    private static final String LOTTERY_BANK_ACCOUNT = "Lottery";
+    private LotteryState lotteryState = new LotteryState();
+    private SingleFileFilesystemStateHelper<LotteryState> stateHelper;
+
     private List<Player> recentList = new ArrayList<>();
     private LotteryTicketDatabase lotteryTicketDatabase;
     private LotteryWinnerDatabase lotteryWinnerDatabase;
-    private static Economy economy = null;
 
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
 
-        setupEconomy();
+        try {
+            stateHelper = new SingleFileFilesystemStateHelper<>("lottery.json", new TypeToken<>() { });
+            stateHelper.load().ifPresent(loadedState -> lotteryState = loadedState);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registrar.registerAsSubCommand("lottery", "Lottery", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, LotteryCommandsRegistration.builder(), new LotteryCommands(this, economy));
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.registerAsSubCommand("lottery", "Lottery", (lotteryRegistrar) -> {
+                lotteryRegistrar.register(LotteryCommandsRegistration.builder(), new LotteryCommands(this, wallet));
             });
         });
 
@@ -106,6 +116,15 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         configure(config);
     }
 
+    @Override
+    public void disable() {
+        try {
+            stateHelper.save(lotteryState);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     private Runnable runLottery = this::completeLottery;
 
     private Runnable broadcastLottery = () -> broadcastLottery(server.getOnlinePlayers());
@@ -129,8 +148,8 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMarketPurchase(MarketPurchaseEvent event) {
         // Deposit into the lottery account
-        double lottery = event.getTotalCost() * .03;
-        economy.bankDeposit(LOTTERY_BANK_ACCOUNT, lottery);
+        double lotteryContribution = event.getTotalCost().doubleValue() * .03;
+        lotteryState.profitFromMarketSales += lotteryContribution;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -188,53 +207,62 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         }
     }
 
-    private boolean setupEconomy() {
-
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
-                .vault.economy.Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
-
-        return (economy != null);
-    }
-
     public LotteryTicketDatabase getLotteryTicketDatabase() {
 
         return lotteryTicketDatabase;
     }
 
+    private Text formatTickets(int amount) {
+        return Text.of(
+            Text.of(ChatColor.WHITE, WHOLE_NUMBER_FORMATTER.format(amount)),
+            " ",
+            amount == 1 ? "ticket" : "tickets"
+        );
+    }
+
     public void buyTickets(final Player player, int count) throws CommandException {
         if (recentList.contains(player)) return;
 
-        int maxTicketPurchase = (int) (economy.getBalance(player) / config.ticketPrice);
-        int oldTicketCount = lotteryTicketDatabase.getTickets(player.getUniqueId());
+        int[] ticketsBought = {0};
 
-        int newTicketCount = Math.min(config.maxPerLotto, oldTicketCount + Math.min(count, maxTicketPurchase));
-        int ticketsBought = newTicketCount - oldTicketCount;
-
-        if (!economy.has(player, config.ticketPrice * ticketsBought)) {
-            throw new CommandException("You do not have enough " + economy.currencyNamePlural() + ".");
-        }
-
-        if (ticketsBought > 0) {
-            economy.withdrawPlayer(player, config.ticketPrice * ticketsBought);
-
-            lotteryTicketDatabase.addTickets(player.getUniqueId(), ticketsBought);
-            lotteryTicketDatabase.save();
-        }
-
-        if (ticketsBought * config.ticketPrice != 1) {
-            ChatUtil.sendNotice(player, "You purchased: "
-                    + ChatUtil.makeCountString(ticketsBought, " tickets for: ")
-                    + ChatUtil.makeCountString(economy.format(ticketsBought * config.ticketPrice), "."));
-        } else {
-            ChatUtil.sendNotice(player, "You purchased: "
-                    + ChatUtil.makeCountString(ticketsBought, " tickets for: ")
-                    + ChatUtil.makeCountString(economy.format(ticketsBought * config.ticketPrice), "."));
-        }
         recentList.add(player);
-        server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 1);
+
+        wallet.getBalance(player).thenApplyAsynchronously(
+            (balance) -> {
+                return balance.divide(new BigDecimal(config.ticketPrice)).intValue();
+            },
+            (ignored) -> {
+                ErrorUtil.reportUnexpectedError(player);
+            }
+        ).thenComposeFailableAsynchronously(
+            (maxTicketPurchase) -> {
+                int oldTicketCount = lotteryTicketDatabase.getTickets(player.getUniqueId());
+
+                int newTicketCount = Math.min(config.maxPerLotto, oldTicketCount + Math.min(count, maxTicketPurchase));
+                ticketsBought[0] = newTicketCount - oldTicketCount;
+
+                return wallet.removeFromBalance(player, config.ticketPrice * ticketsBought[0]);
+            }
+        ).thenApplyFailableAsynchronously(
+            (Function<Boolean, TaskResult<Void, Void>>) TaskResult::fromCondition,
+            (ignored) -> {
+                ErrorUtil.reportUnexpectedError(player);
+            }
+        ).thenAcceptAsynchronously(
+            (ignored) -> {
+                lotteryTicketDatabase.addTickets(player.getUniqueId(), ticketsBought[0]);
+                lotteryTicketDatabase.save();
+
+                ChatUtil.sendNotice(
+                    player,
+                    "You purchased: ", formatTickets(ticketsBought[0]),
+                    " for: ", wallet.format(ticketsBought[0] * config.ticketPrice), "."
+                );
+            },
+            (ignored) -> {
+                ChatUtil.sendError(player, "You do not have enough ", wallet.currencyNamePlural(), ".");
+            }
+        ).thenFinally(() -> recentList.remove(player));
     }
 
     private int calculateCPUTicketCount() {
@@ -248,17 +276,15 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     }
 
     private void handleWinner(LotteryWinner winner) {
-        economy.bankWithdraw(LOTTERY_BANK_ACCOUNT, economy.bankBalance(LOTTERY_BANK_ACCOUNT).balance);
-
-        String winMessage = ChatColor.YELLOW + winner.getName() + " has won: " +
-                ChatUtil.makeCountString(economy.format(winner.getAmt()), " via the lottery!");
-        Bukkit.broadcastMessage(winMessage);
-        chatBridge.broadcast(ChatColor.stripColor(winMessage));
+        Text winMessage = Text.of(ChatColor.YELLOW, winner.getName(), " has won: ",
+                wallet.format(winner.getAmt()), " via the lottery!");
+        Bukkit.broadcast(winMessage.build());
+        chatBridge.broadcast(ChatColor.stripColor(winMessage.toString()));
 
         if (winner.isBot()) {
             lotteryWinnerDatabase.addCPUWin(winner.getAmt());
         } else {
-            economy.depositPlayer(winner.getAsOfflinePlayer(), winner.getAmt());
+            wallet.addToBalance(winner.getAsOfflinePlayer(), winner.getAmt());
             lotteryWinnerDatabase.addWinner(winner.getPlayerID(), winner.getAmt());
         }
 
@@ -277,17 +303,16 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        double cash = getWinnerCash();
+        BigDecimal cash = getWinnerCash();
 
         handleWinner(new LotteryWinner(name, cash));
     }
 
     public void broadcastLottery(Iterable<? extends CommandSender> senders) {
         for (CommandSender receiver : senders) {
-            ChatUtil.sendNotice(receiver, "The lottery currently has: "
-                    + ChatUtil.makeCountString(lotteryTicketDatabase.getTicketCount(), " tickets and is worth: ")
-                    + ChatUtil.makeCountString(economy.format(getWinnerCash()),
-                    "."));
+            ChatUtil.sendNotice(receiver, "The lottery currently has: ",
+                formatTickets(lotteryTicketDatabase.getTicketCount()), " and is worth: ",
+                wallet.format(getWinnerCash()), ".");
         }
     }
 
@@ -295,15 +320,10 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         return lotteryWinnerDatabase.getRecentWinner(config.recentLength);
     }
 
-    public double getWinnerCash() {
-
+    public BigDecimal getWinnerCash() {
         double amt = lotteryTicketDatabase.getTicketCount() * config.ticketPrice * .75;
-
-        EconomyResponse response = economy.bankBalance(LOTTERY_BANK_ACCOUNT);
-        if (response.transactionSuccess()) {
-            amt += response.balance;
-        }
-        return amt;
+        amt += lotteryState.profitFromMarketSales;
+        return new BigDecimal(amt);
     }
 
     private UUID findNewMillionaire() throws NotFoundException {

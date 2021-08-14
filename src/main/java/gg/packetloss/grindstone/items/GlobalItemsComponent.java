@@ -37,6 +37,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Server;
@@ -59,7 +60,7 @@ import java.util.Set;
 @ComponentInformation(friendlyName = "Global Items Component", desc = "Global Custom Item effects")
 @Depend(components = {
         SessionComponent.class, AdminComponent.class, PacketInterceptionComponent.class, PrayerComponent.class,
-        FlightItemsComponent.class
+        FlightItemsComponent.class, ManagedWorldComponent.class
 })
 public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
@@ -78,51 +79,59 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     protected static GuildComponent guilds;
     @InjectComponent
     protected static FlightItemsComponent flightItems;
+    @InjectComponent
+    protected static ManagedWorldComponent managedWorld;
 
-    private static ItemCondenser goldCondenser = new ItemCondenser();
+    private static final ItemCondenser MONEY_CONDENSER = new ItemCondenser();
 
     static {
-        goldCondenser.addSupport(new ItemStack(Material.GOLD_NUGGET, 9), new ItemStack(Material.GOLD_INGOT, 1));
-        goldCondenser.addSupport(new ItemStack(Material.GOLD_INGOT, 9), new ItemStack(Material.GOLD_BLOCK, 1));
+        MONEY_CONDENSER.addSupport(new ItemStack(Material.GOLD_NUGGET, 9), new ItemStack(Material.GOLD_INGOT, 1));
+        MONEY_CONDENSER.addSupport(new ItemStack(Material.GOLD_INGOT, 9), new ItemStack(Material.GOLD_BLOCK, 1));
     }
 
-    private static ItemCondenser summationCondenser = new ItemCondenser();
+    private static final ItemCondenser SUMMATION_CONDENSER = new ItemCondenser();
 
     static {
         // Bone
-        summationCondenser.addSupport(new ItemStack(Material.BONE_MEAL, 9), new ItemStack(Material.BONE_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.BONE_MEAL, 9), new ItemStack(Material.BONE_BLOCK, 1));
 
         // Coal
-        summationCondenser.addSupport(new ItemStack(Material.COAL, 9), new ItemStack(Material.COAL_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.COAL, 9), new ItemStack(Material.COAL_BLOCK, 1));
 
         // Iron
-        summationCondenser.addSupport(new ItemStack(Material.IRON_NUGGET, 9), new ItemStack(Material.IRON_INGOT, 1));
-        summationCondenser.addSupport(new ItemStack(Material.IRON_INGOT, 9), new ItemStack(Material.IRON_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.RAW_IRON, 9), new ItemStack(Material.RAW_IRON_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.IRON_NUGGET, 9), new ItemStack(Material.IRON_INGOT, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.IRON_INGOT, 9), new ItemStack(Material.IRON_BLOCK, 1));
+
+        // Copper
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.RAW_COPPER, 9), new ItemStack(Material.RAW_COPPER_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.COPPER_INGOT, 9), new ItemStack(Material.COPPER_BLOCK, 1));
 
         // Gold
-        summationCondenser.addSupport(new ItemStack(Material.GOLD_NUGGET, 9), new ItemStack(Material.GOLD_INGOT, 1));
-        summationCondenser.addSupport(new ItemStack(Material.GOLD_INGOT, 9), new ItemStack(Material.GOLD_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.RAW_GOLD, 9), new ItemStack(Material.RAW_GOLD_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.GOLD_NUGGET, 9), new ItemStack(Material.GOLD_INGOT, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.GOLD_INGOT, 9), new ItemStack(Material.GOLD_BLOCK, 1));
 
         // Redstone
-        summationCondenser.addSupport(new ItemStack(Material.REDSTONE, 9), new ItemStack(Material.REDSTONE_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.REDSTONE, 9), new ItemStack(Material.REDSTONE_BLOCK, 1));
 
         // Lapis
-        summationCondenser.addSupport(new ItemStack(Material.LAPIS_LAZULI, 9), new ItemStack(Material.LAPIS_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.LAPIS_LAZULI, 9), new ItemStack(Material.LAPIS_BLOCK, 1));
 
         // Diamond
-        summationCondenser.addSupport(new ItemStack(Material.DIAMOND, 9), new ItemStack(Material.DIAMOND_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.DIAMOND, 9), new ItemStack(Material.DIAMOND_BLOCK, 1));
 
         // Emerald
-        summationCondenser.addSupport(new ItemStack(Material.EMERALD, 9), new ItemStack(Material.EMERALD_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.EMERALD, 9), new ItemStack(Material.EMERALD_BLOCK, 1));
 
         // Netherite
-        summationCondenser.addSupport(new ItemStack(Material.NETHERITE_INGOT, 9), new ItemStack(Material.NETHERITE_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.NETHERITE_INGOT, 9), new ItemStack(Material.NETHERITE_BLOCK, 1));
 
         // Slime
-        summationCondenser.addSupport(new ItemStack(Material.SLIME_BALL, 9), new ItemStack(Material.SLIME_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.SLIME_BALL, 9), new ItemStack(Material.SLIME_BLOCK, 1));
 
         // Wheat
-        summationCondenser.addSupport(new ItemStack(Material.WHEAT, 9), new ItemStack(Material.HAY_BLOCK, 1));
+        SUMMATION_CONDENSER.addSupport(new ItemStack(Material.WHEAT, 9), new ItemStack(Material.HAY_BLOCK, 1));
     }
 
     private MigrationManager migrationManager = new MigrationManager();
@@ -143,8 +152,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     }
 
     private <T extends Listener> T handle(T component) {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(component);
+        CommandBook.registerEvents(component);
         return component;
     }
 
@@ -154,6 +162,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         AbstractItemFeatureImpl.applyResource(prayers);
         AbstractItemFeatureImpl.applyResource(guilds);
         AbstractItemFeatureImpl.applyResource(flightItems);
+        AbstractItemFeatureImpl.applyResource(managedWorld);
     }
 
     private void registerSpecWeapons() {
@@ -174,6 +183,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SWORD, handle(new UnleashedSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.UNLEASHED_SHORT_SWORD, handle(new UnleashedSwordImpl()));
             wepSys.add(WeaponType.MELEE, CustomItems.RED_SWORD, handle(new RedSwordImpl()));
+            wepSys.add(WeaponType.MELEE, CustomItems.PHANTOM_SABRE, handle(new PhantomSabreImpl()));
         }, 1);
     }
 
@@ -194,7 +204,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         hymnImpl.addHymn(CustomItems.HYMN_OF_SUMMATION, HymnSingEvent.Hymn.SUMMATION);
 
         handle(new ChickenHymnImpl());
-        handle(new SummationHymnImpl(summationCondenser));
+        handle(new SummationHymnImpl(SUMMATION_CONDENSER));
     }
 
     private void registerPermissionBindingTomes() {
@@ -216,22 +226,23 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
 
     private void registerGeneral() {
         handle(new AncientArmorImpl());
-        handle(new AncientCrownImpl(goldCondenser));
-        handle(new ApocalypticCamouflageArmorImpl());
+        handle(new AncientCrownImpl(MONEY_CONDENSER));
         handle(new BatBowImpl());
         handle(new ChickenBowImpl());
         handle(new ExecutionerAxeImpl());
         handle(new GodFishImpl());
-        handle(new ImbuedCrystalImpl(goldCondenser));
+        handle(new ImbuedCrystalImpl(MONEY_CONDENSER));
         handle(new MadMilkImpl());
         handle(new MagicBucketImpl());
         handle(new NecrosArmorImpl());
         handle(new NectricArmorImpl());
+        handle(new PeacefulWarriorArmor());
+        handle(new PhantomLinkImpl());
         handle(new PhantomPotionImpl());
         handle(new PixieDustImpl());
         handle(new PotionOfRestitutionImpl());
         handle(new RedFeatherImpl());
-        handle(new SummationScrollImpl(summationCondenser));
+        handle(new SummationScrollImpl(SUMMATION_CONDENSER));
     }
 
     private void registerMigrations() {

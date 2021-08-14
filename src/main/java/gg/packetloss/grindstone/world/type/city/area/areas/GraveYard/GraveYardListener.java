@@ -36,6 +36,8 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.item.inventory.PlayerInventoryIterator;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import org.apache.commons.lang.Validate;
@@ -43,6 +45,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -177,7 +180,8 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     private void degradeGoodPotions(Player player) {
         List<PotionEffectType> affectedTypes = Arrays.asList(
                 PotionEffectType.INCREASE_DAMAGE, PotionEffectType.REGENERATION, PotionEffectType.DAMAGE_RESISTANCE,
-                PotionEffectType.WATER_BREATHING, PotionEffectType.FIRE_RESISTANCE
+                PotionEffectType.WATER_BREATHING, PotionEffectType.FIRE_RESISTANCE, PotionEffectType.ABSORPTION,
+                PotionEffectType.HEALTH_BOOST
         );
 
         for (PotionEffect effect : player.getActivePotionEffects()) {
@@ -185,9 +189,11 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 continue;
             }
 
+            /* Remove the effect, we'll readd it if it's still relevant below. */
+            player.removePotionEffect(effect.getType());
+
             int newDuration = (int) (effect.getDuration() * .9);
             if (newDuration == 0) {
-                player.removePotionEffect(effect.getType());
                 continue;
             }
 
@@ -198,7 +204,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     effect.isAmbient(),
                     effect.hasParticles()
             );
-            player.addPotionEffect(newEffect, true);
+            player.addPotionEffect(newEffect);
         }
     }
 
@@ -207,7 +213,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return false;
         }
 
-        if (!ItemUtil.hasAncientArmour(entity)) {
+        if (!ItemUtil.hasAncientArmor(entity)) {
             return false;
         }
 
@@ -264,18 +270,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onPotionSplash(PotionSplashEvent event) {
-        event.getAffectedEntities().stream().filter(entity -> entity instanceof Player && ChanceUtil.getChance(14)).forEach(entity -> {
-            if (ChanceUtil.getChance(14)) {
-                entity.removePotionEffect(PotionEffectType.REGENERATION);
-            }
-            if (ChanceUtil.getChance(14)) {
-                entity.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-            }
-        });
-    }
-
     private int getPhantomValueOfItem(ItemStack item, Location pointOfSacrifice) {
         if (ItemUtil.isItem(item, CustomItems.PHANTOM_GOLD)) {
             return parent.isRewardsArea(pointOfSacrifice) ? 100 : 50;
@@ -296,22 +290,22 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             Player player = event.getPlayer();
 
             int totalAmount = phantomValue * item.getAmount();
-            parent.economy.depositPlayer(player, totalAmount);
-
-            // Delay by a tick to prevent this message from appearing before the ancient fire ignites message
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                ChatUtil.sendNotice(
-                        player,
-                        "You receive " + ChatUtil.makeCountString(parent.economy.format(totalAmount), ".")
-                );
-            }, 1);
+            parent.wallet.addToBalance(player, totalAmount).thenAcceptAsynchronously(
+                (ignored) -> {
+                    // Delay by a tick to prevent this message from appearing before the ancient fire ignites message
+                    CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                        ChatUtil.sendNotice(player, "You receive ", parent.wallet.format(totalAmount), ".");
+                    }, 1);
+                },
+                (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+            );
 
             event.setItemStack(null);
         } else if (ItemUtil.isItem(item, CustomItems.PHANTOM_HYMN)) {
             Player player = event.getPlayer();
 
             for (int i = 0; i < item.getAmount(); ++i) {
-                player.getInventory().addItem(CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, 20));
+                GeneralPlayerUtil.giveItemToPlayer(player, CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, 20));
             }
 
             event.setItemStack(null);
@@ -360,20 +354,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     drops.add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(3)));
                 }
                 if (ChanceUtil.getChance(1000000)) {
-                    switch (ChanceUtil.getRandom(4)) {
-                        case 1:
-                            drops.add(CustomItemCenter.build(CustomItems.FEAR_SWORD));
-                            break;
-                        case 2:
-                            drops.add(CustomItemCenter.build(CustomItems.FEAR_BOW));
-                            break;
-                        case 3:
-                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_SWORD));
-                            break;
-                        case 4:
-                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_BOW));
-                            break;
-                    }
+                    drops.add(ChanceUtil.supplyRandom(
+                        () -> CustomItemCenter.build(CustomItems.FEAR_SWORD),
+                        () -> CustomItemCenter.build(CustomItems.FEAR_BOW),
+                        () -> CustomItemCenter.build(CustomItems.UNLEASHED_SWORD),
+                        () -> CustomItemCenter.build(CustomItems.UNLEASHED_BOW)
+                    ));
                 }
             } else if (customName.equals("Guardian Zombie")) {
                 drops.removeIf(stack -> stack != null && stack.getType() == Material.ROTTEN_FLESH);
@@ -403,20 +389,12 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                     drops.add(CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(8)));
                 }
                 if (ChanceUtil.getChance(8000)) {
-                    switch (ChanceUtil.getRandom(4)) {
-                        case 1:
-                            drops.add(CustomItemCenter.build(CustomItems.FEAR_SWORD));
-                            break;
-                        case 2:
-                            drops.add(CustomItemCenter.build(CustomItems.FEAR_BOW));
-                            break;
-                        case 3:
-                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_SWORD));
-                            break;
-                        case 4:
-                            drops.add(CustomItemCenter.build(CustomItems.UNLEASHED_BOW));
-                            break;
-                    }
+                    drops.add(ChanceUtil.supplyRandom(
+                        () -> CustomItemCenter.build(CustomItems.FEAR_SWORD),
+                        () -> CustomItemCenter.build(CustomItems.FEAR_BOW),
+                        () -> CustomItemCenter.build(CustomItems.UNLEASHED_SWORD),
+                        () -> CustomItemCenter.build(CustomItems.UNLEASHED_BOW)
+                    ));
                 }
                 event.setDroppedExp(event.getDroppedExp() * 5);
             }
@@ -744,14 +722,13 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return;
         }
 
-        ItemStack[] dropsArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
         boolean useGemOfLife = player.hasPermission("aurora.tome.life") ||
-                ItemUtil.findItemOfName(dropsArray, CustomItems.GEM_OF_LIFE.toString());
+                ItemUtil.hasItem(drops, CustomItems.GEM_OF_LIFE);
 
         PlayerGraveProtectItemsEvent protectItemsEvent = new PlayerGraveProtectItemsEvent(
                 player,
                 useGemOfLife,
-                dropsArray
+                ItemUtil.clone(drops.toArray(new ItemStack[0]))
         );
 
         CommandBook.callEvent(protectItemsEvent);
@@ -778,17 +755,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerStatePop(PlayerStatePopEvent event) {
-        if (event.getKind() != PlayerStateKind.GRAVE_YARD) {
-            return;
-        }
-
-        Player player = event.getPlayer();
-        if (player.hasPermission("aurora.tome.life")) {
-            return;
-        }
-
+    private void removeGemOfLife(Player player) {
         PlayerInventory pInv = player.getInventory();
 
         // Count then remove the Gems of Life
@@ -803,6 +770,34 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             c -= amount;
             amount = Math.min(c, 64);
         }
+    }
+
+    private void removeVanishingItems(Player player) {
+        PlayerInventoryIterator it = new PlayerInventoryIterator(player.getInventory());
+        while (it.hasNext()) {
+            ItemStack next = it.next();
+            if (next == null) {
+                continue;
+            }
+
+            if (next.getEnchantmentLevel(Enchantment.VANISHING_CURSE) > 0) {
+                it.clear();
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerStatePop(PlayerStatePopEvent event) {
+        if (event.getKind() != PlayerStateKind.GRAVE_YARD) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        if (!player.hasPermission("aurora.tome.life")) {
+            removeGemOfLife(player);
+        }
+        removeVanishingItems(player);
 
         player.updateInventory();
     }

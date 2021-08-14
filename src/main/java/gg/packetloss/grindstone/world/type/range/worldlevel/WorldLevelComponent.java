@@ -16,44 +16,63 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.PacketInterceptionComponent;
+import gg.packetloss.grindstone.data.DataBaseComponent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.collection.FiniteCache;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
+import gg.packetloss.grindstone.world.type.range.worldlevel.db.PlayerWorldLevelDatabase;
+import gg.packetloss.grindstone.world.type.range.worldlevel.db.mysql.MySQLPlayerWorldLevelDatabase;
+import org.apache.commons.lang.Validate;
 import org.bukkit.*;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @ComponentInformation(friendlyName = "World Level", desc = "Operate the world level for range worlds.")
-@Depend(components = {ManagedWorldComponent.class, PacketInterceptionComponent.class})
+@Depend(components = {DataBaseComponent.class, ManagedWorldComponent.class, PacketInterceptionComponent.class})
 public class WorldLevelComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private ManagedWorldComponent managedWorld;
     @InjectComponent
     private PacketInterceptionComponent packetInterceptor;
 
+    private PlayerWorldLevelDatabase database = new MySQLPlayerWorldLevelDatabase();
     private Map<UUID, Integer> playerWorldLevel = new HashMap<>();
     private FiniteCache<BlockVector2> recentChunks = new FiniteCache<>((int) (Bukkit.getServer().getMaxPlayers() * 1.5));
 
     private PlayerPlacedOresState state = new PlayerPlacedOresState();
     private SingleFileFilesystemStateHelper<PlayerPlacedOresState> stateHelper;
 
+    private WorldLevelConfig config;
+
     protected int sourceDamageLevel = 0;
 
     @Override
     public void enable() {
+        CommandBook.registerEvents(this);
+
+        CommandBook.registerEvents(new DemonicRuneListener(this));
         CommandBook.registerEvents(new LevelAdjustmentListener(this));
         CommandBook.registerEvents(new MobListener(this));
+        CommandBook.registerEvents(new SilverfishClusterListener(this));
 
         try {
             stateHelper = new SingleFileFilesystemStateHelper<>("ranged-player-placed-ores.json", new TypeToken<>() { });
@@ -65,16 +84,100 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
             e.printStackTrace();
         }
 
+        config = configure(new WorldLevelConfig());
+
         packetInterceptor.addListener(new HeartPacketFilter(this));
+
+        CommandBook.server().getScheduler().runTaskTimer(
+            CommandBook.inst(),
+            this::degradeWorldLevel,
+            0,
+            20 * 5
+        );
+    }
+
+    @Override
+    public void reload() {
+        configure(config);
+    }
+
+    protected WorldLevelConfig getConfig() {
+        return config;
+    }
+
+    public void degradeWorldLevel() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!isPeaceful(player)) {
+                continue;
+            }
+
+            int currLevel = getWorldLevel(player);
+            if (currLevel > 1) {
+                int newLevel = currLevel - 1;
+
+                setWorldLevel(player, newLevel);
+                showTitleForLevel(player, newLevel);
+            }
+        }
     }
 
     @Override
     public void disable() {
         try {
+            for (Map.Entry<UUID, Integer> entry: playerWorldLevel.entrySet()) {
+                update(entry.getKey(), entry.getValue());
+            }
+
             stateHelper.save(state);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private TaskFuture<Optional<Integer>> loadWorldLevel(Player player) {
+        return TaskFuture.asyncTask(() -> {
+            return database.loadWorldLevel(player.getUniqueId());
+        });
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+
+        loadWorldLevel(player).thenAccept((optWorldLevel) -> {
+            optWorldLevel.ifPresent((worldLevel -> {
+                playerWorldLevel.put(player.getUniqueId(), worldLevel);
+                if (isRangeWorld(player.getWorld())) {
+                    showTitleForLevel(player, worldLevel);
+                }
+            }));
+        });
+    }
+
+    private void update(UUID playerID, int worldLevel) {
+        database.updateWorldLevel(playerID, worldLevel);
+    }
+
+    private void update(Player player, int worldLevel) {
+        update(player.getUniqueId(), worldLevel);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+
+        Integer worldLevel = playerWorldLevel.remove(player.getUniqueId());
+        if (worldLevel == null) {
+            return;
+        }
+
+        PluginTaskExecutor.submitAsync(() -> {
+            update(player, worldLevel);
+        });
+    }
+
+    public boolean isPeaceful(Player player) {
+        return ItemUtil.hasPeacefulWarriorArmor(player);
     }
 
     public int getWorldLevel(Player player) {
@@ -82,12 +185,9 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     }
 
     public void setWorldLevel(Player player, int worldLevel) {
+        Validate.isTrue(worldLevel >= 1);
         UUID playerID = player.getUniqueId();
-        if (worldLevel <= 1) {
-            playerWorldLevel.remove(playerID);
-        } else {
-            playerWorldLevel.put(playerID, worldLevel);
-        }
+        playerWorldLevel.put(playerID, worldLevel);
     }
 
     protected void showTitleForLevel(Player player, int newLevel) {
@@ -101,7 +201,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
                 ChatColor.DARK_RED,
                 newLevel
             ).build()
-        ).build());
+        ).fadeIn(10).stay(20).fadeOut(10).build());
     }
 
     protected void showTitleForLevelIfInteresting(Player player) {
@@ -117,7 +217,11 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         return managedWorld.is(ManagedWorldIsQuery.ANY_RANGE, world);
     }
 
-    protected boolean shouldSpawnChallengeBlock(Location location, Material blockType) {
+    protected boolean shouldSpawnDemonicAshes(Player player, Location location, Material blockType) {
+        if (isPeaceful(player)) {
+            return false;
+        }
+
         if (recentChunks.contains(WorldEditBridge.toBlockVec2(location.getChunk()))) {
             return false;
         }
@@ -131,20 +235,27 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         }
 
         int yChunk = location.getBlockY() >> 4;
-        return ChanceUtil.getChance(yChunk * 25);
+        return ChanceUtil.getChance(yChunk * config.demonicAshesPerYChunk);
     }
 
-    protected void spawnChallengeBlock(Location location) {
+    protected int getDropCountModifier(int worldLevel, double monsterTypeModifier, double percentDamageDone) {
+        return Math.max(
+            1,
+            (int) Math.min(
+                config.mobsDropTableItemCountMax,
+                monsterTypeModifier * config.mobsDropTableItemCountPerLevel * worldLevel * percentDamageDone
+            )
+        );
+    }
+
+    protected double getDropValueModifier(int worldLevel, double monsterTypeModifier, double percentDamageDone) {
+        return monsterTypeModifier * worldLevel * percentDamageDone;
+    }
+
+    protected void spawnDemonicAshes(Player player, Location location) {
         recentChunks.add(WorldEditBridge.toBlockVec2(location.getChunk()));
 
-        Bukkit.getServer().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-            Block block = location.getBlock();
-            if (!block.getType().isAir()) {
-                return;
-            }
-
-            block.setType(Material.DRAGON_EGG);
-        }, 1);
+        EntityUtil.spawnProtectedItem(CustomItemCenter.build(CustomItems.DEMONIC_ASHES), player);
     }
 
     protected double scale(int fromLevel, int toLevel) {
@@ -161,6 +272,6 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     }
 
     protected boolean hasScaledHealth(Entity entity) {
-        return entity instanceof Monster && entity.getCustomName() == null && isRangeWorld(entity.getWorld());
+        return EntityUtil.isHostileMob(entity) && entity.getCustomName() == null && isRangeWorld(entity.getWorld());
     }
 }

@@ -238,10 +238,10 @@ public class NinjaListener implements Listener {
                 float launchForce = arrow.getMetadata("launch-force").get(0).asFloat();
 
                 ExplosionStateFactory.createPvPExplosion(
-                        player,
-                        arrow.getLocation(), Math.max(2, 4 * launchForce),
-                        false,
-                        true
+                    player,
+                    arrow.getLocation(), Math.max(2, 4 * launchForce),
+                    false,
+                    state.getSettings().shouldAllowEnvironmentalDamage()
                 );
             }
 
@@ -276,7 +276,7 @@ public class NinjaListener implements Listener {
                 return PvPComponent.allowsPvP(player, (Player) e);
             }
 
-            return true;
+            return EntityUtil.isHostileMob(e);
         }).sorted(new EntityDistanceComparator(player.getLocation())).collect(Collectors.toList());
     }
 
@@ -380,7 +380,7 @@ public class NinjaListener implements Listener {
                     bombLocation,
                     event.getExplosionPower(),
                     false,
-                    true
+                    state.getSettings().shouldAllowEnvironmentalDamage()
             );
         });
 

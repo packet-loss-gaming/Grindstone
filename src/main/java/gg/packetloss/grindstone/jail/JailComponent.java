@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.jail;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.util.entity.player.PlayerUtil;
 import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -73,11 +72,10 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         inmates.load();
         jailCells.load();
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            PrisonIdentifierConverter.register(commandManager, this);
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            PrisonIdentifierConverter.register(registrar, this);
 
-            registration.register(commandManager, JailCommandsRegistration.builder(), new JailCommands(this));
+            registrar.register(JailCommandsRegistration.builder(), new JailCommands(this));
         });
 
         registerCommands(Commands.class);

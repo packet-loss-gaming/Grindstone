@@ -7,6 +7,10 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.PatientX;
 
 import com.sk89q.commandbook.CommandBook;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.math.Vector2;
+import com.sk89q.worldedit.regions.CylinderRegion;
+import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -22,9 +26,9 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.listener.BossBuggedRespawnListener;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
+import gg.packetloss.grindstone.util.region.RegionWalker;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -72,8 +76,10 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     protected long lastDeath = 0;
     protected long lastTelep = 0;
     protected double difficulty;
+    protected boolean forceIceChangeExplosion = false;
 
     protected List<Location> destinations = new ArrayList<>();
+    protected List<Block> irradiatedBlocks = new ArrayList<>();
 
     protected BossBar healthBar = Bukkit.createBossBar("Patient X", BarColor.WHITE, BarStyle.SEGMENTED_6);
     protected BossBar rageBar = Bukkit.createBossBar("Rage", BarColor.RED, BarStyle.SEGMENTED_6);
@@ -100,8 +106,11 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 (e) -> spawnBossEntity(e.getHealth())
         ));
 
+        rescanLight();
+
         server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
         server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
+        server.getScheduler().runTaskTimer(inst, this::updateBossIcePad, 0, 1);
 
         destinations.add(new Location(world, -180, 54, 109.5));
         destinations.add(new Location(world, -173, 54, 120));
@@ -121,6 +130,12 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     }
 
     @Override
+    public void reload() {
+        super.reload();
+        rescanLight();
+    }
+
+    @Override
     public void run() {
         updateBossBar();
 
@@ -132,8 +147,37 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             equalize();
             teleportRandom();
             freezeEntities();
-            freezeBlocks(ChanceUtil.getChance((int) Math.ceil(config.iceChangeChance - difficulty)));
+            freezeBlocks();
             spawnCreatures();
+        }
+    }
+
+    private boolean isIrradiatedBlock(Block block) {
+        if (block.getType().isAir() && block.getLightLevel() >= config.radiationLightLevel) {
+            return true;
+        }
+
+        if (EnvironmentUtil.isWater(block)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private void rescanLight() {
+        irradiatedBlocks.clear();
+
+        RegionWalker.walk(region, (x, y, z) -> {
+            Block block = world.getBlockAt(x, y, z);
+            if (isIrradiatedBlock(block)) {
+                irradiatedBlocks.add(block);
+            }
+        });
+    }
+
+    private void irradiateBlock(Runnable playEffect) {
+        for (int i = 0; i < 10; ++i) {
+            playEffect.run();
         }
     }
 
@@ -161,15 +205,71 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         }
     }
 
+    private Region getIcePadRegion(Location bossLoc, int iceY) {
+        return new CylinderRegion(
+            BlockVector3.at(
+                bossLoc.getX(),
+                iceY,
+                bossLoc.getZ()
+            ),
+            Vector2.at(2, 2),
+            iceY,
+            iceY
+        );
+    }
+
+    private Region getCurrentIcePadRegion() {
+        if (!isBossSpawnedFast()) {
+            return null;
+        }
+
+        int iceY = ice.getMaximumPoint().getBlockY();
+
+        Location bossLoc = boss.getLocation();
+        if (bossLoc.getY() > iceY + 1) {
+            return null;
+        }
+
+        return getIcePadRegion(bossLoc, iceY);
+    }
+
+    private void updateBossIcePad() {
+        if (!isBossSpawnedFast()) {
+            return;
+        }
+
+        Region rg = getCurrentIcePadRegion();
+        // The boss isn't touching the water/ice line
+        if (rg == null) {
+            return;
+        }
+
+        // The next ice cleanup will be explosive
+        forceIceChangeExplosion = true;
+
+        // Freeze the region so Patient X has somewhere to stand
+        RegionWalker.walk(rg, (x, y, z) -> {
+            if (canFreezeOrThawBlock(x, y, z)) {
+                freezeBlock(x, y, z);
+            }
+        });
+
+        Location bossLoc = boss.getLocation();
+        int icePadY = rg.getMaximumPoint().getY();
+
+        // The boss is above the water/ice line
+        if (bossLoc.getY() >= icePadY + 1) {
+            return;
+        }
+
+        // Move Patient X to be standing on the region
+        bossLoc.setY(icePadY + 1);
+        boss.teleport(bossLoc);
+    }
+
     private void equalize() {
         for (Player player : getContainedParticipants()) {
             try {
-                if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-                    ChatUtil.sendWarning(player, "Your defensive potion enrages me!");
-                    modifyDifficulty(1);
-                    player.damage(difficulty * config.baseBossHit, boss);
-                }
-
                 Entity vehicle = player.getVehicle();
                 if (vehicle != null && !(vehicle instanceof Bat)) {
                     vehicle.eject();
@@ -296,25 +396,75 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 break;
             case 8:
                 server.getScheduler().runTaskLater(inst, () -> {
-                    for (int i = config.radiationTimes; i > 0; i--) {
-                        server.getScheduler().runTaskLater(inst, () -> {
-                            if (boss != null) {
-                                for (Player player : getContainedParticipants()) {
-                                    for (int e = 0; e < 3; ++e) {
-                                        Location t = LocationUtil.findRandomLoc(player.getLocation(), 5, true);
-                                        for (int k = 0; k < 10; ++k) {
-                                            world.playEffect(t, Effect.MOBSPAWNER_FLAMES, 0);
-                                        }
-                                    }
-                                    if (player.getLocation().getBlock().getLightLevel() >= config.radiationLightLevel) {
-                                        player.damage(difficulty * config.radiationMultiplier);
-                                    }
+                    TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+                    taskBuilder.setInterval(10);
+                    taskBuilder.setNumberOfRuns(config.radiationTimes);
+
+                    taskBuilder.setAction((times) -> {
+                        if (boss == null) {
+                            return true;
+                        }
+
+                        // Show a random sample of blocks to everyone
+                        for (int i = 0; i < 15; ++i) {
+                            Block block = CollectionUtil.getElement(irradiatedBlocks);
+                            irradiateBlock(
+                                () -> world.playEffect(block.getLocation(), Effect.MOBSPAWNER_FLAMES, 0)
+                            );
+                        }
+
+                        // Show player specific blocks
+                        for (Player spectator : getAudiblePlayers()) {
+                            SimpleRayTrace trace = new SimpleRayTrace(
+                                spectator.getLocation(),
+                                spectator.getLocation().getDirection(),
+                                20
+                            );
+                            List<Block> shownBlocks = new ArrayList<>();
+
+                            while (trace.hasNext() && shownBlocks.size() < 3) {
+                                Location tracePoint = trace.next();
+
+                                // Look for irradiated blocks near the trace
+                                List<Block> possibleBlocks = irradiatedBlocks.stream().filter(
+                                    (b) -> LocationUtil.isWithin2DDistance(b.getLocation(), tracePoint, 3)
+                                ).collect(Collectors.toList());
+                                if (possibleBlocks.isEmpty()) {
+                                    continue;
                                 }
+
+                                Block block = CollectionUtil.getElement(possibleBlocks);
+                                if (shownBlocks.contains(block)) {
+                                    continue;
+                                }
+
+                                if (ChanceUtil.getChance(3)) {
+                                    shownBlocks.add(block);
+                                    continue;
+                                }
+
+                                irradiateBlock(
+                                    () -> spectator.playEffect(block.getLocation(), Effect.MOBSPAWNER_FLAMES, 0)
+                                );
+
+                                shownBlocks.add(block);
                             }
-                        }, i * 10);
-                    }
+                        }
+
+                        // Actually handle damage
+                        for (Player player : getContainedParticipants()) {
+                            if (isIrradiatedBlock(player.getLocation().getBlock())) {
+                                player.damage(difficulty * config.radiationMultiplier);
+                            }
+                        }
+
+                        return true;
+                    });
+
+                    taskBuilder.build();
                 }, 3 * 20);
-                attackDur = System.currentTimeMillis() + (config.radiationTimes * 500);
+                attackDur = System.currentTimeMillis() + (config.radiationTimes * 500L);
                 ChatUtil.sendWarning(audible, "Ahhh not the radiation treatment!");
                 break;
             case 9:
@@ -351,8 +501,42 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         modifyDifficulty(-total);
     }
 
+    protected void freezeBlocks() {
+        int chanceOfExplosion = (int) Math.ceil(config.iceChangeChance - difficulty);
+        freezeBlocks(forceIceChangeExplosion || ChanceUtil.getChance(chanceOfExplosion));
+        forceIceChangeExplosion = false;
+    }
+
     protected void freezeBlocks(boolean throwExplosives) {
         freezeBlocks(config.iceChance, throwExplosives);
+    }
+
+    private boolean canFreezeOrThawBlock(int x, int y, int z) {
+        Block block = world.getBlockAt(x, y, z);
+        return block.getRelative(BlockFace.UP).getType() == Material.AIR && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN));
+    }
+
+    private void thawBlock(int x, int y, int z, boolean throwExplosives) {
+        Block block = world.getBlockAt(x, y, z);
+        block.setType(Material.WATER);
+
+        if (!ChanceUtil.getChance(config.snowBallChance) || !throwExplosives) {
+            return;
+        }
+
+        Location target = block.getRelative(BlockFace.UP).getLocation();
+        for (int i = ChanceUtil.getRandom(3); i > 0; i--) {
+            Snowball melvin = world.spawn(target, Snowball.class);
+            melvin.setVelocity(new Vector(0, ChanceUtil.getRangedRandom(.25, 1), 0));
+            melvin.setShooter(boss);
+        }
+    }
+
+    private void freezeBlock(int x, int y, int z) {
+        Block block = world.getBlockAt(x, y, z);
+        if (block.getType() != Material.PACKED_ICE) {
+            block.setType(Material.PACKED_ICE);
+        }
     }
 
     protected void freezeBlocks(int percentage, boolean throwExplosives) {
@@ -362,26 +546,25 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         int maxZ = ice.getMaximumPoint().getBlockZ();
         int y = ice.getMaximumPoint().getBlockY();
 
+        Region icePadRegion = getCurrentIcePadRegion();
+
         for (int x = minX; x < maxX; x++) {
             for (int z = minZ; z < maxZ; z++) {
                 Block block = world.getBlockAt(x, y, z);
-                if (block.getRelative(BlockFace.UP).getType() == Material.AIR
-                        && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN))) {
+                if (canFreezeOrThawBlock(x, y, z)) {
                     if (percentage >= 100) {
                         block.setType(Material.ICE);
                         continue;
                     }
                     if (block.getType() == Material.PACKED_ICE || block.getType() == Material.ICE) {
-                        block.setType(Material.WATER);
-                        if (!ChanceUtil.getChance(config.snowBallChance) || !throwExplosives) continue;
-                        Location target = block.getRelative(BlockFace.UP).getLocation();
-                        for (int i = ChanceUtil.getRandom(3); i > 0; i--) {
-                            Snowball melvin = world.spawn(target, Snowball.class);
-                            melvin.setVelocity(new Vector(0, ChanceUtil.getRangedRandom(.25, 1), 0));
-                            melvin.setShooter(boss);
+                        // If there's a current ice pad, don't touch it
+                        if (icePadRegion != null && icePadRegion.contains(BlockVector3.at(x, y, z))) {
+                            continue;
                         }
+
+                        thawBlock(x, y, z, throwExplosives);
                     } else if (ChanceUtil.getChance(percentage, 100)) {
-                        block.setType(Material.PACKED_ICE);
+                        freezeBlock(x, y, z);
                     }
                 }
             }
@@ -455,12 +638,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
         // Handle name
         boss.setCustomName("Patient X");
 
-        try {
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.MOVEMENT_SPEED, .5);
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 150);
-        } catch (UnsupportedFeatureException ex) {
-            ex.printStackTrace();
-        }
+        EntityUtil.setMovementSpeed(boss, .5);
+        EntityUtil.setFollowRange(boss, 150);
     }
 
     public void spawnBoss() {

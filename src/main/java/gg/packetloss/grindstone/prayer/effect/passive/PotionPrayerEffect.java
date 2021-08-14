@@ -12,16 +12,21 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 public class PotionPrayerEffect implements PassivePrayerEffect {
-    private static final int REAPPLY_THRESHOLD = 20 * 3;
+    private static final int DEFAULT_REAPPLY_THRESHOLD = 20 * 3;
     private static final int POTION_DURATION = 20 * 60;
 
     private final PotionEffectType desiredEffectType;
     private final int amplifier;
+    private final int reapplyThreshold;
 
-    public PotionPrayerEffect(PotionEffectType desiredEffectType, int amplifier) {
-
+    public PotionPrayerEffect(PotionEffectType desiredEffectType, int amplifier, int reapplyThreshold) {
         this.desiredEffectType = desiredEffectType;
         this.amplifier = amplifier;
+        this.reapplyThreshold = reapplyThreshold;
+    }
+
+    public PotionPrayerEffect(PotionEffectType desiredEffectType, int amplifier) {
+        this(desiredEffectType, amplifier, DEFAULT_REAPPLY_THRESHOLD);
     }
 
     private boolean shouldReapply(Player player) {
@@ -31,7 +36,7 @@ public class PotionPrayerEffect implements PassivePrayerEffect {
         }
 
         // Re-add potion effects that are about to expire
-        if (potionEffect.getDuration() < REAPPLY_THRESHOLD) {
+        if (potionEffect.getDuration() < reapplyThreshold) {
             return true;
         }
 

@@ -8,12 +8,12 @@ package gg.packetloss.grindstone.util.item;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
+import gg.packetloss.grindstone.events.custom.item.ArmorBurstEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Effect;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.LivingEntity;
@@ -34,6 +34,12 @@ public class EffectUtil {
         public static void powerBurst(LivingEntity entity, double attackDamage) {
 
             if (entity instanceof Player) {
+                ArmorBurstEvent event = new ArmorBurstEvent((Player) entity);
+                CommandBook.callEvent(event);
+                if (event.isCancelled()) {
+                    return;
+                }
+
                 ChatUtil.sendNotice(entity, "Your armour releases a burst of energy.");
                 ChatUtil.sendNotice(entity, "You are healed by an ancient force.");
             }
@@ -41,7 +47,7 @@ public class EffectUtil {
             EntityUtil.heal(entity, attackDamage);
 
             entity.getNearbyEntities(8, 8, 8).stream().filter(e -> e.isValid() && e instanceof LivingEntity).forEach(e -> {
-                if (e instanceof Player && ((Player) e).getGameMode() != GameMode.SURVIVAL) {
+                if (e instanceof Player && GeneralPlayerUtil.hasInvulnerableGamemode((Player) e)) {
                     return;
                 }
 
@@ -51,7 +57,7 @@ public class EffectUtil {
                     if (e instanceof Player) {
                         ChatUtil.sendNotice(e, "You are healed by an ancient force.");
                     }
-                } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
+                } else if (!(entity instanceof Player) || EntityUtil.isHostileMob(e)) {
                     if (e instanceof Player) {
                         server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
                     }
@@ -69,8 +75,13 @@ public class EffectUtil {
     public static class Necros {
 
         public static void deathStrike(LivingEntity entity, double attackDamage) {
-
             if (entity instanceof Player) {
+                ArmorBurstEvent event = new ArmorBurstEvent((Player) entity);
+                CommandBook.callEvent(event);
+                if (event.isCancelled()) {
+                    return;
+                }
+
                 ChatUtil.sendNotice(entity, "You feel a necrotic power sweep over your soul.");
             }
 
@@ -82,7 +93,7 @@ public class EffectUtil {
                     if (e instanceof Player) {
                         ChatUtil.sendNotice(e, "You feel a necrotic power sweep over your soul.");
                     }
-                } else if (!(entity instanceof Player) || EnvironmentUtil.isHostileEntity(e)) {
+                } else if (!(entity instanceof Player) || EntityUtil.isHostileMob(e)) {
                     ((LivingEntity) e).damage(attackDamage * 1.9);
                 }
             });

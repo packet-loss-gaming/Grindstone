@@ -43,6 +43,7 @@ import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import gg.packetloss.grindstone.world.type.city.area.areas.DropParty.DropPartyTask;
 import org.apache.commons.lang.Validate;
@@ -116,7 +117,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         do {
             player.teleport(parent.getRandomDest(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
-        } while (parent.boss != null && parent.boss.hasLineOfSight(player));
+        } while (parent.isBossSpawnedFast() && parent.boss.hasLineOfSight(player));
 
         boolean removed = ItemUtil.removeItemOfName(
                 player,
@@ -137,7 +138,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
         if (!parent.contains(from) && parent.contains(to) && !event.getCause().equals(PlayerTeleportEvent.TeleportCause.UNKNOWN)) {
             Player player = event.getPlayer();
-            if (player.getGameMode() != GameMode.SURVIVAL) return;
+            if (GeneralPlayerUtil.hasInvulnerableGamemode(player)) return;
 
             ChatUtil.sendError(player, "This teleport isn't strong enough to reach Patient X.");
             event.setCancelled(true);
@@ -199,11 +200,18 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         }
     }
 
-    private static Set<EntityDamageByEntityEvent.DamageCause> blockedDamage = new HashSet<>();
+    private static Set<EntityDamageEvent.DamageCause> EXPLOSIVE_DAMAGE_CAUSES = new HashSet<>();
 
     static {
-        blockedDamage.add(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION);
-        blockedDamage.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
+        EXPLOSIVE_DAMAGE_CAUSES.add(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION);
+        EXPLOSIVE_DAMAGE_CAUSES.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
+    }
+
+    private static Set<EntityDamageByEntityEvent.DamageCause> BOSS_IGNORED_DAMAGE_CAUSES = new HashSet<>();
+
+    static {
+        BOSS_IGNORED_DAMAGE_CAUSES.add(EntityDamageEvent.DamageCause.FALL);
+        BOSS_IGNORED_DAMAGE_CAUSES.addAll(EXPLOSIVE_DAMAGE_CAUSES);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -227,19 +235,14 @@ public class PatientXListener extends AreaListener<PatientXArea> {
             } else if (!(attacker instanceof LivingEntity)) return;
         }
 
-        if (defender instanceof Player && blockedDamage.contains(event.getCause())) {
+        if (defender instanceof Player && EXPLOSIVE_DAMAGE_CAUSES.contains(event.getCause())) {
             // Explosive damage formula: (1 × 1 + 1) × 8 × power + 1
             // Use 49, snowball power is 3
             double ratio = event.getDamage() / 49;
-            for (DamageModifier modifier : DamageModifier.values()) {
-                if (event.isApplicable(modifier)) {
-                    event.setDamage(modifier, 0);
-                }
-            }
-            event.setDamage(DamageModifier.BASE, ratio * parent.difficulty);
+            event.setDamage(ratio * parent.difficulty);
         }
 
-        if (defender.equals(parent.boss) && blockedDamage.contains(event.getCause())) {
+        if (defender.equals(parent.boss) && BOSS_IGNORED_DAMAGE_CAUSES.contains(event.getCause())) {
             event.setCancelled(true);
             return;
         }
@@ -298,7 +301,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 event.setDamage(DamageModifier.BASE, parent.difficulty * parent.getConfig().baseBossHit);
                 return;
             }
-            if (ItemUtil.hasAncientArmour(player)) {
+            if (ItemUtil.hasAncientArmor(player)) {
                 double diff = player.getMaxHealth() - player.getHealth();
                 if (ChanceUtil.getChance(Math.max(Math.round(parent.difficulty), Math.round(player.getMaxHealth() - diff)))) {
                     EffectUtil.Ancient.powerBurst(player, event.getDamage());
@@ -359,40 +362,32 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 int dropVal = parent.getConfig().playerVal * playerCount;
                 List<ItemStack> drops = SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), -1, dropVal);
 
-                switch (ChanceUtil.getRandom(4)) {
-                    case 1:
+                drops.add(ChanceUtil.supplyRandom(
+                    () -> {
                         if (ChanceUtil.getChance(8)) {
-                            drops.add(CustomItemCenter.build(CustomItems.NECROS_HELMET));
-                            break;
+                            return CustomItemCenter.build(CustomItems.NECROS_HELMET);
                         }
-                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_HELMET));
-                        break;
-                    case 2:
+                        return CustomItemCenter.build(CustomItems.NECTRIC_HELMET);
+                    },
+                    () -> {
                         if (ChanceUtil.getChance(8)) {
-                            drops.add(CustomItemCenter.build(CustomItems.NECROS_CHESTPLATE));
-                            break;
+                            return CustomItemCenter.build(CustomItems.NECROS_CHESTPLATE);
                         }
-                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_CHESTPLATE));
-                        break;
-                    case 3:
+                        return CustomItemCenter.build(CustomItems.NECTRIC_CHESTPLATE);
+                    },
+                    () -> {
                         if (ChanceUtil.getChance(8)) {
-                            drops.add(CustomItemCenter.build(CustomItems.NECROS_LEGGINGS));
-                            break;
+                            return CustomItemCenter.build(CustomItems.NECROS_LEGGINGS);
                         }
-                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_LEGGINGS));
-                        break;
-                    case 4:
+                        return CustomItemCenter.build(CustomItems.NECTRIC_LEGGINGS);
+                    },
+                    () -> {
                         if (ChanceUtil.getChance(8)) {
-                            drops.add(CustomItemCenter.build(CustomItems.NECROS_BOOTS));
-                            break;
+                            return CustomItemCenter.build(CustomItems.NECROS_BOOTS);
                         }
-                        drops.add(CustomItemCenter.build(CustomItems.NECTRIC_BOOTS));
-                        break;
-                }
-
-                if (ChanceUtil.getChance(100)) {
-                    drops.add(CustomItemCenter.build(CustomItems.RED_FEATHER));
-                }
+                        return CustomItemCenter.build(CustomItems.NECTRIC_BOOTS);
+                    }
+                ));
 
                 if (ChanceUtil.getChance(100)) {
                     drops.add(CustomItemCenter.build(CustomItems.CALMING_CRYSTAL));

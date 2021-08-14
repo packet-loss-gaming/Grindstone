@@ -17,11 +17,11 @@ import org.bukkit.event.entity.EntityDamageEvent;
 public class AncientArmorImpl extends BloodLustArmor {
     @Override
     public boolean hasArmor(Player player) {
-        return ItemUtil.hasAncientArmour(player);
+        return ItemUtil.hasAncientArmor(player);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void damageReduction(EntityDamageEvent event) {
-        new AbsorbArmor(ItemUtil::hasAncientRoyalArmour, 20, 30, 1).handleEvent(event);
+        new AbsorbArmor(ItemUtil::hasAncientRoyalArmor, 20, 30, 1).handleEvent(event);
     }
 }

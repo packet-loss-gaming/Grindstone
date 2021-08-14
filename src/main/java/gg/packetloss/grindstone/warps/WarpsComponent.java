@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.warps;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.click.ClickType;
@@ -55,14 +54,13 @@ public class WarpsComponent extends BukkitComponent implements Listener {
     public void enable() {
         CommandBook.registerEvents(this);
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            WarpPointConverter.register(commandManager, this);
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            WarpPointConverter.register(registrar, this);
 
-            registration.register(commandManager, WarpCommandsRegistration.builder(), new WarpCommands(this));
+            registrar.register(WarpCommandsRegistration.builder(), new WarpCommands(this));
 
-            registrar.registerAsSubCommand("warps", "Warp management", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, WarpManagementCommandsRegistration.builder(), new WarpManagementCommands(this));
+            registrar.registerAsSubCommand("warps", "Warp management", (warpsRegistrar) -> {
+                warpsRegistrar.register(WarpManagementCommandsRegistration.builder(), new WarpManagementCommands(this));
             });
         });
 

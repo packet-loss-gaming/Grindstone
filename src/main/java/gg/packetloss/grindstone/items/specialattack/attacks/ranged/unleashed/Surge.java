@@ -33,7 +33,8 @@ public class Surge extends EntityAttack implements RangedSpecial {
 
     private void runSurge(SimpleRayTrace it, int distance, double totalDamage) {
         if (!it.hasNext()) {
-            owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * distance, 1), true);
+            owner.removePotionEffect(PotionEffectType.REGENERATION);
+            owner.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * distance, 1));
 
             int dmgAmt = (int) Math.ceil(totalDamage);
             inform("The surge dealt an impressive " + dmgAmt + ".");

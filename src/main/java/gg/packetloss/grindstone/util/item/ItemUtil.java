@@ -24,9 +24,15 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static gg.packetloss.grindstone.util.MaterialUtil.generatePostfixMaterialSet;
+
 public class ItemUtil {
+    public static final String EXPIRY_DATE_START = ChatColor.RED + "Expires: ";
+    public static final SimpleDateFormat ITEM_DATE_FORMAT = new SimpleDateFormat("M/d/y h:ma");
 
     private static final Set<Material> LEATHER_ARMOR_TYPES = Set.of(
             Material.LEATHER_BOOTS, Material.LEATHER_LEGGINGS,
@@ -92,6 +98,16 @@ public class ItemUtil {
         return count;
     }
 
+    public static boolean hasItem(Iterable<ItemStack> itemStacks, CustomItems item) {
+        for (ItemStack itemStack : itemStacks) {
+            if (ItemUtil.isItem(itemStack, item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Deprecated
     public static boolean findItemOfName(ItemStack[] itemStacks, String name) {
 
         for (ItemStack itemStack : itemStacks) {
@@ -220,19 +236,7 @@ public class ItemUtil {
         return count;
     }
 
-    private static final Set<Material> SWORDS;
-
-    static {
-        List<Material> newSwords = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_SWORD")) {
-                newSwords.add(material);
-            }
-        }
-
-        SWORDS = Set.copyOf(newSwords);
-    }
+    private static final Set<Material> SWORDS = generatePostfixMaterialSet("_SWORD");
 
     public static boolean isSword(Material item) {
         return SWORDS.contains(item);
@@ -250,19 +254,13 @@ public class ItemUtil {
         return isBow(stack.getType());
     }
 
-    private static final Set<Material> AXES;
+    private static final Set<Material> INGOTS = generatePostfixMaterialSet("_INGOT");
 
-    static {
-        List<Material> newAxes = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_AXE")) {
-                newAxes.add(material);
-            }
-        }
-
-        AXES = Set.copyOf(newAxes);
+    public static boolean isIngot(Material type) {
+        return INGOTS.contains(type);
     }
+
+    private static final Set<Material> AXES = generatePostfixMaterialSet("_AXE");
 
     public static boolean isAxe(Material type) {
         return AXES.contains(type);
@@ -272,19 +270,7 @@ public class ItemUtil {
         return isAxe(itemStack.getType());
     }
 
-    private static final Set<Material> PICKAXES;
-
-    static {
-        List<Material> newPickaxes = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_PICKAXE")) {
-                newPickaxes.add(material);
-            }
-        }
-
-        PICKAXES = Set.copyOf(newPickaxes);
-    }
+    private static final Set<Material> PICKAXES = generatePostfixMaterialSet("_PICKAXE");
 
     public static boolean isPickaxe(Material type) {
         return PICKAXES.contains(type);
@@ -302,12 +288,39 @@ public class ItemUtil {
         return isTool(stack.getType());
     }
 
+    private static boolean isNotExpired(ItemStack stack, CustomItems type) {
+        if (!type.hasExpiration()) {
+            return true;
+        }
+
+        ItemMeta meta = stack.getItemMeta();
+        List<String> lore = meta.getLore();
+        if (lore == null) {
+            return true;
+        }
+
+        for (String loreElement : lore) {
+            if (loreElement.startsWith(EXPIRY_DATE_START)) {
+                String datePart = loreElement.substring(EXPIRY_DATE_START.length());
+                try {
+                    Date expiryDate = ITEM_DATE_FORMAT.parse(datePart);
+                    Date currentDate = new Date();
+                    return expiryDate.after(currentDate);
+                } catch (ParseException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        return true;
+    }
+
     public static boolean hasItem(Player player, CustomItems type) {
-        return player.isValid() && findItemOfName(player.getInventory().getContents(), type.toString());
+        return player.isValid() && hasItem(player.getInventory(), type);
     }
 
     public static boolean isItem(ItemStack stack, CustomItems type) {
-        return matchesFilter(stack, type.toString(), false);
+        return matchesFilter(stack, type.toString(), false) && isNotExpired(stack, type);
     }
 
     public static boolean isInItemFamily(ItemStack stack, ItemFamily family) {
@@ -362,16 +375,16 @@ public class ItemUtil {
         return numWorn;
     }
 
-    private static boolean hasArmour(LivingEntity entity, String namePrefix) {
-        return getNumOfPiecesWorn(entity, namePrefix) == 4;
+    private static boolean hasArmor(LivingEntity entity, ItemFamily itemFamily) {
+        return getNumOfPiecesWorn(entity, itemFamily.getPrefix()) == 4;
     }
 
-    public static boolean hasAncientArmour(LivingEntity entity) {
-        return hasArmour(entity, ChatColor.GOLD + "Ancient");
+    public static boolean hasAncientArmor(LivingEntity entity) {
+        return hasArmor(entity, ItemFamily.ANCIENT);
     }
 
-    public static boolean hasAncientRoyalArmour(LivingEntity entity) {
-        int numWorn = getNumOfPiecesWorn(entity, ChatColor.GOLD + "Ancient Royal");
+    public static boolean hasAncientRoyalArmor(LivingEntity entity) {
+        int numWorn = getNumOfPiecesWorn(entity, ItemFamily.ANCIENT_ROYAL.getPrefix());
 
         // Check to see if there's an ancient crown in the mix
         if (numWorn == 3) {
@@ -384,15 +397,15 @@ public class ItemUtil {
     }
 
     public static boolean hasNecrosArmour(LivingEntity entity) {
-        return hasArmour(entity, ChatColor.DARK_RED + "Necros");
+        return hasArmor(entity, ItemFamily.NECROS);
     }
 
     public static boolean hasNectricArmour(LivingEntity entity) {
-        return hasArmour(entity, ChatColor.DARK_RED + "Nectric");
+        return hasArmor(entity, ItemFamily.NETRIC);
     }
 
-    public static boolean hasApocalypticCamouflage(LivingEntity entity) {
-        return hasArmour(entity, ChatColor.DARK_GREEN + "Apocalyptic Camouflage");
+    public static boolean hasPeacefulWarriorArmor(LivingEntity entity) {
+        return hasArmor(entity, ItemFamily.PEACEFUL_WARRIOR);
     }
 
     public static boolean isNamed(ItemStack stack) {
@@ -414,13 +427,13 @@ public class ItemUtil {
         return isAuthenticCustomItem(name);
     }
 
+    @Deprecated
     public static boolean matchesFilter(ItemStack stack, String filter) {
-
         return matchesFilter(stack, filter, true);
     }
 
+    @Deprecated
     public static boolean matchesFilter(ItemStack stack, String filter, boolean loose) {
-
         return isNamed(stack) && (loose ? stack.getItemMeta().getDisplayName().startsWith(filter) : stack.getItemMeta().getDisplayName().equals(filter));
     }
 
@@ -544,5 +557,35 @@ public class ItemUtil {
         }
 
         return stack;
+    }
+
+    public static List<Map.Entry<String, String>> loadLoreKeyValues(String string) {
+        List<Map.Entry<String, String>> result = new ArrayList<>();
+
+        String[] commaSplit = string.split(", ");
+        for (String commaSplitEl : commaSplit) {
+            String[] keyValueSplit = commaSplitEl.split(": ");
+            result.add(new AbstractMap.SimpleEntry<>(keyValueSplit[0], keyValueSplit[1]));
+        }
+
+        return result;
+    }
+
+    public static String saveLoreKeyValues(List<Map.Entry<String, String>> entries) {
+        StringBuilder builder = new StringBuilder();
+
+        boolean first = true;
+        for (Map.Entry<String, String> entry : entries) {
+            if (!first) {
+                builder.append(", ");
+            }
+            first = false;
+
+            builder.append(entry.getKey());
+            builder.append(": ");
+            builder.append(entry.getValue());
+        }
+
+        return builder.toString();
     }
 }

@@ -6,10 +6,10 @@
 
 package gg.packetloss.grindstone.world.timetravel;
 
+import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.worldedit.util.formatting.text.Component;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldTimeContext;
-import org.enginehub.piston.CommandManager;
 import org.enginehub.piston.converter.ArgumentConverter;
 import org.enginehub.piston.converter.ConversionResult;
 import org.enginehub.piston.converter.FailedConversion;
@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class TimeContextConverter implements ArgumentConverter<ManagedWorldTimeContext> {
-    public static void register(CommandManager commandManager) {
-        commandManager.registerConverter(Key.of(ManagedWorldTimeContext.class), new TimeContextConverter());
+    public static void register(ComponentCommandRegistrar.Registrar registrar) {
+        registrar.registerConverter(Key.of(ManagedWorldTimeContext.class), new TimeContextConverter());
     }
 
     @Override

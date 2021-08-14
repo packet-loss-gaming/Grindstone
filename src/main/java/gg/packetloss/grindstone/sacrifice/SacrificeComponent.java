@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.sacrifice;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.session.SessionComponent;
 import com.sk89q.worldedit.math.BlockVector2;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -30,10 +29,8 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.prayer.Prayers;
 import gg.packetloss.grindstone.state.player.NativeSerializerComponent;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.bukkit.*;
@@ -99,10 +96,9 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
 
         populateRegistry();
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registrar.registerAsSubCommand("sacrifice", "Sacrifice Commands", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, SacrificeCommandsRegistration.builder(), new SacrificeCommands(this));
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.registerAsSubCommand("sacrifice", "Sacrifice Commands", (sacrificeRegistrar) -> {
+                sacrificeRegistrar.register(SacrificeCommandsRegistration.builder(), new SacrificeCommands(this));
             });
         });
 
@@ -183,7 +179,6 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> new ItemStack(Material.DIAMOND_BOOTS), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.DIAMOND_PICKAXE), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.DIAMOND_AXE), NORMAL);
-        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_FISH), NORMAL);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.OVERSEER_BOW), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.EXPERIENCE_BOTTLE, ChanceUtil.getRangedRandom(40, 64)), NORMAL);
         registry.registerItem(() -> new ItemStack(Material.BLAZE_ROD, ChanceUtil.getRangedRandom(20, 32)), NORMAL);
@@ -208,6 +203,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE), RARE_3);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.EXTREME_COMBAT_POTION), RARE_3);
 
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.GOD_FISH), RARE_4);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.ANCIENT_HELMET), RARE_4);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE), RARE_4);
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS), RARE_4);
@@ -217,6 +213,11 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> {
             return randomizedSkulls.getRandomSkull().orElse(new ItemStack(Material.PLAYER_HEAD));
         }, RARE_5);
+
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_HELMET), RARE_5);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_CHESTPLATE), RARE_5);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_LEGGINGS), RARE_5);
+        registry.registerItem(() -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_BOOTS), RARE_5);
 
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION), RARE_6);
 
@@ -453,37 +454,28 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }
     }
 
+    private static final List<Prayers> SACRIFICE_PRAYERS = List.of(
+        Prayers.DIGGYDIGGY,
+        Prayers.HEALTH,
+        Prayers.POWER,
+        Prayers.SPEED,
+        Prayers.ANTIFIRE,
+        Prayers.NIGHT_VISION,
+        Prayers.DEADLYDEFENSE
+    );
+
     private Prayers getRandomSacrificePrayer() {
-        switch (ChanceUtil.getRandom(7)) {
-            case 1:
-                return Prayers.DIGGYDIGGY;
-            case 2:
-                return Prayers.HEALTH;
-            case 3:
-                return Prayers.POWER;
-            case 4:
-                return Prayers.SPEED;
-            case 5:
-                return Prayers.ANTIFIRE;
-            case 6:
-                return Prayers.NIGHT_VISION;
-            case 7:
-                return Prayers.DEADLYDEFENSE;
-            default:
-                return Prayers.SMOKE;
-        }
+        return CollectionUtil.getElement(SACRIFICE_PRAYERS);
     }
 
     private void sacrifice(Player player, List<ItemStack> items) {
-        PlayerInventory pInventory = player.getInventory();
-
         double totalValue = 0;
 
         MarketItemLookupInstance lookupInst = MarketComponent.getLookupInstanceFromStacksImmediately(items);
         for (ItemStack itemStack : items) {
             double value = registry.getValue(lookupInst, itemStack);
             if (value <= 0) {
-                pInventory.addItem(itemStack);
+                GeneralPlayerUtil.giveItemToPlayer(player, itemStack);
                 continue;
             }
 
@@ -508,6 +500,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
         session.addItems(getCalculatedLoot(new SacrificeInformation(player, totalValue)));
 
+        PlayerInventory pInventory = player.getInventory();
         session.pollItems((itemStack -> {
             ItemStack remainder = pInventory.addItem(itemStack).get(0);
             if (remainder != null) {

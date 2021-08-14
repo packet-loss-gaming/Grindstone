@@ -11,8 +11,8 @@ import java.math.BigDecimal;
 public class ScaledScoreType extends BasicScoreType {
     private final double scalingConstant;
 
-    protected ScaledScoreType(int id, boolean requirements, boolean incremental, Order order, double scalingConstant) {
-        super(id, requirements, incremental, order);
+    protected ScaledScoreType(int id, boolean requirements, UpdateMethod updateMethod, Order order, double scalingConstant) {
+        super(id, requirements, updateMethod, order);
         this.scalingConstant = scalingConstant;
     }
 

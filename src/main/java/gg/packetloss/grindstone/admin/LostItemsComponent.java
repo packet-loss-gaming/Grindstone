@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.admin;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Server;
@@ -23,12 +22,10 @@ public class LostItemsComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            CustomItemsConverter.register(registrar);
 
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            CustomItemsConverter.register(commandManager);
-
-            registration.register(commandManager, LostItemCommandsRegistration.builder(), new LostItemCommands());
+            registrar.register(LostItemCommandsRegistration.builder(), new LostItemCommands());
         });
     }
 }

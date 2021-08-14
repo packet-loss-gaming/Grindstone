@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.range.worldlevel;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
@@ -53,16 +54,22 @@ class MobListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onMobSpawn(CreatureSpawnEvent event) {
         LivingEntity entity = event.getEntity();
-        if (!parent.hasScaledHealth(entity)) {
+        if (!parent.isRangeWorld(entity.getWorld())) {
             return;
         }
 
-        double max = entity.getMaxHealth();
+        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            if (!parent.hasScaledHealth(entity)) {
+                return;
+            }
 
-        entity.setMaxHealth(parent.scaleHealth(max, 1, 100));
-        entity.setHealth(parent.scaleHealth(max, 1, 100));
+            double max = entity.getMaxHealth();
 
-        genericMonster.bind((Monster) entity);
+            entity.setMaxHealth(parent.scaleHealth(max, 1, 100));
+            entity.setHealth(parent.scaleHealth(max, 1, 100));
+
+            genericMonster.bind((Mob) entity);
+        });
     }
 
     private int previousSourceDamageLevel;
@@ -171,9 +178,12 @@ class MobListener implements Listener {
         if (parent.hasScaledHealth(defender)) {
             parent.sourceDamageLevel = level;
             event.setDamage(parent.scaleHealth(event.getDamage(), level, 100));
+
+            // Don't print health for non-damage scaled entities as this causes double printing in some cases
+            // e.g the apocalypse.
+            PvMComponent.printHealth(attacker, defender);
         }
 
-        PvMComponent.printHealth(attacker, defender);
         return true;
     }
 

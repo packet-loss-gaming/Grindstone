@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.worldedit.command.util.CommandPermissions;
 import com.sk89q.worldedit.command.util.CommandPermissionsConditionGenerator;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
@@ -26,11 +27,11 @@ import java.util.List;
 @CommandContainer(superTypes = CommandPermissionsConditionGenerator.Registration.class)
 public class LotteryCommands {
     private LotteryComponent component;
-    private Economy economy;
+    private WalletComponent wallet;
 
-    public LotteryCommands(LotteryComponent component, Economy economy) {
+    public LotteryCommands(LotteryComponent component, WalletComponent wallet) {
         this.component = component;
-        this.economy = economy;
+        this.wallet = wallet;
     }
 
     @Command(name = "buy", desc = "Buy Lottery Tickets.")
@@ -66,9 +67,12 @@ public class LotteryCommands {
 
         short number = 0;
         for (LotteryWinner winner : component.getRecentWinner()) {
-            number++;
-            ChatUtil.sendNotice(sender, "  " + ChatColor.GOLD + number + ". " + ChatColor.YELLOW
-                    + winner.getName() + ChatColor.GOLD + " - " + ChatColor.WHITE + economy.format(winner.getAmt()));
+            ChatUtil.sendNotice(
+                sender,
+                "  ", ChatColor.GOLD, ++number, ". ",
+                ChatColor.YELLOW, winner.getName(),
+                ChatColor.GOLD, " - ", wallet.format(winner.getAmt())
+            );
         }
     }
 }

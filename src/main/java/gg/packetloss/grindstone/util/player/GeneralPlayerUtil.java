@@ -8,14 +8,14 @@ package gg.packetloss.grindstone.util.player;
 
 import com.google.common.collect.Lists;
 import com.sk89q.commandbook.CommandBook;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.*;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.BlockFace;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +24,15 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class GeneralPlayerUtil {
+    public static void giveItemToPlayer(Player player, ItemStack... items) {
+        for (ItemStack item : items) {
+            ItemStack remainder = player.getInventory().addItem(item).get(0);
+            if (remainder != null) {
+                EntityUtil.spawnProtectedItem(remainder, player);
+            }
+        }
+    }
+
     public static boolean isFlyingGamemode(GameMode gameMode) {
         List<GameMode> flyingGamemodes = List.of(
                 GameMode.CREATIVE,
@@ -79,8 +88,12 @@ public class GeneralPlayerUtil {
         return isDamageableGamemode(player.getGameMode());
     }
 
-    public static boolean isInvulnerable(Player player) {
+    public static boolean hasInvulnerableGamemode(Player player) {
         return !hasDamageableGamemode(player);
+    }
+
+    public static boolean isInBuildMode(Player player) {
+        return player.getGameMode() == GameMode.CREATIVE;
     }
 
     public static void findSafeSpot(Player player) {
@@ -195,8 +208,12 @@ public class GeneralPlayerUtil {
         return null;
     }
 
-    public static UUID resolveMacroNamespace(String qualifier) {
-        if (qualifier.startsWith("#")) {
+    public static UUID resolveMacroNamespace(CommandSender context, String qualifier) {
+        if (qualifier.equals("@")) {
+            return NamespaceConstants.GLOBAL;
+        } else if (qualifier.equals("$") && context instanceof Player player) {
+            return player.getUniqueId();
+        } else if (qualifier.startsWith("#")) {
             String name = qualifier.substring(1);
 
             for (OfflinePlayer player : CommandBook.server().getOfflinePlayers()) {

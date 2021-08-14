@@ -370,6 +370,18 @@ public class LocationUtil {
         return locations;
     }
 
+    public static Location pickLocation(World world, RegionChecker checker) {
+        BlockVector3 max = checker.get().getMaximumPoint();
+        BlockVector3 min = checker.get().getMinimumPoint();
+
+        BlockVector3 v;
+        do {
+            v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getY(), max.getY(), min.getZ(), max.getZ());
+        } while (!checker.evaluate(v));
+
+        return new Location(world, v.getX(), v.getY(), v.getZ());
+    }
+
     public static Location pickLocation(World world, double y, RegionChecker checker) {
         BlockVector3 max = checker.get().getMaximumPoint();
         BlockVector3 min = checker.get().getMinimumPoint();

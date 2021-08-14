@@ -11,15 +11,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class MarketPurchaseEvent extends PlayerEvent {
     private static final HandlerList handlers = new HandlerList();
 
     private final List<MarketTransactionLine> items;
-    private final double totalCost;
+    private final BigDecimal totalCost;
 
-    public MarketPurchaseEvent(Player who, List<MarketTransactionLine> items, double totalCost) {
+    public MarketPurchaseEvent(Player who, List<MarketTransactionLine> items, BigDecimal totalCost) {
         super(who);
         this.items = items;
         this.totalCost = totalCost;
@@ -29,7 +30,7 @@ public class MarketPurchaseEvent extends PlayerEvent {
         return items;
     }
 
-    public double getTotalCost() {
+    public BigDecimal getTotalCost() {
         return totalCost;
     }
 

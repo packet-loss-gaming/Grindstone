@@ -6,18 +6,12 @@
 
 package gg.packetloss.grindstone.highscore;
 
-import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.minecraft.util.commands.Command;
-import com.sk89q.minecraft.util.commands.CommandContext;
-import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.bukkittext.Text;
-import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.data.DataBaseComponent;
@@ -25,29 +19,24 @@ import gg.packetloss.grindstone.highscore.mysql.MySQLHighScoresDatabase;
 import gg.packetloss.grindstone.highscore.scoretype.GobletScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
-import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
+import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
-import gg.packetloss.grindstone.util.chat.ChatConstants;
-import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
-
-import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
-import static gg.packetloss.grindstone.util.StringUtil.toUppercaseTitle;
 
 @ComponentInformation(friendlyName = "High Scores Component", desc = "High Scores")
 @Depend(components = {ChatBridgeComponent.class, DataBaseComponent.class})
@@ -66,7 +55,7 @@ public class HighScoresComponent extends BukkitComponent {
             try {
                 Object result = field.get(null);
                 if (result instanceof ScoreType) {
-                    String processedFieldName = field.getName().toLowerCase();
+                    String processedFieldName = field.getName().toUpperCase();
                     nameToScoreType.put(processedFieldName, (ScoreType) result);
                     idToScoreType.put(((ScoreType) result).getId(), (ScoreType) result);
                     idToName.put(((ScoreType) result).getId(), processedFieldName);
@@ -102,21 +91,32 @@ public class HighScoresComponent extends BukkitComponent {
 
         checkGobletForUpdate();
 
-        registerCommands(Commands.class);
+        // Register user facing commands
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            ScoreTypeConverter.register(registrar, this);
+            registrar.register(HighScoreCommandsRegistration.builder(), new HighScoreCommands(this));
+        });
 
-        server.getScheduler().runTaskTimerAsynchronously(inst, () -> {
-            highScoreLock.lock();
+        server.getScheduler().runTaskTimerAsynchronously(inst, this::processUpdateQueue, 25, 20);
+    }
 
-            List<HighScoreUpdate> scoresToUpdate;
-            try {
-                scoresToUpdate = highScoreUpdates;
-                highScoreUpdates = new ArrayList<>();
-            } finally {
-                highScoreLock.unlock();
-            }
+    @Override
+    public void disable() {
+        processUpdateQueue();
+    }
 
-            database.batchProcess(scoresToUpdate);
-        }, 25, 20);
+    private void processUpdateQueue() {
+        highScoreLock.lock();
+
+        List<HighScoreUpdate> scoresToUpdate;
+        try {
+            scoresToUpdate = highScoreUpdates;
+            highScoreUpdates = new ArrayList<>();
+        } finally {
+            highScoreLock.unlock();
+        }
+
+        database.batchProcess(scoresToUpdate);
     }
 
     private ScoreType getNewGobletScoreType() {
@@ -141,7 +141,8 @@ public class HighScoresComponent extends BukkitComponent {
     private void addGobletWinner(OfflinePlayer player) {
         gobletState.addWinner(player.getUniqueId());
 
-        String winMessage = ChatColor.YELLOW + player.getName() + " has won the " + getGobletName() + "!";
+        String friendlyGobletName = StringUtil.toTitleCase(getGobletName());
+        String winMessage = ChatColor.YELLOW + player.getName() + " has won the " + friendlyGobletName + "!";
         Bukkit.broadcastMessage(winMessage);
         chatBridge.broadcast(ChatColor.stripColor(winMessage));
     }
@@ -189,28 +190,44 @@ public class HighScoresComponent extends BukkitComponent {
         );
     }
 
-    private void queueUpdate(HighScoreUpdate update) {
+    private boolean isCurrentGoblet(ScoreType scoreType) {
+        return scoreType.isGobletEquivalent(gobletScoreType);
+    }
+
+    private void update(UUID playerID, ScoreType scoreType, long value) {
         highScoreLock.lock();
         try {
-            highScoreUpdates.add(update);
+            highScoreUpdates.add(new HighScoreUpdate(playerID, scoreType, value));
+            if (isCurrentGoblet(scoreType)) {
+                highScoreUpdates.add(new HighScoreUpdate(playerID, gobletScoreType, value));
+            }
         } finally {
             highScoreLock.unlock();
         }
     }
 
-    private boolean isCurrentGoblet(ScoreType scoreType) {
-        return scoreType.isGobletEquivalent(gobletScoreType);
-    }
+    public void update(OfflinePlayer player, ScoreType scoreType, long value) {
+        // FIXME: Ideally this wouldn't be necessary, need to make sure the PluginTaskExecutor
+        // isn't shutdown before the high scores, or any dependent component.
+        try {
+            PluginTaskExecutor.submitAsync(() -> {
+                // Disqualify any high score gains in admin mode
+                if (adminComponent.isAdmin(player)) {
+                    return;
+                }
 
-    public void update(Player player, ScoreType scoreType, long value) {
-        // Disqualify any high score gains in admin mode
-        if (adminComponent.isAdmin(player)) {
-            return;
-        }
+                update(player.getUniqueId(), scoreType, value);
+            });
+        } catch (RejectedExecutionException ex) {
+            if (!(player instanceof Player onlinePlayer)) {
+                return;
+            }
 
-        queueUpdate(new HighScoreUpdate(player.getUniqueId(), scoreType, value));
-        if (isCurrentGoblet(scoreType)) {
-            queueUpdate(new HighScoreUpdate(player.getUniqueId(), gobletScoreType, value));
+            if (adminComponent.isAdmin(onlinePlayer)) {
+                return;
+            }
+
+            update(onlinePlayer.getUniqueId(), scoreType, value);
         }
     }
 
@@ -239,70 +256,19 @@ public class HighScoresComponent extends BukkitComponent {
         return database.getAverageScore(scoreType);
     }
 
-    private Text createScoreLine(int rank, ScoreEntry entry, ScoreType scoreType) {
-        String playerName = entry.getPlayer().getName();
-
-        return Text.of(ChatColor.YELLOW, '#', rank, ' ',
-                ChatColor.BLUE, StringUtils.rightPad(playerName, ChatConstants.MAX_PLAYER_NAME_LENGTH), "   ",
-                (rank == 1 ? ChatColor.GOLD : ChatColor.WHITE), scoreType.format(entry.getScore()));
-    }
-
-    private Text createScoreTypeLine(String scoreType) {
-        return Text.of(
-                ChatColor.BLUE, toUppercaseTitle(scoreType),
-                TextAction.Click.runCommand("/highscores " + scoreType),
-                TextAction.Hover.showText(Text.of("View high scores for " + toTitleCase(scoreType)))
-        );
-    }
-
     private String getGobletName() {
         String baseName = gobletScoreType.getGobletName().orElseGet(() -> {
             return idToName.get(gobletScoreType.getBaseScoreType().getId());
         });
-        return baseName + "_goblet";
+        return baseName + "_GOBLET";
     }
 
-    private ScoreType getScoreTypeFromString(String scoreTypeName) {
-        if (scoreTypeName.equals(getGobletName())) {
-            return gobletScoreType;
+    public List<AnnotatedScoreType> getScoreTypes() {
+        List<AnnotatedScoreType> scoreTypes = new ArrayList<>();
+        for (Map.Entry<String, ScoreType> entry : nameToScoreType.entrySet()) {
+            scoreTypes.add(new AnnotatedScoreType(entry.getKey(), entry.getValue()));
         }
-
-        return nameToScoreType.get(scoreTypeName);
-    }
-
-    public class Commands {
-        @Command(aliases = {"highscores", "highscore"},
-                usage = "<scope type>", desc = "View high scores",
-                flags = "p:")
-        public void highscoresCmd(CommandContext args, CommandSender sender) throws CommandException {
-            String scoreTypeString = args.argsLength() == 0 ? ""
-                    : args.getJoinedStrings(0).toLowerCase().replaceAll(" ", "_");
-
-            ScoreType scoreType = getScoreTypeFromString(scoreTypeString);
-            if (scoreType != null) {
-                ChatUtil.sendNotice(sender, ChatColor.GOLD + toTitleCase(scoreTypeString));
-
-                List<ScoreEntry> scores = getTop(scoreType);
-                for (int i = 0; i < scores.size(); ++i) {
-                    sender.sendMessage(createScoreLine(i + 1, scores.get(i), scoreType).build());
-                }
-            } else {
-                List<String> tables = Lists.newArrayList(nameToScoreType.keySet());
-                tables.add(getGobletName());
-                tables.sort(Comparator.naturalOrder());
-
-                new TextComponentChatPaginator<String>(ChatColor.GOLD, "High Score Tables") {
-                    @Override
-                    public Optional<String> getPagerCommand(int page) {
-                        return Optional.of("/highscores -p " + page);
-                    }
-
-                    @Override
-                    public Text format(String scoreType) {
-                        return createScoreTypeLine(scoreType);
-                    }
-                }.display(sender, tables, args.getFlagInteger('p', 1));
-            }
-        }
+        scoreTypes.add(new AnnotatedScoreType(getGobletName(), gobletScoreType));
+        return scoreTypes;
     }
 }

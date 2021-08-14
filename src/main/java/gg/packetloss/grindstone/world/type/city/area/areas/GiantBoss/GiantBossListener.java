@@ -51,10 +51,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
@@ -106,21 +104,6 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
     @EventHandler(ignoreCancelled = true)
     public void onCreepSpeak(CreepSpeakEvent event) {
         if (parent.contains(event.getPlayer(), 1) || parent.contains(event.getTargeter(), 1)) event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onConsume(PlayerItemConsumeEvent event) {
-        Player player = event.getPlayer();
-        if (parent.contains(player, 1)) {
-            ItemStack stack = event.getItem();
-            if (stack.getItemMeta() instanceof PotionMeta) {
-                PotionMeta pMeta = (PotionMeta) stack.getItemMeta();
-                if (pMeta.hasCustomEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-                    ChatUtil.sendWarning(player, "You find yourself unable to drink the potion.");
-                    event.setCancelled(true);
-                }
-            }
-        }
     }
 
     private static Set<Class<?>> generalBlacklistedSpecs = new HashSet<>();
@@ -348,7 +331,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             }
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
-            if (ItemUtil.hasAncientArmour(player)) {
+            if (ItemUtil.hasAncientArmor(player)) {
                 if (attacker != null) {
                     if (attacker instanceof Zombie) {
                         Zombie zombie = (Zombie) attacker;

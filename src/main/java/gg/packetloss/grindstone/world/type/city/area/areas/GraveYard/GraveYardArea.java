@@ -16,6 +16,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.graveyard.PlayerDisturbGraveEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
@@ -35,9 +36,6 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Chunk;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -54,7 +52,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.material.Lever;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -76,7 +73,7 @@ import static org.bukkit.block.data.type.Chest.Type;
 @Depend(components = {
         AdminComponent.class, PlayerStateComponent.class,
         SpectatorComponent.class, BlockStateComponent.class,
-        HighScoresComponent.class},
+        HighScoresComponent.class, WalletComponent.class},
         plugins = {"WorldGuard"})
 public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
@@ -96,9 +93,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected BlockStateComponent blockState;
     @InjectComponent
     protected HighScoresComponent highScores;
-
-    // Other
-    protected Economy economy;
+    @InjectComponent
+    protected WalletComponent wallet;
 
     // Temple regions
     protected ProtectedRegion temple, pressurePlateLockArea, torchArea, creepers, parkour, rewards, rewardsDoor;
@@ -179,8 +175,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         regenParkour();
         setRewardsDoor(Material.AIR);
-
-        setupEconomy();
 
         spawnBlockBreakerTask();
         spawnTorchToggleTask();
@@ -513,33 +507,28 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
     }
 
+    private Location getHallZombieSpawnPosition() {
+        return new Location(
+            world,
+            -223 + ChanceUtil.getRangedRandom(-2, 2),
+            56,
+            -755
+        );
+    }
+
     private void spawnHallZombies(Player player) {
         if (!ChanceUtil.getChance(5) && getContained(torchArea, Zombie.class).size() >= 10) {
             return;
         }
 
         // Redirect local spawns to be the end of the hall way
-        Location spawnPoint = new Location(world, -223, 56, -755);
-
         for (int i = ChanceUtil.getRangedRandom(2, 5); i > 0; --i) {
-            Zombie z = spawnAndArm(
-                spawnPoint.clone().add(
-                    ChanceUtil.getRangedRandom(-2, 2),
-                    0,
-                    0
-                ),
-                Zombie.class,
-                true
-            );
+            Zombie z = spawnAndArm(getHallZombieSpawnPosition(), Zombie.class, true);
 
             z.setTarget(player);
             z.setHealth(10);
 
-            try {
-                AttributeBook.setAttribute(z, AttributeBook.Attribute.ATTACK_KNOCKBACK, 10);
-            } catch (UnsupportedFeatureException e) {
-                e.printStackTrace();
-            }
+            EntityUtil.setAttackKnockback(z, 10);
         }
     }
 
@@ -954,7 +943,12 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     private void fillGrave(Chest chest, ArrayDeque<ItemStack> itemStacks) {
         forGraveInventory(chest, (inv) -> {
             while (!itemStacks.isEmpty()) {
-                ItemStack remainder = inv.addItem(itemStacks.poll()).get(0);
+                ItemStack itemToAdd = itemStacks.poll();
+                if (itemToAdd.getEnchantmentLevel(Enchantment.VANISHING_CURSE) > 0) {
+                    continue;
+                }
+
+                ItemStack remainder = inv.addItem(itemToAdd).get(0);
                 if (remainder != null) {
                     itemStacks.addFirst(remainder);
                     break;
@@ -1029,7 +1023,6 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
             location.getWorld().dropItem(location, stack);
         }
-
     }
 
     public Location makeGrave(String playerName, ItemStack[] itemStacks) {
@@ -1189,96 +1182,85 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private ItemStack pickRandomItem() {
-        switch (ChanceUtil.getRandom(39)) {
-            case 1:
-                return CustomItemCenter.build(CustomItems.GEM_OF_LIFE, 6);
-            case 3:
+        if (ChanceUtil.getChance(5)) {
+            return CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(5));
+        }
+
+        return ChanceUtil.supplyRandom(
+            () -> CustomItemCenter.build(CustomItems.GEM_OF_LIFE, 6),
+            () -> CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL, ChanceUtil.getRandom(3)),
+            () -> CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS, ChanceUtil.getRandom(3)),
+            () -> CustomItemCenter.build(CustomItems.BAT_BOW),
+            () -> CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(64)),
+            () -> {
                 if (!ChanceUtil.getChance(200)) return null;
                 if (ChanceUtil.getChance(2)) {
                     return CustomItemCenter.build(CustomItems.FEAR_SWORD);
                 } else {
                     return CustomItemCenter.build(CustomItems.FEAR_SHORT_SWORD);
                 }
-            case 4:
+            },
+            () -> {
                 if (!ChanceUtil.getChance(200)) return null;
                 return CustomItemCenter.build(CustomItems.FEAR_BOW);
-            case 5:
+            },
+            () -> {
                 if (!ChanceUtil.getChance(200)) return null;
                 if (ChanceUtil.getChance(2)) {
                     return CustomItemCenter.build(CustomItems.UNLEASHED_SWORD);
                 } else {
                     return CustomItemCenter.build(CustomItems.UNLEASHED_SHORT_SWORD);
                 }
-            case 6:
+            },
+            () -> {
                 if (!ChanceUtil.getChance(200)) return null;
                 return CustomItemCenter.build(CustomItems.UNLEASHED_BOW);
-            case 7:
-                return CustomItemCenter.build(CustomItems.IMBUED_CRYSTAL, ChanceUtil.getRandom(3));
-            case 8:
-                return CustomItemCenter.build(CustomItems.GEM_OF_DARKNESS, ChanceUtil.getRandom(3));
-            case 9:
-                return CustomItemCenter.build(CustomItems.BAT_BOW);
-            case 10:
-                return CustomItemCenter.build(CustomItems.PHANTOM_GOLD, ChanceUtil.getRandom(64));
-            case 11:
+            },
+            () -> {
                 if (ChanceUtil.getChance(500)) {
                     return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_HELMET);
                 } else {
                     return CustomItemCenter.build(CustomItems.ANCIENT_HELMET);
                 }
-            case 12:
+            },
+            () -> {
                 if (ChanceUtil.getChance(500)) {
                     return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_CHESTPLATE);
                 } else {
                     return CustomItemCenter.build(CustomItems.ANCIENT_CHESTPLATE);
                 }
-            case 13:
+            },
+            () -> {
                 if (ChanceUtil.getChance(500)) {
                     return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_LEGGINGS);
                 } else {
                     return CustomItemCenter.build(CustomItems.ANCIENT_LEGGINGS);
                 }
-            case 14:
+            },
+            () -> {
                 if (ChanceUtil.getChance(500)) {
                     return CustomItemCenter.build(CustomItems.ANCIENT_ROYAL_BOOTS);
                 } else {
                     return CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
                 }
-            case 15:
-                return CustomItemCenter.build(CustomItems.GOD_HELMET);
-            case 16:
-                return CustomItemCenter.build(CustomItems.GOD_CHESTPLATE);
-            case 17:
-                return CustomItemCenter.build(CustomItems.GOD_LEGGINGS);
-            case 18:
-                return CustomItemCenter.build(CustomItems.GOD_BOOTS);
-            case 19:
-                return CustomItemCenter.build(CustomItems.GOD_PICKAXE);
-            case 20:
-                return CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE);
-            case 21:
-                return new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64));
-            case 22:
-                return new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64));
-            case 23:
-                return new ItemStack(Material.EMERALD, ChanceUtil.getRandom(64));
-            case 24:
-                return CustomItemCenter.build(CustomItems.PHANTOM_POTION);
-            case 25:
-                return CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE, ChanceUtil.getRandom(16));
-            case 26:
-                return new ItemStack(Material.ENCHANTED_GOLDEN_APPLE, ChanceUtil.getRandom(32));
-            case 28:
-                return new ItemStack(Material.SADDLE);
-            case 29:
-                return new ItemStack(Material.IRON_HORSE_ARMOR);
-            case 30:
-                return new ItemStack(Material.GOLDEN_HORSE_ARMOR);
-            case 31:
-                return new ItemStack(Material.DIAMOND_HORSE_ARMOR);
-            default:
-                return CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(5));
-        }
+            },
+            () -> new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64)),
+            () -> new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64)),
+            () -> new ItemStack(Material.EMERALD, ChanceUtil.getRandom(64)),
+            () -> new ItemStack(Material.ENCHANTED_GOLDEN_APPLE, ChanceUtil.getRandom(32)),
+            () -> new ItemStack(Material.SADDLE),
+            () -> new ItemStack(Material.IRON_HORSE_ARMOR),
+            () -> new ItemStack(Material.GOLDEN_HORSE_ARMOR),
+            () -> new ItemStack(Material.DIAMOND_HORSE_ARMOR),
+            () -> CustomItemCenter.build(CustomItems.GOD_HELMET),
+            () -> CustomItemCenter.build(CustomItems.GOD_CHESTPLATE),
+            () -> CustomItemCenter.build(CustomItems.GOD_LEGGINGS),
+            () -> CustomItemCenter.build(CustomItems.GOD_BOOTS),
+            () -> CustomItemCenter.build(CustomItems.GOD_PICKAXE),
+            () -> CustomItemCenter.build(CustomItems.LEGENDARY_GOD_PICKAXE),
+            () -> CustomItemCenter.build(CustomItems.PHANTOM_POTION),
+            () -> CustomItemCenter.build(CustomItems.PHANTOM_ESSENCE)
+        );
     }
 
     private void breakBlock(Entity e, Location location) {
@@ -1348,13 +1330,5 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
 
         return dest;
-    }
-
-    private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
-        return (economy != null);
     }
 }

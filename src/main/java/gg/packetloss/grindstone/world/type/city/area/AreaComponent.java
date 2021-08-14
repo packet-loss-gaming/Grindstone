@@ -13,7 +13,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
-import org.bukkit.GameMode;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -74,7 +74,7 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     }
 
     public boolean isParticipant(Player player) {
-        return contains(player) && player.getGameMode() == GameMode.SURVIVAL;
+        return contains(player) && GeneralPlayerUtil.hasDamageableGamemode(player);
     }
 
     public final boolean isParticipant(Player player, boolean includeDead) {
@@ -109,6 +109,12 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
 
     public Collection<Player> getAudiblePlayers() {
         return getContained(Player.class);
+    }
+
+    public List<Player> getAudiblePlayersIn(ProtectedRegion region) {
+        return getAudiblePlayers().stream()
+            .filter((p) -> contains(region, p))
+            .collect(Collectors.toList());
     }
 
     public <T extends Entity> Collection<T> getContained(Class<T> clazz) {

@@ -24,8 +24,10 @@ public class Speed extends EntityAttack implements MeleeSpecial, RangedSpecial {
     public void activate() {
 
         int duration = (int) Math.min(20 * 60 * 5, owner.getHealth() * 18);
-        owner.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, 2), true);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, duration, 1), true);
+        owner.removePotionEffect(PotionEffectType.SPEED);
+        owner.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, 2));
+        target.removePotionEffect(PotionEffectType.SLOW);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, duration, 1));
 
         inform("You gain a agile advantage over your opponent.");
     }

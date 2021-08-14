@@ -11,9 +11,6 @@ import com.sk89q.minecraft.util.commands.Command;
 import com.sk89q.minecraft.util.commands.CommandContext;
 import com.sk89q.minecraft.util.commands.CommandException;
 import com.sk89q.minecraft.util.commands.CommandPermissions;
-import com.sk89q.util.yaml.YAMLFormat;
-import com.sk89q.util.yaml.YAMLProcessor;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
@@ -35,18 +32,12 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import gg.packetloss.grindstone.world.type.city.arena.*;
-import gg.packetloss.grindstone.world.type.city.arena.factory.FactoryBrewer;
-import gg.packetloss.grindstone.world.type.city.arena.factory.FactoryFloor;
-import gg.packetloss.grindstone.world.type.city.arena.factory.FactoryMech;
-import gg.packetloss.grindstone.world.type.city.arena.factory.FactorySmelter;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
 
-import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -139,14 +130,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
         protected Set<String> prisonRaids = new HashSet<>(Arrays.asList(
                 "vineam-district-prison"
         ));
-        @Setting("factories")
-        protected Set<String> factories = new HashSet<>(Arrays.asList(
-                "oblitus-district-old-factory"
-        ));
-        @Setting("factory-vats")
-        protected Set<String> factoryVats = new HashSet<>(Arrays.asList(
-                "vat-1", "vat-2", "vat-3"
-        ));
     }
 
     private class ArenaManager {
@@ -222,43 +205,6 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                     log.warning("Failed to add arena: " + region + ".");
                 }
             }
-
-            // Add factories
-            for (String region : config.factories) {
-                try {
-                    ProtectedRegion[] PRs = new ProtectedRegion[6];
-                    PRs[0] = mgr.getRegion(region);
-                    PRs[1] = mgr.getRegion(region + "-producer");
-                    PRs[2] = mgr.getRegion(region + "-smelter-1");
-                    PRs[3] = mgr.getRegion(region + "-smelter-2");
-                    PRs[4] = mgr.getRegion(region + "-smelter-1-track");
-                    PRs[5] = mgr.getRegion(region + "-smelter-2-track");
-
-                    YAMLProcessor processor = new YAMLProcessor(
-                            new File(inst.getDataFolder() + "/area/" + PRs[0] .getId()+ "/data.yml"),
-                            false,
-                            YAMLFormat.EXTENDED
-                    );
-                    List<FactoryMech> mechs = new ArrayList<>();
-                    ProtectedRegion er;
-                    for (String mech : config.factoryVats) {
-                        er = mgr.getRegion(region + "-" + mech);
-                        mechs.add(new FactoryBrewer(world, er, processor));
-                    }
-                    ProtectedRegion furnace = mgr.getRegion(region + "-hopper-1");
-                    ProtectedRegion[] lavaChannels = {
-                        mgr.getRegion(region + "-lava-channel-1"),
-                        mgr.getRegion(region + "-lava-channel-2")
-                    };
-                    ProtectedRegion lavaZ = mgr.getRegion(region + "-lava");
-                    mechs.add(new FactorySmelter(world, furnace, processor, lavaChannels, lavaZ));
-                    arenas.add(new FactoryFloor(world, PRs, mechs, processor));
-                    if (config.listRegions) log.info("Added region: " + PRs[0].getId() + " to Arenas.");
-                } catch (Exception e) {
-                    log.warning("Failed to add arena: " + region + ".");
-                    e.printStackTrace();
-                }
-            }
         }
     }
 
@@ -304,17 +250,5 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
                 }
             }
         }
-    }
-
-    protected WorldGuardPlugin getWorldGuard() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
-
-        // WorldGuard may not be loaded
-        if (!(plugin instanceof WorldGuardPlugin)) {
-            return null; // Maybe you want throw an exception instead
-        }
-
-        return (WorldGuardPlugin) plugin;
     }
 }

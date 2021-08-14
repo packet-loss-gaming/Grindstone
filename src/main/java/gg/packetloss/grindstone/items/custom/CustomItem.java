@@ -111,7 +111,7 @@ public class CustomItem {
         visitor.visit(this);
     }
 
-    public ItemStack build() {
+    protected ItemStack build(CustomItems identity) {
         ItemStack itemStack = new ItemStack(baseType);
         ItemMeta meta = itemStack.getItemMeta();
         for (Enchant enchant : enchants) {
@@ -120,9 +120,13 @@ public class CustomItem {
         List<String> lore = tags.stream().map(e -> e.getColor() + e.getKey() + ": " + e.getProp()).collect(Collectors.toList());
         lore.addAll(this.lore);
         if (!lore.isEmpty()) meta.setLore(lore);
-        meta.setDisplayName(item.toString());
-        meta.setCustomModelData(item.getModelId());
+        meta.setDisplayName(identity.toString());
+        meta.setCustomModelData(identity.getModelId());
         itemStack.setItemMeta(meta);
         return itemStack;
+    }
+
+    public final ItemStack build() {
+        return build(item);
     }
 }

@@ -16,6 +16,8 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePopEvent;
 import gg.packetloss.grindstone.items.migration.migrations.CustomItemModelMigration;
+import gg.packetloss.grindstone.items.migration.migrations.OPCombatPotionNerfMigration;
+import gg.packetloss.grindstone.items.migration.migrations.ToPeacefulWarriorArmor;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import org.bukkit.Chunk;
@@ -37,6 +39,12 @@ import org.bukkit.inventory.InventoryHolder;
 
 import java.io.IOException;
 
+/**
+ * To migrate items using this system:
+ * - Add the migration(s) to the migration manager
+ * - Increase gg.packetloss.grindstone.items.custom.CustomItemCenter#REVISION
+ * - Deploy the update
+ */
 @ComponentInformation(friendlyName = "Automatic Item Migration", desc = "Automatic Item Updates")
 @Depend(components = {AdminComponent.class, PlayerStateComponent.class})
 public class AutomaticItemMigrationComponent extends BukkitComponent implements Listener {
@@ -49,6 +57,8 @@ public class AutomaticItemMigrationComponent extends BukkitComponent implements 
 
     static {
         manager.add(new CustomItemModelMigration());
+        manager.add(new OPCombatPotionNerfMigration());
+        manager.add(new ToPeacefulWarriorArmor());
     }
 
     private AutomaticMigrationState state = new AutomaticMigrationState();

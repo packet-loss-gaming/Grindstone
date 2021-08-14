@@ -11,8 +11,12 @@ import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.Objects;
+import java.util.UUID;
 
 import static gg.packetloss.grindstone.events.EntityHealthInContextEvent.HealthKind.CURRENT;
 import static gg.packetloss.grindstone.events.EntityHealthInContextEvent.HealthKind.MAX;
@@ -95,7 +99,7 @@ public class EntityUtil {
         }
 
         // Check damageable
-        if (entity instanceof Player && GeneralPlayerUtil.isInvulnerable((Player) entity)) {
+        if (entity instanceof Player && GeneralPlayerUtil.hasInvulnerableGamemode((Player) entity)) {
             return;
         }
 
@@ -137,6 +141,11 @@ public class EntityUtil {
             return true;
         }
 
+        // Hoglin are not considered monsters
+        if (entity instanceof Hoglin) {
+            return true;
+        }
+
         return false;
     }
 
@@ -160,20 +169,45 @@ public class EntityUtil {
         return false;
     }
 
-    public static void protectDrop(Item item, Player player) {
-        item.setOwner(player.getUniqueId());
+    public static void protectDrop(Item item, UUID playerID) {
+        item.setOwner(playerID);
 
         // Prevent environmental shenanigans
         item.setInvulnerable(true);
         item.setCanMobPickup(false);
     }
 
-    public static void spawnProtectedItem(ItemStack stack, Player player, Location destination) {
+    public static Item spawnProtectedItem(ItemStack stack, UUID playerID, Location destination) {
         Item item = destination.getWorld().dropItem(destination, stack);
-        EntityUtil.protectDrop(item, player);
+        protectDrop(item, playerID);
+        return item;
     }
 
-    public static void spawnProtectedItem(ItemStack stack, Player player) {
-        spawnProtectedItem(stack, player, player.getLocation());
+    public static Item spawnProtectedItem(ItemStack stack, Player player, Location destination) {
+        return spawnProtectedItem(stack, player.getUniqueId(), destination);
+    }
+
+    public static Item spawnProtectedItem(ItemStack stack, Player player) {
+        return spawnProtectedItem(stack, player, player.getLocation());
+    }
+
+    public static void setMovementSpeed(LivingEntity entity, double speed) {
+        Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED)).setBaseValue(speed);
+    }
+
+    public static void setKnockbackResistance(LivingEntity entity, double resistance) {
+        Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_KNOCKBACK_RESISTANCE)).setBaseValue(resistance);
+    }
+
+    public static void setAttackKnockback(LivingEntity entity, double knockback) {
+        Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_ATTACK_KNOCKBACK)).setBaseValue(knockback);
+    }
+
+    public static double getFollowRange(LivingEntity entity) {
+        return Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE)).getValue();
+    }
+
+    public static void setFollowRange(LivingEntity entity, double followRange) {
+        Objects.requireNonNull(entity.getAttribute(Attribute.GENERIC_FOLLOW_RANGE)).setBaseValue(followRange);
     }
 }

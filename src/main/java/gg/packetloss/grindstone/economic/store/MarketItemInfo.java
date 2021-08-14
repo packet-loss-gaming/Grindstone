@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.economic.store;
 
+import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -14,7 +15,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.Optional;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
-import static gg.packetloss.grindstone.util.StringUtil.toUppercaseTitle;
 
 public class MarketItemInfo implements Comparable<MarketItemInfo> {
     private String name;
@@ -39,8 +39,12 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return ItemNameCalculator.getUnqualifiedName(name);
     }
 
-    public String getDisplayName() {
-        return toUppercaseTitle(getUnqualifiedName());
+    public Text getDisplayName() {
+        return ItemNameCalculator.getSystemDisplayName(name);
+    }
+
+    public String getDisplayNameNoColor() {
+        return ItemNameCalculator.getSystemDisplayNameNoColor(name);
     }
 
     public String getLookupName() {

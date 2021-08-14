@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.events.guild;
 
 import gg.packetloss.grindstone.guild.GuildType;
+import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
@@ -22,7 +23,7 @@ public class GuildGrantExpEvent extends PlayerEvent implements Cancellable {
     public GuildGrantExpEvent(Player who, GuildType type, double grantedExpr) {
         super(who);
         this.guild = type;
-        this.grantedExp = grantedExpr;
+        setGrantedExp(grantedExpr);
     }
 
     public GuildType getGuild() {
@@ -34,6 +35,7 @@ public class GuildGrantExpEvent extends PlayerEvent implements Cancellable {
     }
 
     public void setGrantedExp(double grantedExp) {
+        Validate.isTrue(grantedExp >= 0);
         this.grantedExp = grantedExp;
     }
 

@@ -10,8 +10,6 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
-import gg.packetloss.grindstone.sacrifice.SacrificeInformation;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
 import gg.packetloss.grindstone.util.dropttable.OSBLKillInfo;
@@ -25,13 +23,10 @@ import gg.packetloss.openboss.entity.LocalEntity;
 import gg.packetloss.openboss.instruction.InstructionResult;
 import gg.packetloss.openboss.instruction.SimpleInstructionDispatch;
 import gg.packetloss.openboss.instruction.UnbindInstruction;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 
-import static gg.packetloss.grindstone.util.EnvironmentUtil.isFrozenBiome;
+import static gg.packetloss.grindstone.world.type.range.worldlevel.DemonicRuneListener.DemonicRuneState.fromMonsterKill;
 
 public class GenericRangedWorldMonster {
     private static class GenericMonsterHandler extends BukkitBossDeclaration<GenericDetail> {
@@ -42,7 +37,7 @@ public class GenericRangedWorldMonster {
             this.worldLevelComponent = worldLevelComponent;
         }
 
-        public void bind(Monster entity) {
+        public void bind(Mob entity) {
             bind(new BukkitBoss<>(entity, new GenericDetail()));
         }
 
@@ -54,7 +49,7 @@ public class GenericRangedWorldMonster {
 
         @Override
         public LocalControllable<GenericDetail> tryRebind(LocalEntity entity) {
-            var boss = new BukkitBoss<>((Monster) BukkitUtil.getBukkitEntity(entity), new GenericDetail());
+            var boss = new BukkitBoss<>((Mob) BukkitUtil.getBukkitEntity(entity), new GenericDetail());
             silentBind(boss);
             return boss;
         }
@@ -69,7 +64,18 @@ public class GenericRangedWorldMonster {
         this.genericEntity = new GenericMonsterHandler(worldLevelComponent);
 
         setupDropTable();
-        setupGenericRangedWorldMonster();
+        setupGenericRangedWorldMob();
+    }
+
+    private double getModifierByType(EntityType type) {
+        WorldLevelConfig config = worldLevelComponent.getConfig();
+        return switch (type) {
+            case CREEPER -> config.mobsDropTableTypeModifiersCreeper;
+            case ENDERMITE -> config.mobsDropTableTypeModifiersEndermite;
+            case SILVERFISH -> config.mobsDropTableTypeModifiersSilverfish;
+            case WITHER -> config.mobsDropTableTypeModifiersWither;
+            default -> config.mobsDropTableTypeModifiersDefault;
+        };
     }
 
     private void setupDropTable() {
@@ -83,42 +89,32 @@ public class GenericRangedWorldMonster {
                     return;
                 }
 
+                EntityType killedEntityType =  info.getKillInfo().getKilled().getType();
+                double typeModifier = getModifierByType(killedEntityType);
+
                 PerformanceKillInfo killInfo = info.getKillInfo();
                 float percentDamageDone = killInfo.getPercentDamageDone(player).orElseThrow();
 
-                boolean isFrozenBiome = isFrozenBiome(player.getLocation().getBlock().getBiome());
-                int dropCountModifier = (int) (Math.min(20, level - 1) * percentDamageDone);
-                double dropValueModifier = Math.max(1, level * 1.25) * percentDamageDone;
+                // Handle "live dropped" drops
+                if (level > 10) {
+                    int dropCountModifier = worldLevelComponent.getDropCountModifier(level, typeModifier, percentDamageDone);
+                    double dropValueModifier = worldLevelComponent.getDropValueModifier(level, typeModifier, percentDamageDone);
 
-                // Handle unique drops
-                for (int i = 0; i < dropCountModifier; ++i) {
-                    if (ChanceUtil.getChance(2000 / dropValueModifier)) {
-                        consumer.accept(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
-                    }
-
-                    if (ChanceUtil.getChance(2000 / dropValueModifier)) {
-                        consumer.accept(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
-                    }
-
-                    if (ChanceUtil.getChance((isFrozenBiome ? 1000 : 2000) / dropValueModifier)) {
-                        consumer.accept(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
+                    for (int i = 0; i < dropCountModifier; ++i) {
+                        if (ChanceUtil.getChance(2000 / dropValueModifier)) {
+                            consumer.accept(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
+                        }
                     }
                 }
 
-                // Handle sacrificial pit generated drops
-                SacrificeInformation sacrificeInfo = new SacrificeInformation(
-                    CommandBook.server().getConsoleSender(),
-                    dropCountModifier,
-                    dropValueModifier * 128
-                );
-                for (ItemStack itemStack : SacrificeComponent.getCalculatedLoot(sacrificeInfo)) {
-                    consumer.accept(itemStack);
-                }
+                ItemStack demonicRune = CustomItemCenter.build(CustomItems.DEMONIC_RUNE);
+                DemonicRuneListener.setRuneTier(demonicRune, fromMonsterKill(level, typeModifier, percentDamageDone));
+                consumer.accept(demonicRune);
             }
         );
     }
 
-    private void setupGenericRangedWorldMonster() {
+    private void setupGenericRangedWorldMob() {
         genericEntity.unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
             @Override
             public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
@@ -130,7 +126,7 @@ public class GenericRangedWorldMonster {
         });
     }
 
-    public void bind(Monster entity) {
+    public void bind(Mob entity) {
         genericEntity.bind(entity);
     }
 }

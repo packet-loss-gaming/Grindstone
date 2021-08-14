@@ -48,17 +48,17 @@ public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
     }
 
     private int inflateExternalIndex(int index) {
-        if (index >= InventoryConstants.PLAYER_INV_STORAGE_LENGTH) {
+        if (index >= InventoryConstants.PLAYER_INV_ROWS_TOTAL_LENGTH) {
             return index + InventoryConstants.PLAYER_INV_ARMOUR_LENGTH;
         }
         return index;
     }
 
     private int prioritizeInternalIndex(int index) {
-        if (index > InventoryConstants.PLAYER_INV_STORAGE_LENGTH) {
+        if (index > InventoryConstants.PLAYER_INV_ROWS_TOTAL_LENGTH) {
             return index;
         }
-        return (index + InventoryConstants.PLAYER_INV_ROW_LENGTH) % InventoryConstants.PLAYER_INV_STORAGE_LENGTH;
+        return (index + InventoryConstants.PLAYER_INV_ROW_LENGTH) % InventoryConstants.PLAYER_INV_ROWS_TOTAL_LENGTH;
     }
 
     private int translateExternalIndexToInternal(int index) {

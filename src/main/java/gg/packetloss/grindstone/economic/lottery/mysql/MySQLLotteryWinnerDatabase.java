@@ -11,6 +11,7 @@ import gg.packetloss.grindstone.data.MySQLPreparedStatement;
 import gg.packetloss.grindstone.economic.lottery.LotteryWinner;
 import gg.packetloss.grindstone.economic.lottery.LotteryWinnerDatabase;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -61,7 +62,7 @@ public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
     }
 
     @Override
-    public void addWinner(UUID playerID, double amount) {
+    public void addWinner(UUID playerID, BigDecimal amount) {
         try {
             queue.add(new LotteryWinnerStatement(MySQLHandle.getPlayerInternalID(playerID).get(), amount));
         } catch (SQLException e) {
@@ -70,7 +71,7 @@ public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
     }
 
     @Override
-    public void addCPUWin(double amount) {
+    public void addCPUWin(BigDecimal amount) {
         queue.add(new LotteryWinnerStatement(-1, amount));
     }
 
@@ -85,7 +86,7 @@ public class MySQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
                     while (results.next()) {
                         int internalID = results.getInt(1);
                         UUID playerID = internalID == -1 ? CPU_ID : MySQLHandle.getPlayerUUID(internalID).get();
-                        winners.add(new LotteryWinner(playerID, results.getDouble(2)));
+                        winners.add(new LotteryWinner(playerID, results.getBigDecimal(2)));
                     }
                 }
             }

@@ -10,7 +10,7 @@ import gg.packetloss.grindstone.guild.GuildLevel;
 
 class ExpBasedScoreType extends BasicScoreType {
     protected ExpBasedScoreType(int id) {
-        super(id, false, false, Order.DESC);
+        super(id, false, UpdateMethod.OVERRIDE_ALWAYS, Order.DESC);
     }
 
     @Override

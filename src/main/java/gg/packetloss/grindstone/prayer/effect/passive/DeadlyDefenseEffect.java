@@ -8,7 +8,7 @@ package gg.packetloss.grindstone.prayer.effect.passive;
 
 import gg.packetloss.grindstone.prayer.PassivePrayerEffect;
 import gg.packetloss.grindstone.util.ArrowUtil;
-import gg.packetloss.grindstone.util.EnvironmentUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -20,7 +20,7 @@ public class DeadlyDefenseEffect implements PassivePrayerEffect {
         for (Entity entity : player.getNearbyEntities(8, 3, 8)) {
 
             if (arrow > 10) break;
-            if (EnvironmentUtil.isHostileEntity(entity)) {
+            if (EntityUtil.isHostileMob(entity)) {
                 if (!player.hasLineOfSight(entity)) {
                     arrow--;
                     continue;

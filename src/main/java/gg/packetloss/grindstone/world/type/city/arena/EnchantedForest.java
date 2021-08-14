@@ -21,6 +21,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import org.bukkit.*;
@@ -177,31 +178,47 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
         if (ChanceUtil.getChance(256)) {
             final PlayerInventory pInv = player.getInventory();
-            switch (ChanceUtil.getRandom(5)) {
-                case 1:
+            ChanceUtil.doRandom(
+                () -> {
                     boolean hasAxe = true;
                     switch (pInv.getItemInHand().getType()) {
                         case DIAMOND_AXE:
-                            pInv.addItem(new ItemStack(Material.DIAMOND, 2), new ItemStack(Material.STICK, 2));
+                            GeneralPlayerUtil.giveItemToPlayer(
+                                player,
+                                new ItemStack(Material.DIAMOND, 2),
+                                new ItemStack(Material.STICK, 2)
+                            );
                             break;
                         case GOLDEN_AXE:
-                            pInv.addItem(new ItemStack(Material.GOLD_INGOT, 2), new ItemStack(Material.STICK, 2));
+                            GeneralPlayerUtil.giveItemToPlayer(
+                                player,
+                                new ItemStack(Material.GOLD_INGOT, 2),
+                                new ItemStack(Material.STICK, 2)
+                            );
                             break;
                         case IRON_AXE:
-                            pInv.addItem(new ItemStack(Material.IRON_INGOT, 2), new ItemStack(Material.STICK, 2));
+                            GeneralPlayerUtil.giveItemToPlayer(
+                                player,
+                                new ItemStack(Material.IRON_INGOT, 2),
+                                new ItemStack(Material.STICK, 2)
+                            );
                             break;
                         case WOODEN_AXE:
-                            pInv.addItem(new ItemStack(Material.OAK_WOOD, 2), new ItemStack(Material.STICK, 2));
+                            GeneralPlayerUtil.giveItemToPlayer(
+                                player,
+                                new ItemStack(Material.OAK_WOOD, 2),
+                                new ItemStack(Material.STICK, 2)
+                            );
                             break;
                         default:
                             hasAxe = false;
                             ChatUtil.sendWarning(player, "The fairy couldn't find an axe and instead throws a rock" +
-                                    "at you.");
+                                "at you.");
                             player.damage(7);
                             player.setVelocity(new Vector(
-                                    random.nextDouble() * 2.0 - 1,
-                                    random.nextDouble() * 1,
-                                    random.nextDouble() * 2.0 - 1)
+                                random.nextDouble() * 2.0 - 1,
+                                random.nextDouble() * 1,
+                                random.nextDouble() * 2.0 - 1)
                             );
                     }
 
@@ -209,16 +226,17 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                         ChatUtil.sendWarning(player, "The fairy breaks your axe.");
                         server.getScheduler().runTaskLater(inst, () -> player.getInventory().setItemInHand(null), 1);
                     }
-                    break;
-                case 2:
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 60, 2), true);
+                },
+                () -> {
+                    player.removePotionEffect(PotionEffectType.POISON);
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 60, 2));
                     ChatUtil.sendWarning(player, "You cut your hand on the poisonous bark.");
-                    break;
-                case 3:
+                },
+                () -> {
                     new ButterFingersEffect().trigger(player);
                     ChatUtil.sendNotice(player, "The fairies throws your stuff all over the place");
-                    break;
-                case 4:
+                },
+                () -> {
                     for (final Player aPlayer : getContained(Player.class)) {
                         ChatUtil.sendWarning(aPlayer, "The fairies turn rabid!");
                         IntegratedRunnable runnable = new IntegratedRunnable() {
@@ -241,13 +259,13 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                         TimedRunnable timedRunnable = new TimedRunnable(runnable, 1);
                         timedRunnable.setTask(server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20));
                     }
-                    break;
-                case 5:
+                },
+                () -> {
                     ChatUtil.sendWarning(player, "The tooth fairy takes your teeth!");
                     noTeeth.add(player);
                     server.getScheduler().runTaskLater(inst, () -> noTeeth.remove(player), 20 * 60 * 2);
-                    break;
-            }
+                }
+            );
         }
     }
 

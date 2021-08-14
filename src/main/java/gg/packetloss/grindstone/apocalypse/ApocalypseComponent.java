@@ -178,7 +178,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         if (!(target instanceof Player) || !targeter.isValid() || !(targeter instanceof Zombie)) return;
 
         Player player = (Player) target;
-        if (checkEntity(targeter) && ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(8)) {
+        if (checkEntity(targeter) && ItemUtil.hasAncientArmor(player) && ChanceUtil.getChance(8)) {
             targeter.setFireTicks(ChanceUtil.getRandom(20 * 60));
         }
     }
@@ -258,7 +258,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 Player player = (Player) target;
 
                 if (checkEntity(attacker)) {
-                    if (ItemUtil.hasAncientArmour(player)) {
+                    if (ItemUtil.hasAncientArmor(player)) {
                         double diff = player.getMaxHealth() - player.getHealth();
                         if (ChanceUtil.getChance((int) Math.max(3, Math.round(player.getMaxHealth() - diff)))) {
                             EffectUtil.Ancient.powerBurst(player, event.getDamage());
@@ -319,9 +319,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
 
         server.getScheduler().scheduleSyncDelayedTask(inst, () -> {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 30, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 45, 2));
-            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 2));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 30, 1));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 45, 1));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 60, 1));
         }, 1);
     }
@@ -344,20 +344,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        switch (ChanceUtil.getRandom(4)) {
-            case 1:
-                buffComponent.notifyIncrease(Buff.APOCALYPSE_OVERLORD, player);
-                break;
-            case 2:
-                buffComponent.notifyIncrease(Buff.APOCALYPSE_MAGIC_SHIELD, player);
-                break;
-            case 3:
-                buffComponent.notifyIncrease(Buff.APOCALYPSE_DAMAGE_BOOST, player);
-                break;
-            case 4:
-                buffComponent.notifyIncrease(Buff.APOCALYPSE_LIFE_LEACH, player);
-                break;
-        }
+        ChanceUtil.doRandom(
+            () -> buffComponent.notifyIncrease(Buff.APOCALYPSE_OVERLORD, player),
+            () -> buffComponent.notifyIncrease(Buff.APOCALYPSE_MAGIC_SHIELD, player),
+            () -> buffComponent.notifyIncrease(Buff.APOCALYPSE_DAMAGE_BOOST, player),
+            () -> buffComponent.notifyIncrease(Buff.APOCALYPSE_LIFE_LEACH, player)
+        );
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -405,20 +397,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             }
 
             if (ChanceUtil.getChance(5000)) {
-                switch (ChanceUtil.getRandom(4)) {
-                    case 1:
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_HELMET));
-                        break;
-                    case 2:
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_CHESTPLATE));
-                        break;
-                    case 3:
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_LEGGINGS));
-                        break;
-                    default:
-                        event.getDrops().add(CustomItemCenter.build(CustomItems.APOCALYPTIC_CAMOUFLAGE_BOOTS));
-                        break;
-                }
+                event.getDrops().add(ChanceUtil.supplyRandom(
+                    () -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_HELMET),
+                    () -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_CHESTPLATE),
+                    () -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_LEGGINGS),
+                    () -> CustomItemCenter.build(CustomItems.PEACEFUL_WARRIOR_BOOTS)
+                ));
             }
         }
     }

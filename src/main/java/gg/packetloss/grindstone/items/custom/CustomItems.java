@@ -14,33 +14,31 @@ public enum CustomItems {
     PWNG_BOW(ItemFamily.PWNG, "Bow"),
 
     // Ancient Armor
-    ANCIENT_CROWN(ChatColor.GOLD, "Ancient Crown"),
-    ANCIENT_ROYAL_HELMET(ChatColor.GOLD, "Ancient Royal Helmet"),
-    ANCIENT_ROYAL_CHESTPLATE(ChatColor.GOLD, "Ancient Royal Chestplate"),
-    ANCIENT_ROYAL_LEGGINGS(ChatColor.GOLD, "Ancient Royal Leggings"),
-    ANCIENT_ROYAL_BOOTS(ChatColor.GOLD, "Ancient Royal Boots"),
-    ANCIENT_HELMET(ChatColor.GOLD, "Ancient Helmet"),
-    ANCIENT_CHESTPLATE(ChatColor.GOLD, "Ancient Chestplate"),
-    ANCIENT_LEGGINGS(ChatColor.GOLD, "Ancient Leggings"),
-    ANCIENT_BOOTS(ChatColor.GOLD, "Ancient Boots"),
+    ANCIENT_CROWN(ItemFamily.ANCIENT, "Crown"),
+    ANCIENT_ROYAL_HELMET(ItemFamily.ANCIENT_ROYAL, "Helmet"),
+    ANCIENT_ROYAL_CHESTPLATE(ItemFamily.ANCIENT_ROYAL, "Chestplate"),
+    ANCIENT_ROYAL_LEGGINGS(ItemFamily.ANCIENT_ROYAL, "Leggings"),
+    ANCIENT_ROYAL_BOOTS(ItemFamily.ANCIENT_ROYAL, "Boots"),
+    ANCIENT_HELMET(ItemFamily.ANCIENT, "Helmet"),
+    ANCIENT_CHESTPLATE(ItemFamily.ANCIENT, "Chestplate"),
+    ANCIENT_LEGGINGS(ItemFamily.ANCIENT, "Leggings"),
+    ANCIENT_BOOTS(ItemFamily.ANCIENT, "Boots"),
 
-    // Apocalyptic Camouflage Armor
-    APOCALYPTIC_CAMOUFLAGE_HELMET(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Helmet"),
-    APOCALYPTIC_CAMOUFLAGE_CHESTPLATE(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Chestplate"),
-    APOCALYPTIC_CAMOUFLAGE_LEGGINGS(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Leggings"),
-    APOCALYPTIC_CAMOUFLAGE_BOOTS(ChatColor.DARK_GREEN, "Apocalyptic Camouflage Boots"),
+    // Demonic Items
+    DEMONIC_ASHES(ChatColor.DARK_RED, "Demonic Ashes"),
+    DEMONIC_RUNE(ChatColor.DARK_RED, "Demonic Rune"),
 
     // Nectric Armor
-    NECTRIC_HELMET(ChatColor.DARK_RED, "Nectric Helmet"),
-    NECTRIC_CHESTPLATE(ChatColor.DARK_RED, "Nectric Chestplate"),
-    NECTRIC_LEGGINGS(ChatColor.DARK_RED, "Nectric Leggings"),
-    NECTRIC_BOOTS(ChatColor.DARK_RED, "Nectric Boots"),
+    NECTRIC_HELMET(ItemFamily.NETRIC, "Helmet"),
+    NECTRIC_CHESTPLATE(ItemFamily.NETRIC, "Chestplate"),
+    NECTRIC_LEGGINGS(ItemFamily.NETRIC, "Leggings"),
+    NECTRIC_BOOTS(ItemFamily.NETRIC, "Boots"),
 
     // Necros Armor
-    NECROS_HELMET(ChatColor.DARK_RED, "Necros Helmet"),
-    NECROS_CHESTPLATE(ChatColor.DARK_RED, "Necros Chestplate"),
-    NECROS_LEGGINGS(ChatColor.DARK_RED, "Necros Leggings"),
-    NECROS_BOOTS(ChatColor.DARK_RED, "Necros Boots"),
+    NECROS_HELMET(ItemFamily.NECROS, "Helmet"),
+    NECROS_CHESTPLATE(ItemFamily.NECROS, "Chestplate"),
+    NECROS_LEGGINGS(ItemFamily.NECROS, "Leggings"),
+    NECROS_BOOTS(ItemFamily.NECROS, "Boots"),
 
     // Master Weapons
     MASTER_SWORD(ItemFamily.MASTER, "Sword"),
@@ -93,12 +91,21 @@ public enum CustomItems {
     GEM_OF_DARKNESS(ChatColor.DARK_RED, "Gem of Darkness"),
     IMBUED_CRYSTAL(ChatColor.AQUA, "Imbued Crystal"),
 
+    // Peaceful Warrior Armor
+    PEACEFUL_WARRIOR_HELMET(ItemFamily.PEACEFUL_WARRIOR, "Helmet"),
+    PEACEFUL_WARRIOR_CHESTPLATE(ItemFamily.PEACEFUL_WARRIOR, "Chestplate"),
+    PEACEFUL_WARRIOR_LEGGINGS(ItemFamily.PEACEFUL_WARRIOR, "Leggings"),
+    PEACEFUL_WARRIOR_BOOTS(ItemFamily.PEACEFUL_WARRIOR, "Boots"),
+
     // Phantom Items
     PHANTOM_GOLD(ChatColor.GOLD, "Phantom Gold"),
     PHANTOM_DIAMOND(ChatColor.GOLD, "Phantom Diamond"),
+    PHANTOM_SABRE(ChatColor.DARK_RED, "Phantom Sabre"),
+    PHANTOM_LINK(ChatColor.DARK_RED, "Phantom Link"),
     PHANTOM_CLOCK(ChatColor.DARK_RED, "Phantom Clock"),
     PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
     PHANTOM_POTION(ChatColor.DARK_RED, "Phantom Potion"),
+    NEWBIE_PHANTOM_POTION(ChatColor.DARK_RED, "Newbie Phantom Potion", true),
     PHANTOM_ESSENCE(ChatColor.DARK_RED, "Phantom Essence"),
 
     // Linear Tools
@@ -159,6 +166,7 @@ public enum CustomItems {
     EXECUTIONER_AXE(ChatColor.GOLD, "Executioner's Axe"),
     MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
     GOD_FISH(ChatColor.BLUE, "God Fish"),
+    GOLDEN_STICK(ChatColor.GOLD, "Golden Stick"),
     OVERSEER_BOW(ChatColor.RED, "Overseer's Bow"),
     BARBARIAN_BONE(ChatColor.DARK_RED, "Barbarian Bone"),
     POTION_OF_RESTITUTION(ChatColor.DARK_RED, "Potion of Restitution"),
@@ -175,23 +183,34 @@ public enum CustomItems {
     TOME_OF_LEGENDS(ChatColor.GOLD, "Tome of Legends"),
     TOME_OF_LIFE(ChatColor.DARK_AQUA, "Tome of Life");
 
+    private static final String GRINDSTONE_PREFIX = "grindstone:";
+
     private final ItemFamily family;
     private final ChatColor color;
     private final String name;
     private final String namespaceName;
+    private final String snakecaseName;
+    private final boolean expires;
 
     CustomItems(ItemFamily family, String kind) {
-        this.family = family;
-        this.color = family.getColor();
-        this.name = family.getProperName() + " " + kind;
-        this.namespaceName = computeNamespaceName(this.name);
+        this(family, family.getColor(), family.getProperName() + " " + kind, false);
     }
 
     CustomItems(ChatColor color, String name) {
-        this.family = null;
+        this(null, color, name, false);
+    }
+
+    CustomItems(ChatColor color, String name, boolean expires) {
+        this(null, color, name, expires);
+    }
+
+    CustomItems(ItemFamily family, ChatColor color, String name, boolean expires) {
+        this.family = family;
         this.color = color;
         this.name = name;
         this.namespaceName = computeNamespaceName(this.name);
+        this.snakecaseName = namespaceName.substring(GRINDSTONE_PREFIX.length());
+        this.expires = expires;
     }
 
     public ItemFamily getFamily() {
@@ -211,11 +230,15 @@ public enum CustomItems {
     }
 
     public String getSnakecaseName() {
-        return this.name().toLowerCase();
+        return snakecaseName;
     }
 
     public String getNamespaceName() {
         return namespaceName;
+    }
+
+    public boolean hasExpiration() {
+        return expires;
     }
 
     public int getModelId() {
@@ -223,7 +246,7 @@ public enum CustomItems {
     }
 
     public static String computeNamespaceName(String name) {
-        return "grindstone:" + name.toLowerCase().replaceAll("'s", "").replaceAll(" ", "_");
+        return GRINDSTONE_PREFIX + name.toLowerCase().replaceAll("'s", "").replaceAll(" ", "_");
     }
 
     @Override

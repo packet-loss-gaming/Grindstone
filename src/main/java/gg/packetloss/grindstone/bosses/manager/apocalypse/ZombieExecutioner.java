@@ -21,8 +21,6 @@ import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
 import gg.packetloss.openboss.bukkit.util.BukkitUtil;
 import gg.packetloss.openboss.entity.LocalControllable;
 import gg.packetloss.openboss.entity.LocalEntity;
@@ -125,13 +123,9 @@ public class ZombieExecutioner {
                     ((LivingEntity) anEntity).setMaxHealth(775);
                     ((LivingEntity) anEntity).setHealth(775);
 
-                    // Set speed
-                    try {
-                        AttributeBook.setAttribute((LivingEntity) anEntity, AttributeBook.Attribute.MOVEMENT_SPEED, .33);
-                        AttributeBook.setAttribute((LivingEntity) anEntity, AttributeBook.Attribute.FOLLOW_RANGE, 75);
-                    } catch (UnsupportedFeatureException ex) {
-                        ex.printStackTrace();
-                    }
+                    // Set speed and follow range
+                    EntityUtil.setMovementSpeed((LivingEntity) anEntity, 0.33);
+                    EntityUtil.setFollowRange((LivingEntity) anEntity, 75);
 
                     // Gear them up
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();

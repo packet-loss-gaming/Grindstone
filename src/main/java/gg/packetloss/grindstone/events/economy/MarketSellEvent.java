@@ -11,15 +11,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class MarketSellEvent extends PlayerEvent {
     private static final HandlerList handlers = new HandlerList();
 
     private final List<MarketTransactionLine> items;
-    private final double payment;
+    private final BigDecimal payment;
 
-    public MarketSellEvent(Player who, List<MarketTransactionLine> items, double payment) {
+    public MarketSellEvent(Player who, List<MarketTransactionLine> items, BigDecimal payment) {
         super(who);
         this.items = items;
         this.payment = payment;
@@ -29,7 +30,7 @@ public class MarketSellEvent extends PlayerEvent {
         return items;
     }
 
-    public double getPayment() {
+    public BigDecimal getPayment() {
         return payment;
     }
 

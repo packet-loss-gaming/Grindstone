@@ -21,12 +21,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
+import static gg.packetloss.grindstone.economic.store.mysql.MarketDatabaseHelper.MARKET_INFO_COLUMNS;
+import static gg.packetloss.grindstone.economic.store.mysql.MarketDatabaseHelper.getMarketItem;
 import static gg.packetloss.grindstone.util.DBUtil.preparePlaceHolders;
 import static gg.packetloss.grindstone.util.DBUtil.setStringValues;
 
 public class MySQLItemStoreDatabase implements ItemStoreDatabase {
-    private static final String columns = "`name`, `price`, `current-price`, `stock`, `buyable`, `sellable`";
-    private Queue<MySQLPreparedStatement> queue = new LinkedList<>();
+    private final Queue<MySQLPreparedStatement> queue = new LinkedList<>();
 
     @Override
     public boolean load() {
@@ -183,12 +184,12 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public void addItem(String playerName, String itemName, double price, boolean disableBuy, boolean disableSell) {
+    public void addItem(String itemName, double price, boolean disableBuy, boolean disableSell) {
         queue.add(new ItemRowStatement(itemName, price, !disableBuy, !disableSell));
     }
 
     @Override
-    public void removeItem(String playerName, String itemName) {
+    public void removeItem(String itemName) {
         queue.add(new ItemDeleteStatement(itemName));
     }
 
@@ -241,19 +242,12 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     @Override
     public MarketItemInfo getItem(String name) {
         try (Connection connection  = MySQLHandle.getConnection()) {
-            String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` = ?";
+            String sql = "SELECT " + MARKET_INFO_COLUMNS + " FROM `market-items` WHERE `name` = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, name.toUpperCase());
                 try (ResultSet results = statement.executeQuery()) {
                     if (results.next()) {
-                        return new MarketItemInfo(
-                                results.getString(1),
-                                results.getDouble(2),
-                                results.getDouble(3),
-                                results.getInt(4),
-                                !results.getBoolean(5),
-                                !results.getBoolean(6)
-                        );
+                        return getMarketItem(results, 1);
                     }
                 }
             }
@@ -272,7 +266,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         }
 
         try (Connection connection  = MySQLHandle.getConnection()) {
-            String sql = "SELECT " + columns + " FROM `market-items` WHERE `name` IN (" + preparePlaceHolders(names.size()) + ")";
+            String sql = "SELECT " + MARKET_INFO_COLUMNS + " FROM `market-items` WHERE `name` IN (" + preparePlaceHolders(names.size()) + ")";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 List<String> uppercaseNames = names.stream().map(String::toUpperCase).collect(Collectors.toList());
                 setStringValues(statement, uppercaseNames);
@@ -281,14 +275,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                     while (results.next()) {
                         nameItemMapping.put(
                             results.getString(1).toUpperCase(),
-                            new MarketItemInfo(
-                                results.getString(1),
-                                results.getDouble(2),
-                                results.getDouble(3),
-                                results.getInt(4),
-                                !results.getBoolean(5),
-                                !results.getBoolean(6)
-                            )
+                            getMarketItem(results, 1)
                         );
                     }
                 }
@@ -304,17 +291,10 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     public List<MarketItemInfo> getItemList() {
         List<MarketItemInfo> items = new ArrayList<>();
         try (Connection connection = MySQLHandle.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement("SELECT " + columns + " FROM `market-items`")) {
+            try (PreparedStatement statement = connection.prepareStatement("SELECT " + MARKET_INFO_COLUMNS + " FROM `market-items`")) {
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
-                        items.add(new MarketItemInfo(
-                                results.getString(1),
-                                results.getDouble(2),
-                                results.getDouble(3),
-                                results.getInt(4),
-                                !results.getBoolean(5),
-                                !results.getBoolean(6)
-                        ));
+                        items.add(getMarketItem(results, 1));
                     }
                 }
             }
@@ -326,14 +306,13 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
 
     @Override
     public List<MarketItemInfo> getItemList(String filter, boolean showHidden) {
-
         if (filter == null || filter.isEmpty()) {
             return getItemList();
         }
 
         List<MarketItemInfo> items = new ArrayList<>();
         try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT " + columns + " FROM `market-items` WHERE SUBSTRING_INDEX(`name`, ':', -1) LIKE ?";
+            String sql = "SELECT " + MARKET_INFO_COLUMNS + " FROM `market-items` WHERE SUBSTRING_INDEX(`name`, ':', -1) LIKE ?";
             if (!showHidden) {
                 sql += " AND (`buyable` = true OR `sellable` = true)";
             }
@@ -341,14 +320,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
                 statement.setString(1, "%" + filter.replaceAll("\\s+", "_") + "%");
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
-                        items.add(new MarketItemInfo(
-                                results.getString(1),
-                                results.getDouble(2),
-                                results.getDouble(3),
-                                results.getInt(4),
-                                !results.getBoolean(5),
-                                !results.getBoolean(6)
-                        ));
+                        items.add(getMarketItem(results, 1));
                     }
                 }
             }

@@ -18,6 +18,7 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.listener.BetterMobSpawningListener;
 import gg.packetloss.grindstone.util.listener.DoorRestorationListener;
 import gg.packetloss.grindstone.util.listener.NuisanceSpawnBlockingListener;
+import gg.packetloss.grindstone.util.listener.combatwatchdog.UnbalancedCombatWatchdog;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldMassQuery;
@@ -55,6 +56,7 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
     @Override
     public void enable() {
         CommandBook.registerEvents(this);
+        CommandBook.registerEvents(new UnbalancedCombatWatchdog(this::isRangeWorld));
         CommandBook.registerEvents(new DoorRestorationListener(this::isRangeWorld));
         CommandBook.registerEvents(new NuisanceSpawnBlockingListener(this::isRangeWorld));
         CommandBook.registerEvents(new BetterMobSpawningListener(this::isRangeWorld));

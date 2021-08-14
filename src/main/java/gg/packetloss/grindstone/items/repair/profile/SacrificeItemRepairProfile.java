@@ -12,6 +12,7 @@ import gg.packetloss.grindstone.items.custom.ItemFamily;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import net.md_5.bungee.api.chat.BaseComponent;
+import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 
@@ -24,6 +25,8 @@ public class SacrificeItemRepairProfile implements RepairProfile, ItemRepairProf
         this.itemFamily = itemFamily;
         this.repairItem = repairItem;
         this.repairPercentage = repairPercentage;
+
+        Validate.isTrue(repairItem.getAmount() == 1);
     }
 
     public float getRepairPercentage() {

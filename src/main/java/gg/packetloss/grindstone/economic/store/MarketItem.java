@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.economic.store;
 
+import gg.packetloss.bukkittext.Text;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Optional;
@@ -27,8 +28,12 @@ public class MarketItem implements Comparable<MarketItem> {
         return toTitleCase(itemInfo.getUnqualifiedName());
     }
 
-    public String getDisplayName() {
+    public Text getDisplayName() {
         return itemInfo.getDisplayName();
+    }
+
+    public String getDisplayNameNoColor() {
+        return itemInfo.getDisplayNameNoColor();
     }
 
     public String getLookupName() {

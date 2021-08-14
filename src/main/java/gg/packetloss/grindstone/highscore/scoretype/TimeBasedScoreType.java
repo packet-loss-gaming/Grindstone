@@ -17,8 +17,8 @@ import java.util.concurrent.TimeUnit;
 class TimeBasedScoreType extends BasicScoreType {
     private static final DecimalFormat FINE_TIME_FORMATTER = new DecimalFormat("0.000");
 
-    protected TimeBasedScoreType(int id, boolean gobletEnabled, boolean incremental, Order order) {
-        super(id, gobletEnabled, incremental, order);
+    protected TimeBasedScoreType(int id, boolean gobletEnabled, UpdateMethod updateMethod, Order order) {
+        super(id, gobletEnabled, updateMethod, order);
     }
 
     @Override

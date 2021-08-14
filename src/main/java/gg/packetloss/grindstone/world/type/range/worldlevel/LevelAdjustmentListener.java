@@ -6,73 +6,106 @@
 
 package gg.packetloss.grindstone.world.type.range.worldlevel;
 
-import com.sk89q.commandbook.CommandBook;
-import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import org.bukkit.inventory.ItemStack;
 
 class LevelAdjustmentListener implements Listener {
-    private WorldLevelComponent parent;
-    private Set<UUID> recentlyAwardedPlayers = new HashSet<>();
+    private final WorldLevelComponent parent;
 
     public LevelAdjustmentListener(WorldLevelComponent parent) {
         this.parent = parent;
     }
 
-    private boolean wasRecentlyAwarded(Player player) {
-        return recentlyAwardedPlayers.contains(player.getUniqueId());
-    }
-
-    private void markPlayerRecentlyAwarded(Player player) {
-        recentlyAwardedPlayers.add(player.getUniqueId());
-
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-            recentlyAwardedPlayers.remove(player.getUniqueId());
-        }, 30);
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onPlayerInteractBlock(PlayerInteractEvent event) {
-        Block block = event.getClickedBlock();
-        World world = block.getWorld();
-        if (!parent.isRangeWorld(world)) {
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
             return;
         }
 
-        if (block.getType() == Material.DRAGON_EGG) {
-            // Always stop the interaction
-            event.setCancelled(true);
+        ItemStack itemStack = event.getItem();
+        if (!ItemUtil.isItem(itemStack, CustomItems.DEMONIC_ASHES)) {
+            return;
+        }
 
-            // If the player was recently awarded, hold off, give them time to process that this is here
-            Player player = event.getPlayer();
-            if (wasRecentlyAwarded(player)) {
-                return;
-            }
+        Player player = event.getPlayer();
+        if (!parent.isRangeWorld(player.getWorld())) {
+            ChatUtil.sendError(player, "These won't have any effect here.");
+            ChatUtil.sendError(player, "This world is shielded from influence.");
+            return;
+        }
 
-            // Remove the block, and create a fake explosion for fun
-            block.setType(Material.AIR);
-            ExplosionStateFactory.createFakeExplosion(block.getLocation());
+        if (parent.isPeaceful(player)) {
+            ChatUtil.sendError(player, "Spreading these ashes would violate your peaceful stature.");
+            return;
+        }
 
+        ItemUtil.removeItemOfName(
+            player,
+            CustomItemCenter.build(CustomItems.DEMONIC_ASHES),
+            1,
+            false
+        );
+
+        // Update the world level
+        int newLevel = parent.getWorldLevel(player) + 1;
+        parent.setWorldLevel(player, newLevel);
+        parent.showTitleForLevel(player, newLevel);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSacrifice(PlayerSacrificeItemEvent event) {
+        ItemStack itemStack = event.getItemStack();
+        if (!ItemUtil.isItem(itemStack, CustomItems.BARBARIAN_BONE)) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        int worldLevel = parent.getWorldLevel(player);
+
+        // If any bones were consumed, remove the corresponding amount of levels, and add grant them
+        // as ashes
+        int amountConsumed = Math.min(itemStack.getAmount(), worldLevel - 1);
+        if (amountConsumed > 0) {
             // Update the world level
-            int newLevel = parent.getWorldLevel(player) + 1;
+            int newLevel = worldLevel - amountConsumed;
             parent.setWorldLevel(player, newLevel);
             parent.showTitleForLevel(player, newLevel);
+
+            // Give ashes
+            GeneralPlayerUtil.giveItemToPlayer(
+                player,
+                CustomItemCenter.build(CustomItems.DEMONIC_ASHES, amountConsumed)
+            );
         }
+
+        // If any bones remain in the stack, give the remainder back
+        int newAmountOfBones = itemStack.getAmount() - amountConsumed;
+        if (newAmountOfBones > 0) {
+            GeneralPlayerUtil.giveItemToPlayer(
+                player,
+                CustomItemCenter.build(CustomItems.BARBARIAN_BONE, newAmountOfBones)
+            );
+        }
+
+        event.setItemStack(null);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -82,13 +115,11 @@ class LevelAdjustmentListener implements Listener {
             return;
         }
 
+        Player player = event.getPlayer();
         Block block = event.getBlock();
         Location blockLoc = block.getLocation();
-        if (parent.shouldSpawnChallengeBlock(blockLoc, block.getType())) {
-            parent.spawnChallengeBlock(blockLoc);
-
-            Player player = event.getPlayer();
-            markPlayerRecentlyAwarded(player);
+        if (parent.shouldSpawnDemonicAshes(player, blockLoc, block.getType())) {
+            parent.spawnDemonicAshes(player, blockLoc);
         }
     }
 
@@ -123,6 +154,15 @@ class LevelAdjustmentListener implements Listener {
             return;
         }
 
-        parent.setWorldLevel(player, parent.getWorldLevel(player) / 2);
+        int worldLevel = parent.getWorldLevel(player);
+        if (worldLevel > 1) {
+            parent.setWorldLevel(
+                player,
+                (int) Math.max(
+                    1,
+                    worldLevel * parent.getConfig().adjustmentDeathPenalty
+                )
+            );
+        }
     }
 }

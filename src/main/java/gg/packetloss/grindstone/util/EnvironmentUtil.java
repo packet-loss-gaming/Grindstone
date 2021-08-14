@@ -6,21 +6,23 @@
 
 package gg.packetloss.grindstone.util;
 
+import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Monster;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Dye;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+
+import static gg.packetloss.grindstone.util.MaterialUtil.generatePostfixMaterialSet;
 
 public class EnvironmentUtil {
     private static final long START_NIGHT = 12 * 1000;
@@ -71,32 +73,28 @@ public class EnvironmentUtil {
         return cropBlocks.contains(type) || isBerryBush(type);
     }
 
-    private static final Set<Material> shrubBlocks = Set.of(
-            Material.DEAD_BUSH, Material.GRASS, Material.TALL_GRASS, Material.ROSE_BUSH, Material.DANDELION,
-            Material.RED_MUSHROOM, Material.BROWN_MUSHROOM, Material.POPPY
-    );
+    private static final Set<Material> SHRUB_BLOCKS;
+
+    static {
+        List<Material> newShrubBlocks = new ArrayList<>(List.of(
+            Material.DEAD_BUSH, Material.GRASS, Material.TALL_GRASS,
+            Material.RED_MUSHROOM, Material.BROWN_MUSHROOM
+        ));
+
+        newShrubBlocks.addAll(Tag.FLOWERS.getValues());
+
+        SHRUB_BLOCKS = Set.copyOf(newShrubBlocks);
+    }
 
     public static boolean isShrubBlock(Block block) {
         return isShrubBlock(block.getType());
     }
 
     public static boolean isShrubBlock(Material type) {
-        return shrubBlocks.contains(type) || isCropBlock(type);
+        return SHRUB_BLOCKS.contains(type) || isCropBlock(type);
     }
 
-    private static final Set<Material> ORES;
-
-    static {
-        List<Material> newOreBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_ORE")) {
-                newOreBlocks.add(material);
-            }
-        }
-
-        ORES = Set.copyOf(newOreBlocks);
-    }
+    private static final Set<Material> ORES = generatePostfixMaterialSet("_ORE");
 
     public static boolean isOre(Block block) {
         return isOre(block.getType());
@@ -106,19 +104,66 @@ public class EnvironmentUtil {
         return ORES.contains(type);
     }
 
-    private static final Set<Material> LOGS;
-
-    static {
-        List<Material> newSaplingsBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_LOG")) {
-                newSaplingsBlocks.add(material);
+    private static ItemStack getOreDrop(Material block) {
+        if (Tag.COAL_ORES.isTagged(block)) {
+            return new ItemStack(Material.COAL);
+        }
+        if (Tag.IRON_ORES.isTagged(block)) {
+            return new ItemStack(Material.RAW_IRON);
+        }
+        if (Tag.COPPER_ORES.isTagged(block)) {
+            return new ItemStack(Material.RAW_COPPER, ChanceUtil.getRangedRandom(2, 3));
+        }
+        if (Tag.LAPIS_ORES.isTagged(block)) {
+            return new ItemStack(Material.LAPIS_LAZULI, ChanceUtil.getRangedRandom(4, 9));
+        }
+        if (Tag.REDSTONE_ORES.isTagged(block)) {
+            return new ItemStack(Material.REDSTONE, ChanceUtil.getRangedRandom(4, 5));
+        }
+        if (Tag.GOLD_ORES.isTagged(block)) {
+            if (block == Material.NETHER_GOLD_ORE) {
+                return new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRangedRandom(2, 6));
             }
+            return new ItemStack(Material.RAW_GOLD);
+        }
+        if (Tag.DIAMOND_ORES.isTagged(block)) {
+            return new ItemStack(Material.DIAMOND);
+        }
+        if (Tag.EMERALD_ORES.isTagged(block)) {
+            return new ItemStack(Material.EMERALD);
+        }
+        if (block == Material.NETHER_QUARTZ_ORE) {
+            return new ItemStack(Material.QUARTZ);
         }
 
-        LOGS = Set.copyOf(newSaplingsBlocks);
+        throw new UnsupportedOperationException("Unknown ore: " + block.name());
     }
+
+    public static ItemStack getOreDrop(Material block, ItemStack tool) {
+        Validate.isTrue(isOre(block));
+
+        if (tool.containsEnchantment(Enchantment.SILK_TOUCH)) {
+            return new ItemStack(block);
+        } else {
+            int fortuneModifier = ItemUtil.fortuneModifier(block, ItemUtil.fortuneLevel(tool));
+            ItemStack stack = getOreDrop(block);
+            stack.setAmount(stack.getAmount() * fortuneModifier);
+            return stack;
+        }
+    }
+
+    static {
+        // Do a runtime validation of the getOreDrop function to make sure it's setup correctly.
+        for (Material ore : ORES) {
+            ItemStack result = getOreDrop(ore, new ItemStack(Material.DIAMOND_PICKAXE));
+            Validate.notNull(result);
+
+            Material resultType = result.getType();
+            Validate.isTrue(resultType != ore);
+        }
+    }
+
+    private static final Set<Material> LOGS = Tag.LOGS.getValues();
 
     public static boolean isLog(Block block) {
         return isLog(block.getType());
@@ -128,19 +173,7 @@ public class EnvironmentUtil {
         return LOGS.contains(type);
     }
 
-    private static final Set<Material> SAPLINGS;
-
-    static {
-        List<Material> newSaplingsBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_SAPLING")) {
-                newSaplingsBlocks.add(material);
-            }
-        }
-
-        SAPLINGS = Set.copyOf(newSaplingsBlocks);
-    }
+    private static final Set<Material> SAPLINGS = Tag.SAPLINGS.getValues();
 
     public static boolean isSapling(Block block) {
         return isSapling(block.getType());
@@ -150,54 +183,35 @@ public class EnvironmentUtil {
         return SAPLINGS.contains(type);
     }
 
-    public static ItemStack getOreDrop(Block block, boolean hasSilkTouch) {
-        return getOreDrop(block.getType(), hasSilkTouch);
+    private static final Set<Material> PORTABLE_CONTAINER_BLOCKS;
+
+    static {
+        List<Material> newPortableContainerBlocks = new ArrayList<>(List.of(
+            Material.SHULKER_BOX
+        ));
+
+        newPortableContainerBlocks.addAll(Tag.SHULKER_BOXES.getValues());
+
+        PORTABLE_CONTAINER_BLOCKS = Set.copyOf(newPortableContainerBlocks);
     }
 
-    public static ItemStack getOreDrop(Material block, boolean hasSilkTouch) {
+    public static boolean isPortableContainer(Block block) {
+        return isPortableContainer(block.getType());
+    }
 
-        if (!isOre(block)) {
-            return null;
-        } else if (hasSilkTouch) {
-            return new ItemStack(block);
-        } else {
-            if (block == Material.COAL_ORE) {
-                return new ItemStack(Material.COAL);
-            }
-            if (block == Material.LAPIS_ORE) {
-                return new Dye(DyeColor.BLUE).toItemStack(ChanceUtil.getRangedRandom(4, 8));
-            }
-            if (block == Material.REDSTONE_ORE) {
-                return new ItemStack(Material.REDSTONE, ChanceUtil.getRangedRandom(4, 5));
-            }
-            if (block == Material.DIAMOND_ORE) {
-                return new ItemStack(Material.DIAMOND);
-            }
-            if (block == Material.EMERALD_ORE) {
-                return new ItemStack(Material.EMERALD);
-            }
-            if (block == Material.NETHER_QUARTZ_ORE) {
-                return new ItemStack(Material.QUARTZ);
-            }
-
-            return new ItemStack(block);
-        }
+    public static boolean isPortableContainer(Material type) {
+        return PORTABLE_CONTAINER_BLOCKS.contains(type);
     }
 
     private static final Set<Material> CONTAINER_BLOCKS;
 
     static {
         List<Material> newContainerBlocks = new ArrayList<>(List.of(
-                Material.BREWING_STAND, Material.CHEST, Material.DISPENSER, Material.DROPPER, Material.FURNACE,
-                Material.JUKEBOX, Material.ENDER_CHEST, Material.TRAPPED_CHEST, Material.HOPPER,
-                Material.SHULKER_BOX
+            Material.BREWING_STAND, Material.CHEST, Material.DISPENSER, Material.DROPPER, Material.FURNACE,
+            Material.JUKEBOX, Material.ENDER_CHEST, Material.TRAPPED_CHEST, Material.HOPPER,Material.BARREL
         ));
 
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_SHULKER_BOX")) {
-                newContainerBlocks.add(material);
-            }
-        }
+        newContainerBlocks.addAll(PORTABLE_CONTAINER_BLOCKS);
 
         CONTAINER_BLOCKS = Set.copyOf(newContainerBlocks);
     }
@@ -218,20 +232,7 @@ public class EnvironmentUtil {
         return isChest(block.getType());
     }
 
-    private static final Set<Material> TRAPDOOR_BLOCKS;
-
-    static {
-        List<Material> newTrapdoorBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            String name = material.name();
-            if (name.endsWith("_TRAPDOOR")) {
-                newTrapdoorBlocks.add(material);
-            }
-        }
-
-        TRAPDOOR_BLOCKS = Set.copyOf(newTrapdoorBlocks);
-    }
+    private static final Set<Material> TRAPDOOR_BLOCKS = Tag.TRAPDOORS.getValues();
 
     public static boolean isTrapdoorBlock(Material type) {
         return TRAPDOOR_BLOCKS.contains(type);
@@ -246,18 +247,8 @@ public class EnvironmentUtil {
     static {
         List<Material> newClosableBlocks = new ArrayList<>();
 
-        for (Material material : Material.values()) {
-            String name = material.name();
-            if (name.endsWith("_DOOR")) {
-                if (material == Material.IRON_DOOR) {
-                    continue;
-                }
-
-                newClosableBlocks.add(material);
-            } else if (name.endsWith("_FENCE_GATE")) {
-                newClosableBlocks.add(material);
-            }
-        }
+        newClosableBlocks.addAll(Tag.WOODEN_DOORS.getValues());
+        newClosableBlocks.addAll(Tag.FENCE_GATES.getValues());
 
         newClosableBlocks.addAll(TRAPDOOR_BLOCKS);
 
@@ -280,6 +271,16 @@ public class EnvironmentUtil {
         return isLadder(block.getType());
     }
 
+    private static final Set<Material> BEDS = Tag.BEDS.getValues();
+
+    public static boolean isBed(Material type) {
+        return BEDS.contains(type);
+    }
+
+    public static boolean isBed(Block block) {
+        return isBed(block.getType());
+    }
+
     private static final Set<Material> INTERACTIVE_BLOCKS;
 
     static {
@@ -292,15 +293,8 @@ public class EnvironmentUtil {
         newInteractiveBlocks.addAll(CONTAINER_BLOCKS);
         newInteractiveBlocks.addAll(CLOSEABLE_BLOCKS);
         newInteractiveBlocks.addAll(BERRY_BUSHES);
-
-        for (Material material : Material.values()) {
-            String name = material.name();
-            if (name.endsWith("_BUTTON")) {
-                newInteractiveBlocks.add(material);
-            } else if (name.endsWith("_BED")) {
-                newInteractiveBlocks.add(material);
-            }
-        }
+        newInteractiveBlocks.addAll(BEDS);
+        newInteractiveBlocks.addAll(Tag.BUTTONS.getValues());
 
         INTERACTIVE_BLOCKS = Set.copyOf(newInteractiveBlocks);
     }
@@ -334,22 +328,14 @@ public class EnvironmentUtil {
             return true;
         }
 
+        if (EnvironmentUtil.isInteractiveBlock(clicked.getRelative(clickedFace.getOppositeFace()))) {
+            return true;
+        }
+
         return false;
     }
 
-    private static final Set<Material> SIGN_BLOCKS;
-
-    static {
-        List<Material> newSignBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_SIGN")) {
-                newSignBlocks.add(material);
-            }
-        }
-
-        SIGN_BLOCKS = Set.copyOf(newSignBlocks);
-    }
+    private static final Set<Material> SIGN_BLOCKS = Tag.SIGNS.getValues();
 
     public static boolean isSign(Block block) {
         return isSign(block.getType());
@@ -359,19 +345,7 @@ public class EnvironmentUtil {
         return SIGN_BLOCKS.contains(type);
     }
 
-    private static final Set<Material> WOOL;
-
-    static {
-        List<Material> newWoolBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_WOOL")) {
-                newWoolBlocks.add(material);
-            }
-        }
-
-        WOOL = Set.copyOf(newWoolBlocks);
-    }
+    private static final Set<Material> WOOL = Tag.WOOL.getValues();
 
     public static boolean isWool(Material type) {
         return WOOL.contains(type);
@@ -381,19 +355,7 @@ public class EnvironmentUtil {
         return isWool(block.getType());
     }
 
-    private static final Set<Material> CONCRETE;
-
-    static {
-        List<Material> newConcreteBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_CONCRETE")) {
-                newConcreteBlocks.add(material);
-            }
-        }
-
-        CONCRETE = Set.copyOf(newConcreteBlocks);
-    }
+    private static final Set<Material> CONCRETE = generatePostfixMaterialSet("_CONCRETE");
 
     public static boolean isConcrete(Material type) {
         return CONCRETE.contains(type);
@@ -403,19 +365,7 @@ public class EnvironmentUtil {
         return isConcrete(block.getType());
     }
 
-    private static final Set<Material> STAINED_GLASS_BLOCKS;
-
-    static {
-        List<Material> newStainedGlassBlocks = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_STAINED_GLASS")) {
-                newStainedGlassBlocks.add(material);
-            }
-        }
-
-        STAINED_GLASS_BLOCKS = Set.copyOf(newStainedGlassBlocks);
-    }
+    private static final Set<Material> STAINED_GLASS_BLOCKS = generatePostfixMaterialSet("_STAINED_GLASS");
 
     public static boolean isStainedGlassBlock(Material type) {
         return STAINED_GLASS_BLOCKS.contains(type);
@@ -425,19 +375,7 @@ public class EnvironmentUtil {
         return isStainedGlassBlock(block.getType());
     }
 
-    private static final Set<Material> STAINED_GLASS_PANES;
-
-    static {
-        List<Material> newStainedGlassPanes = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_STAINED_GLASS_PANE")) {
-                newStainedGlassPanes.add(material);
-            }
-        }
-
-        STAINED_GLASS_PANES = Set.copyOf(newStainedGlassPanes);
-    }
+    private static final Set<Material> STAINED_GLASS_PANES = generatePostfixMaterialSet("_STAINED_GLASS_PANE");
 
     public static boolean isStainedGlassPane(Material type) {
         return STAINED_GLASS_PANES.contains(type);
@@ -453,28 +391,6 @@ public class EnvironmentUtil {
 
     public static boolean isStainedGlass(Block block) {
         return isStainedGlass(block.getType());
-    }
-
-    private static final Set<Material> BEDS;
-
-    static {
-        List<Material> newBeds = new ArrayList<>();
-
-        for (Material material : Material.values()) {
-            if (material.name().endsWith("_BED")) {
-                newBeds.add(material);
-            }
-        }
-
-        BEDS = Set.copyOf(newBeds);
-    }
-
-    public static boolean isBed(Material type) {
-        return BEDS.contains(type);
-    }
-
-    public static boolean isBed(Block block) {
-        return isBed(block.getType());
     }
 
     public static boolean isWater(Block block) {
@@ -494,8 +410,11 @@ public class EnvironmentUtil {
     }
 
     public static boolean isLiquid(Material type) {
-
         return isWater(type) || isLava(type);
+    }
+
+    public static boolean isLiquid(Block block) {
+        return isLiquid(block.getType());
     }
 
     public static boolean isDangerous(Material type) {
@@ -569,11 +488,6 @@ public class EnvironmentUtil {
     public static void generateRadialEffect(Location[] locations, Effect effect) {
 
         for (Location loc : locations) generateRadialEffect(loc, effect);
-    }
-
-    public static boolean isHostileEntity(Entity e) {
-
-        return e instanceof Monster;
     }
 
     private static final BlockFace[] NEARBY_BLOCK_FACES = new BlockFace[]{

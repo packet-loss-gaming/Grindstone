@@ -35,15 +35,14 @@ import gg.packetloss.grindstone.util.item.BookUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.BossBuggedRespawnListener;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
+import gg.packetloss.grindstone.util.mobai.SimpleAttackNearestPlayer;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import gg.packetloss.hackbook.AttributeBook;
-import gg.packetloss.hackbook.entity.HBGiant;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
+import gg.packetloss.grindstone.world.type.city.area.areas.GiantBoss.mobai.ShnugglesSmash;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -224,23 +223,10 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
     public boolean isBossSpawned() {
         if (!isArenaLoaded()) return true;
-        boolean found = false;
-        boolean second = false;
         for (Giant e : getContained(Giant.class)) {
-            if (e.isValid() && HBGiant.is(e)) {
-                if (!found) {
-                    boss = e;
-                    found = true;
-                } else if (e.getHealth() < boss.getHealth()) {
-                    boss = e;
-                    second = true;
-                } else {
-                    e.remove();
-                }
+            if (e.isValid() && e != boss) {
+                e.remove();
             }
-        }
-        if (second) {
-            getContained(Giant.class).stream().filter(e -> e.isValid() && !e.equals(boss)).forEach(Entity::remove);
         }
 
         return isBossSpawnedFast();
@@ -255,17 +241,18 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     }
 
     private void spawnBossEntity(double currentHealth, double maxHealth) {
-        boss = HBGiant.spawn(getBossSpawnLocation());
+        boss = getWorld().spawn(getBossSpawnLocation(), Giant.class);
+
+        Bukkit.getMobGoals().addGoal(boss, 1, new SimpleAttackNearestPlayer(boss));
+        Bukkit.getMobGoals().addGoal(boss, 2, new ShnugglesSmash(boss));
+
         boss.setMaxHealth(maxHealth);
         boss.setHealth(currentHealth);
         boss.setRemoveWhenFarAway(false);
 
-        try {
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.KNOCKBACK_RESISTANCE, 1);
-            AttributeBook.setAttribute(boss, AttributeBook.Attribute.FOLLOW_RANGE, 40);
-        } catch (UnsupportedFeatureException ex) {
-            log.warning("Boss NMS attributes not properly set.");
-        }
+        EntityUtil.setMovementSpeed(boss, .2);
+        EntityUtil.setKnockbackResistance(boss, 1);
+        EntityUtil.setFollowRange(boss, 40);
     }
 
     public void spawnBoss() {
@@ -349,10 +336,6 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         // Equalize Players
         for (Player player : getContainedParticipants()) {
             try {
-                if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
-                    player.damage(32, boss);
-                }
-
                 if (player.getVehicle() != null) {
                     player.getVehicle().eject();
                     ChatUtil.sendWarning(player, "The boss throws you off!");
@@ -435,7 +418,8 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
         for (Zombie baby : containedBabies) {
             for (PotionEffectType effectType : effectTypes) {
-                baby.addPotionEffect(new PotionEffect(effectType, 20 * config.babyPotTime, potLevel), true);
+                baby.removePotionEffect(effectType);
+                baby.addPotionEffect(new PotionEffect(effectType, 20 * config.babyPotTime, potLevel));
             }
         }
     }
@@ -562,7 +546,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                                 continue;
                             }
 
-                            if (ItemUtil.hasAncientArmour(player) && ChanceUtil.getChance(3)) {
+                            if (ItemUtil.hasAncientArmor(player) && ChanceUtil.getChance(3)) {
                                 ChatUtil.sendNotice(player, "Your armor shields you from the fire!");
                                 continue;
                             }

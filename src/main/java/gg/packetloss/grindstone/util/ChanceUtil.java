@@ -69,4 +69,13 @@ public class ChanceUtil {
     public static boolean getChance(int chance, int outOf) {
         return getRandom(outOf) <= chance;
     }
+
+    public static void doRandom(Runnable... options) {
+        CollectionUtil.getElement(options).run();
+    }
+
+    @SafeVarargs
+    public static <T> T supplyRandom(Supplier<T>... options){
+        return CollectionUtil.getElement(options).get();
+    }
 }

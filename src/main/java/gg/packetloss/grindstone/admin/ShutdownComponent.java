@@ -17,7 +17,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -34,12 +33,10 @@ public class ShutdownComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-        CommandBook.getComponentRegistrar().registerTopLevelCommands((commandManager, registration) -> {
-            registration.register(commandManager, ShutdownCommandsRegistration.builder(), new ShutdownCommands(this));
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.register(ShutdownCommandsRegistration.builder(), new ShutdownCommands(this));
         });
     }
-
-    private BukkitTask task = null;
 
     private boolean isRequesterOnlyPlayerOnline(Collection<? extends Player> players, @Nullable Player requester) {
         if (requester == null) {
@@ -55,16 +52,24 @@ public class ShutdownComponent extends BukkitComponent {
     }
 
     private CountdownHandle shutdownHandle;
-    private String expectedDowntime;
 
-    private boolean checkForEarlyShutdown(Player requester) {
+    private boolean checkForEarlyShutdown(@Nullable Player requester) {
         Collection<? extends Player> players = server.getOnlinePlayers();
         if (players.isEmpty() || isRequesterOnlyPlayerOnline(players, requester)) {
-            shutdownHandle.setRunsRemaining(0);
             return true;
         }
 
         return false;
+    }
+
+    private void doFinalShutdown() {
+        server.getPluginManager().callEvent(new ServerShutdownEvent(0));
+
+        Bukkit.getOnlinePlayers().forEach((player) -> {
+            player.sendActionBar(ChatColor.RED + "Shutting down!");
+        });
+
+        server.shutdown();
     }
 
     public void shutdown(@Nullable Player requester, int assignedSeconds, String givenDowntime) {
@@ -73,11 +78,8 @@ public class ShutdownComponent extends BukkitComponent {
             return;
         }
 
-        this.expectedDowntime = givenDowntime;
-
         if (shutdownHandle != null) {
-            shutdownHandle.setRunsRemaining(assignedSeconds);
-            return;
+            shutdownHandle.cancel();
         }
 
         TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
@@ -87,11 +89,12 @@ public class ShutdownComponent extends BukkitComponent {
 
         taskBuilder.setAction((seconds) -> {
             if (checkForEarlyShutdown(requester)) {
+                shutdownHandle.setRunsRemaining(0);
                 return true;
             }
 
             if (TimerUtil.matchesFilter(seconds, 10, 5)) {
-                String message = "Shutting down in " + seconds + " seconds - for " + expectedDowntime + " of downtime!";
+                String message = "Shutting down in " + seconds + " seconds - for " + givenDowntime + " of downtime!";
 
                 Bukkit.getOnlinePlayers().forEach((player) -> {
                     player.sendActionBar(ChatColor.RED + message);
@@ -104,15 +107,32 @@ public class ShutdownComponent extends BukkitComponent {
 
             return true;
         });
-        taskBuilder.setFinishAction(() -> {
-            server.getPluginManager().callEvent(new ServerShutdownEvent(0));
+        taskBuilder.setFinishAction(this::doFinalShutdown);
 
-            Bukkit.getOnlinePlayers().forEach((player) -> {
-                player.sendActionBar(ChatColor.RED + "Shutting down!");
-            });
+        shutdownHandle = taskBuilder.build();
+    }
 
-            server.shutdown();
+    public void idleShutdown() {
+        if (shutdownHandle != null) {
+            shutdownHandle.cancel();
+        }
+
+        TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
+
+        taskBuilder.setInterval(20);
+        taskBuilder.setNumberOfRuns(30);
+
+        taskBuilder.setAction((seconds) -> {
+            if (checkForEarlyShutdown(null)) {
+                String message = "Honoring idle shutdown request in " + seconds + " seconds.";
+                log.info(message);
+                return true;
+            }
+
+            shutdownHandle.setRunsRemaining(30);
+            return false;
         });
+        taskBuilder.setFinishAction(this::doFinalShutdown);
 
         shutdownHandle = taskBuilder.build();
     }

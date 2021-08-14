@@ -33,9 +33,9 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.bukkittext.Text;
-import gg.packetloss.grindstone.EconomyComponent;
 import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
@@ -61,6 +61,7 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.flag.BooleanFlagState;
+import gg.packetloss.grindstone.util.item.ItemModifierUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.signwall.SignWall;
@@ -73,10 +74,8 @@ import gg.packetloss.grindstone.util.signwall.flag.BooleanFlagPainter;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.minigame.Win;
 import gg.packetloss.grindstone.world.type.city.minigame.WinType;
-import gg.packetloss.hackbook.ModifierBook;
-import gg.packetloss.hackbook.exceptions.UnsupportedFeatureException;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.*;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
@@ -92,6 +91,7 @@ import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -103,6 +103,7 @@ import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +116,10 @@ import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
 @ComponentInformation(friendlyName = "Jungle Raid", desc = "Warfare at it's best!")
-@Depend(components = {GuildComponent.class, PrayerComponent.class}, plugins = {"WorldEdit", "WorldGuard"})
+@Depend(
+    components = {GuildComponent.class, PrayerComponent.class, WalletComponent.class},
+    plugins = {"WorldEdit", "WorldGuard"}
+)
 public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
     private final CommandBook inst = CommandBook.inst();
@@ -159,7 +163,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     @InjectComponent
     SpectatorComponent spectatorComponent;
     @InjectComponent
-    EconomyComponent economyComponent;
+    WalletComponent walletComponent;
     @InjectComponent
     ChatBridgeComponent chatBridgeComponent;
 
@@ -274,25 +278,21 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             gear.add(new ItemStack(Material.SHEARS));
         }
         if (combatClass.hasAxe()) {
-            try {
-                gear.add(ModifierBook.cloneWithSpecifiedModifiers(
-                        new ItemStack(Material.IRON_AXE),
-                        Lists.newArrayList(
-                                ModifierBook.ITEM_ATTACK_DAMAGE.get(
-                                        1,
-                                        ModifierBook.ModifierOperation.ADDITIVE,
-                                        ModifierBook.Slot.MAIN_HAND
-                                ),
-                                ModifierBook.ITEM_ATTACK_SPEED.get(
-                                        .9,
-                                        ModifierBook.ModifierOperation.ADDITIVE,
-                                        ModifierBook.Slot.MAIN_HAND
-                                )
+            gear.add(ItemModifierUtil.cloneWithSpecifiedModifiers(
+                    new ItemStack(Material.IRON_AXE),
+                    Lists.newArrayList(
+                        ItemModifierUtil.ITEM_ATTACK_DAMAGE.get(
+                            1,
+                            AttributeModifier.Operation.ADD_NUMBER,
+                            EquipmentSlot.HAND
+                        ),
+                        ItemModifierUtil.ITEM_ATTACK_SPEED.get(
+                            .9,
+                            AttributeModifier.Operation.ADD_NUMBER,
+                            EquipmentSlot.HAND
                         )
-                ));
-            } catch (UnsupportedFeatureException ex) {
-                ex.printStackTrace();
-            }
+                    )
+            ));
         }
         gear.add(new ItemStack(Material.COOKED_BEEF, 64));
         gear.add(new ItemStack(Material.COMPASS));
@@ -378,10 +378,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void rewardPlayer(Player player, boolean won) {
-        if (!economyComponent.isEnabled()) {
-            return;
-        }
-
         double adjustedPoints = 1.5 * gameState.get(player).getPoints();
         double amt = adjustedPoints * (won ? 1 : .5);
 
@@ -395,9 +391,13 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
         }
 
-        Economy economyHandle = economyComponent.getHandle();
-        economyHandle.depositPlayer(player, amt);
-        ChatUtil.sendNotice(player, "You received: " + economyHandle.format(amt) + '.');
+        BigDecimal finalAmt = new BigDecimal(amt);
+        walletComponent.addToBalance(player, finalAmt).thenAcceptAsynchronously(
+            (newBalance) -> {
+                ChatUtil.sendNotice(player, "You received: ", walletComponent.format(finalAmt), '.');
+            },
+            (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+        );
     }
 
     public void died(Player player) {

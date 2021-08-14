@@ -23,6 +23,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -96,7 +97,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
 
             // Always give the player their block back, provided the types matched.
             if (typesMatch) {
-                player.getInventory().addItem(itemStack);
+                GeneralPlayerUtil.giveItemToPlayer(player, itemStack);
             }
         }, 20 * 10);
     }

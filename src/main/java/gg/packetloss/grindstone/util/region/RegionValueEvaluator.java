@@ -6,10 +6,10 @@
 
 package gg.packetloss.grindstone.util.region;
 
-import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.regions.Region;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -79,7 +79,7 @@ public class RegionValueEvaluator {
 
         CompletableFuture<RegionValueReport> future = new CompletableFuture<>();
 
-        CommandBook.server().getScheduler().runTaskAsynchronously(CommandBook.inst(), () -> {
+        PluginTaskExecutor.submitAsync(() -> {
             MarketItemLookupInstance nameItemMapping = MarketComponent.getLookupInstance(reportSource.allNames);
 
             double blockPrice = 0;

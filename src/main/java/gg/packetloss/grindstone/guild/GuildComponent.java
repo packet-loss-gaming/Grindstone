@@ -8,14 +8,15 @@ package gg.packetloss.grindstone.guild;
 
 import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.info.InfoComponent;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
+import gg.packetloss.grindstone.data.DataBaseComponent;
 import gg.packetloss.grindstone.events.guild.GuildGrantExpEvent;
 import gg.packetloss.grindstone.events.guild.GuildLevelUpEvent;
 import gg.packetloss.grindstone.guild.base.GuildBase;
@@ -29,14 +30,13 @@ import gg.packetloss.grindstone.guild.listener.RogueListener;
 import gg.packetloss.grindstone.guild.passive.PotionMetabolizer;
 import gg.packetloss.grindstone.guild.powers.GuildPower;
 import gg.packetloss.grindstone.guild.setting.GuildSettingConverter;
-import gg.packetloss.grindstone.guild.state.GuildState;
-import gg.packetloss.grindstone.guild.state.InternalGuildState;
-import gg.packetloss.grindstone.guild.state.NinjaState;
-import gg.packetloss.grindstone.guild.state.RogueState;
+import gg.packetloss.grindstone.guild.state.*;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
+import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.StringUtil;
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
 import org.apache.commons.lang.Validate;
@@ -51,10 +51,13 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Guild Management", desc = "Guild core systems and services")
+@Depend(components = {
+    AdminComponent.class, DataBaseComponent.class, HighScoresComponent.class,
+    ChatBridgeComponent.class, ManagedWorldComponent.class
+})
 public class GuildComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -98,12 +101,11 @@ public class GuildComponent extends BukkitComponent implements Listener {
                 11
         );
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            GuildSettingConverter.register(commandManager);
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            GuildSettingConverter.register(registrar);
 
-            registrar.registerAsSubCommand("guild", "Guild commands", commandManager, (innerCommandManager, innerRegistration) -> {
-                innerRegistration.register(innerCommandManager, GuildCommandsRegistration.builder(), new GuildCommands(this));
+            registrar.registerAsSubCommand("guild", "Guild commands", (guildRegistrar) -> {
+                guildRegistrar.register(GuildCommandsRegistration.builder(), new GuildCommands(this));
             });
         });
 
@@ -135,24 +137,17 @@ public class GuildComponent extends BukkitComponent implements Listener {
         return Optional.of(getState(player, baseState));
     }
 
-    private CompletableFuture<Optional<InternalGuildState>> constructGuildState(Player player) {
-        CompletableFuture<Optional<InternalGuildState>> future = new CompletableFuture<>();
-
-        server.getScheduler().runTaskAsynchronously(inst, () -> {
-            future.complete(database.loadGuild(player.getUniqueId()));
+    private TaskFuture<Optional<InternalGuildState>> constructGuildState(Player player) {
+        return TaskFuture.asyncTask(() -> {
+            return database.loadGuild(player.getUniqueId());
         });
-
-        return future;
     }
 
     private InternalGuildState constructDefaultGuildState(GuildType type) {
-        switch (type) {
-            case ROGUE:
-                return new RogueState(0);
-            case NINJA:
-                return new NinjaState(0);
-        }
-        throw new UnsupportedOperationException();
+        return switch (type) {
+            case ROGUE -> new RogueState(0, new RogueStateSettings());
+            case NINJA -> new NinjaState(0, new NinjaStateSettings());
+        };
     }
 
     private String getGuildName(InternalGuildState state) {
@@ -221,24 +216,21 @@ public class GuildComponent extends BukkitComponent implements Listener {
         throw new IllegalStateException();
     }
 
-    private void update(Player player, InternalGuildState state) {
-        highScores.update(player, getScoreType(state), (int) state.getExperience());
-        database.updateActive(player.getUniqueId(), state);
-    }
-
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
         constructGuildState(player).thenAccept((optInternalGuildState) -> {
             optInternalGuildState.ifPresent((internalGuildState -> {
-                server.getScheduler().runTask(inst, () -> {
-                    guildStateMap.put(player.getUniqueId(), internalGuildState);
-
-                    getState(player, internalGuildState).enablePowers();
-                });
+                guildStateMap.put(player.getUniqueId(), internalGuildState);
+                getState(player, internalGuildState).enablePowers();
             }));
         });
+    }
+
+    private void update(Player player, InternalGuildState state) {
+        highScores.update(player, getScoreType(state), (int) state.getExperience());
+        database.updateActive(player.getUniqueId(), state);
     }
 
     @EventHandler
@@ -250,7 +242,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        server.getScheduler().runTaskAsynchronously(inst, () -> {
+        PluginTaskExecutor.submitAsync(() -> {
            update(player, internalState);
         });
 
@@ -282,7 +274,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
                         " Level ",
                         newLevel
                 ).build()
-        ).build());
+        ).fadeIn(10).stay(20).fadeOut(10).build());
     }
 
     private void announceNewLevel(Player player, String guildName, int newLevel) {

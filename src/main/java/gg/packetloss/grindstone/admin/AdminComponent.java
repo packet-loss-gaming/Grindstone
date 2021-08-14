@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.admin;
 
 import com.destroystokyo.paper.Title;
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.ComponentCommandRegistrar;
 import com.sk89q.commandbook.component.god.GodComponent;
 import com.sk89q.commandbook.component.info.InfoComponent;
 import com.sk89q.commandbook.util.InputUtil;
@@ -79,9 +78,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
         inst.registerEvents(this);
         setupPermissions();
 
-        ComponentCommandRegistrar registrar = CommandBook.getComponentRegistrar();
-        registrar.registerTopLevelCommands((commandManager, registration) -> {
-            registration.register(commandManager, AdminTeleportCommandsRegistration.builder(), new AdminTeleportCommands());
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.register(AdminTeleportCommandsRegistration.builder(), new AdminTeleportCommands());
         });
     }
 
@@ -120,8 +118,8 @@ public class AdminComponent extends BukkitComponent implements Listener {
      * @param player - The player to check
      * @return - true if the player is in Admin Mode
      */
-    public boolean isAdmin(Player player) {
-        return permission.playerInGroup(player, "Admin");
+    public boolean isAdmin(OfflinePlayer player) {
+        return permission.playerInGroup(null, player, "Admin");
     }
 
     /**
@@ -186,7 +184,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         boolean wasFlying = player.isFlying();
 
-        if (!player.getGameMode().equals(GameMode.SURVIVAL)) player.setGameMode(GameMode.SURVIVAL);
+        if (player.getGameMode() != GameMode.SURVIVAL) player.setGameMode(GameMode.SURVIVAL);
         GeneralPlayerUtil.takeFlightSafely(player);
 
         if (wasFlying) {

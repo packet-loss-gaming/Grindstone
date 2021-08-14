@@ -14,19 +14,28 @@ import java.util.List;
 
 public abstract class BaseStateSettings implements StateSettings {
     private boolean verboseExp = false;
+    private boolean allowEnvironmentalDamage = false;
 
     @Override
     public boolean shouldPrintExpVerbose() { return verboseExp; }
+
+    public boolean shouldAllowEnvironmentalDamage() {
+        return allowEnvironmentalDamage;
+    }
 
     // Wrappers
     private transient BooleanGuildSetting verboseExpWrapper = new BooleanGuildSetting(
             "Verbose Experience", () -> verboseExp
     );
+    private transient BooleanGuildSetting allowEnvironmentalDamageWrapper = new BooleanGuildSetting(
+        "Allow Environmental Damage", () -> allowEnvironmentalDamage
+    );
 
     @Override
     public List<GuildSetting> getAll() {
         return List.of(
-                verboseExpWrapper
+            verboseExpWrapper,
+            allowEnvironmentalDamageWrapper
         );
     }
 
@@ -34,6 +43,10 @@ public abstract class BaseStateSettings implements StateSettings {
     public boolean updateSetting(GuildSettingUpdate setting) {
         if (setting.getSetting().getKey().equals(verboseExpWrapper.getKey())) {
             verboseExp = Boolean.parseBoolean(setting.getNewValue());
+            return true;
+        }
+        if (setting.getSetting().getKey().equals(allowEnvironmentalDamageWrapper.getKey())) {
+            allowEnvironmentalDamage = Boolean.parseBoolean(setting.getNewValue());
             return true;
         }
 

@@ -51,9 +51,11 @@ public class PotionMetabolizer implements Runnable {
                 continue;
             }
 
+            /* Remove the effect, we'll readd it if it's still relevant below. */
+            player.removePotionEffect(effect.getType());
+
             int newDuration = (int) (effect.getDuration() * ChanceUtil.getRangedRandom(.5, 1.0));
             if (newDuration == 0) {
-                player.removePotionEffect(effect.getType());
                 continue;
             }
 
@@ -64,7 +66,7 @@ public class PotionMetabolizer implements Runnable {
                     effect.isAmbient(),
                     effect.hasParticles()
             );
-            player.addPotionEffect(newEffect, true);
+            player.addPotionEffect(newEffect);
         }
     }
 
