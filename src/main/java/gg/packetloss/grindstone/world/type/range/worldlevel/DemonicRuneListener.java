@@ -258,6 +258,11 @@ class DemonicRuneListener implements Listener {
             TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
             taskBuilder.setAction((times) -> {
+                // Do nothing if the chunk isn't loaded
+                if (!LocationUtil.isChunkLoadedAt(portalLocation)) {
+                    return false;
+                }
+
                 double radiusX = ChanceUtil.getRangedRandom(.1, 1.5);
                 double radiusZ = ChanceUtil.getRangedRandom(.1, 1.5);
 
