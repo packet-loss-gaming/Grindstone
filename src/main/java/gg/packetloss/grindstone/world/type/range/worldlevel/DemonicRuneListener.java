@@ -246,6 +246,7 @@ class DemonicRuneListener implements Listener {
                 ItemNameCalculator.getSystemDisplayName(CustomItems.DEMONIC_RUNE),
                 "(s)!"
             );
+            event.setCancelled(true);
         }
     }
 }
