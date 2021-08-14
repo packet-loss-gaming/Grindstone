@@ -943,7 +943,12 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     private void fillGrave(Chest chest, ArrayDeque<ItemStack> itemStacks) {
         forGraveInventory(chest, (inv) -> {
             while (!itemStacks.isEmpty()) {
-                ItemStack remainder = inv.addItem(itemStacks.poll()).get(0);
+                ItemStack itemToAdd = itemStacks.poll();
+                if (itemToAdd.getEnchantmentLevel(Enchantment.VANISHING_CURSE) > 0) {
+                    continue;
+                }
+
+                ItemStack remainder = inv.addItem(itemToAdd).get(0);
                 if (remainder != null) {
                     itemStacks.addFirst(remainder);
                     break;

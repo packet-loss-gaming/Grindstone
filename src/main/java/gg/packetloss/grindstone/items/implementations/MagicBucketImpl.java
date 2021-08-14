@@ -26,8 +26,11 @@ import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Map;
 
 public class MagicBucketImpl extends AbstractItemFeatureImpl {
@@ -192,8 +195,8 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
 
         if (!player.getAllowFlight()) return;
 
-        ItemStack[] chestContents = event.getInventory().getContents();
-        if (!ItemUtil.findItemOfName(chestContents, CustomItems.MAGIC_BUCKET.toString())) return;
+        @NotNull Inventory chestContents = event.getInventory();
+        if (!ItemUtil.hasItem(chestContents, CustomItems.MAGIC_BUCKET)) return;
 
         if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET) && !GeneralPlayerUtil.hasFlyingGamemode(player)) {
             takeFlight(player);
@@ -204,9 +207,9 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
-        ItemStack[] drops = event.getDrops().toArray(new ItemStack[0]);
+        @NotNull List<ItemStack> drops = event.getDrops();
 
-        if (ItemUtil.findItemOfName(drops, CustomItems.MAGIC_BUCKET.toString())) {
+        if (ItemUtil.hasItem(drops, CustomItems.MAGIC_BUCKET)) {
             takeFlight(player);
         }
     }

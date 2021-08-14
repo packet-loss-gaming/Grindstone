@@ -98,6 +98,15 @@ public class ItemUtil {
         return count;
     }
 
+    public static boolean hasItem(Iterable<ItemStack> itemStacks, CustomItems item) {
+        for (ItemStack itemStack : itemStacks) {
+            if (ItemUtil.isItem(itemStack, item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Deprecated
     public static boolean findItemOfName(ItemStack[] itemStacks, String name) {
 
@@ -307,7 +316,7 @@ public class ItemUtil {
     }
 
     public static boolean hasItem(Player player, CustomItems type) {
-        return player.isValid() && findItemOfName(player.getInventory().getContents(), type.toString());
+        return player.isValid() && hasItem(player.getInventory(), type);
     }
 
     public static boolean isItem(ItemStack stack, CustomItems type) {

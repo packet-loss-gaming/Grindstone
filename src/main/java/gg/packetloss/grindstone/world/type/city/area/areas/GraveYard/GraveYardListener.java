@@ -36,6 +36,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.item.inventory.PlayerInventoryIterator;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
@@ -44,6 +45,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -720,14 +722,13 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             return;
         }
 
-        ItemStack[] dropsArray = ItemUtil.clone(drops.toArray(new ItemStack[0]));
         boolean useGemOfLife = player.hasPermission("aurora.tome.life") ||
-                ItemUtil.findItemOfName(dropsArray, CustomItems.GEM_OF_LIFE.toString());
+                ItemUtil.hasItem(drops, CustomItems.GEM_OF_LIFE);
 
         PlayerGraveProtectItemsEvent protectItemsEvent = new PlayerGraveProtectItemsEvent(
                 player,
                 useGemOfLife,
-                dropsArray
+                ItemUtil.clone(drops.toArray(new ItemStack[0]))
         );
 
         CommandBook.callEvent(protectItemsEvent);
@@ -754,17 +755,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerStatePop(PlayerStatePopEvent event) {
-        if (event.getKind() != PlayerStateKind.GRAVE_YARD) {
-            return;
-        }
-
-        Player player = event.getPlayer();
-        if (player.hasPermission("aurora.tome.life")) {
-            return;
-        }
-
+    private void removeGemOfLife(Player player) {
         PlayerInventory pInv = player.getInventory();
 
         // Count then remove the Gems of Life
@@ -779,6 +770,34 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             c -= amount;
             amount = Math.min(c, 64);
         }
+    }
+
+    private void removeVanishingItems(Player player) {
+        PlayerInventoryIterator it = new PlayerInventoryIterator(player.getInventory());
+        while (it.hasNext()) {
+            ItemStack next = it.next();
+            if (next == null) {
+                continue;
+            }
+
+            if (next.getEnchantmentLevel(Enchantment.VANISHING_CURSE) > 0) {
+                it.clear();
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerStatePop(PlayerStatePopEvent event) {
+        if (event.getKind() != PlayerStateKind.GRAVE_YARD) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        if (!player.hasPermission("aurora.tome.life")) {
+            removeGemOfLife(player);
+        }
+        removeVanishingItems(player);
 
         player.updateInventory();
     }

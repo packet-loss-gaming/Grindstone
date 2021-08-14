@@ -333,7 +333,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     private void checkFloodType() {
         for (Player player : getContained(Player.class)) {
             if (!players.contains(player.getName())) continue;
-            if (ItemUtil.findItemOfName(player.getInventory().getContents(), CustomItems.PHANTOM_HYMN.toString())) {
+            if (ItemUtil.hasItem(player, CustomItems.PHANTOM_HYMN)) {
                 drainAll(); // Force away all water
                 floodBlockType = Material.LAVA;
                 break;
