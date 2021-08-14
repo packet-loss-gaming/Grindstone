@@ -137,7 +137,7 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
         });
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         World from = event.getFrom().getWorld();
         World to = event.getTo().getWorld();
