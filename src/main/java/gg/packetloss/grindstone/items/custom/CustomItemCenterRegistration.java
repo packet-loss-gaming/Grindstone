@@ -163,6 +163,19 @@ public class CustomItemCenterRegistration {
         ancientBoots.addUse("Repaired when worn while attacking creatures or players");
         itemConsumer.accept(ancientBoots);
 
+        // Demonic Items
+        CustomItem demonicAshes = new CustomItem(DEMONIC_ASHES, Material.BLAZE_POWDER);
+        demonicAshes.addSource(ItemSource.SACRIFICIAL_EXCHANGE);
+        demonicAshes.addSource(ItemSource.RANGED_WORLD_MINING);
+        demonicAshes.addUse("Consumable to increase world level.");
+        itemConsumer.accept(demonicAshes);
+
+        CustomItem demonicRune = new CustomItem(DEMONIC_RUNE, Material.NETHER_BRICK);
+        demonicRune.addEnchant(Enchantment.VANISHING_CURSE, 1);
+        demonicRune.addSource(ItemSource.RANGED_WORLD_COMBAT);
+        demonicRune.addUse("Sacrifice for valuable loot.");
+        itemConsumer.accept(demonicRune);
+
         // Nectric Armor
         CustomEquipment nectricHelmet = new CustomEquipment(NECTRIC_HELMET, Material.DIAMOND_HELMET);
         nectricHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
@@ -817,12 +830,6 @@ public class CustomItemCenterRegistration {
         executionerAxe.addSource(ItemSource.MARKET);
         executionerAxe.addUse("Deals damage based on the number of zombies around.");
         itemConsumer.accept(executionerAxe);
-
-        CustomItem demonicAshes = new CustomItem(DEMONIC_ASHES, Material.BLAZE_POWDER);
-        demonicAshes.addSource(ItemSource.SACRIFICIAL_EXCHANGE);
-        demonicAshes.addSource(ItemSource.RANGED_WORLD_MINING);
-        demonicAshes.addUse("Consumable to increase world level.");
-        itemConsumer.accept(demonicAshes);
 
         CustomItem madMilk = new CustomItem(MAD_MILK, Material.MILK_BUCKET);
         madMilk.addSource(ItemSource.MARKET);

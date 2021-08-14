@@ -24,6 +24,10 @@ public enum CustomItems {
     ANCIENT_LEGGINGS(ItemFamily.ANCIENT, "Leggings"),
     ANCIENT_BOOTS(ItemFamily.ANCIENT, "Boots"),
 
+    // Demonic Items
+    DEMONIC_ASHES(ChatColor.DARK_RED, "Demonic Ashes"),
+    DEMONIC_RUNE(ChatColor.DARK_RED, "Demonic Rune"),
+
     // Nectric Armor
     NECTRIC_HELMET(ItemFamily.NETRIC, "Helmet"),
     NECTRIC_CHESTPLATE(ItemFamily.NETRIC, "Chestplate"),
@@ -160,7 +164,6 @@ public enum CustomItems {
 
     // Miscellaneous
     EXECUTIONER_AXE(ChatColor.GOLD, "Executioner's Axe"),
-    DEMONIC_ASHES(ChatColor.DARK_RED, "Demonic Ashes"),
     MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
     GOD_FISH(ChatColor.BLUE, "God Fish"),
     GOLDEN_STICK(ChatColor.GOLD, "Golden Stick"),
@@ -180,10 +183,13 @@ public enum CustomItems {
     TOME_OF_LEGENDS(ChatColor.GOLD, "Tome of Legends"),
     TOME_OF_LIFE(ChatColor.DARK_AQUA, "Tome of Life");
 
+    private static final String GRINDSTONE_PREFIX = "grindstone:";
+
     private final ItemFamily family;
     private final ChatColor color;
     private final String name;
     private final String namespaceName;
+    private final String snakecaseName;
     private final boolean expires;
 
     CustomItems(ItemFamily family, String kind) {
@@ -203,6 +209,7 @@ public enum CustomItems {
         this.color = color;
         this.name = name;
         this.namespaceName = computeNamespaceName(this.name);
+        this.snakecaseName = namespaceName.substring(GRINDSTONE_PREFIX.length());
         this.expires = expires;
     }
 
@@ -223,7 +230,7 @@ public enum CustomItems {
     }
 
     public String getSnakecaseName() {
-        return this.name().toLowerCase();
+        return snakecaseName;
     }
 
     public String getNamespaceName() {
@@ -239,7 +246,7 @@ public enum CustomItems {
     }
 
     public static String computeNamespaceName(String name) {
-        return "grindstone:" + name.toLowerCase().replaceAll("'s", "").replaceAll(" ", "_");
+        return GRINDSTONE_PREFIX + name.toLowerCase().replaceAll("'s", "").replaceAll(" ", "_");
     }
 
     @Override

@@ -69,6 +69,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     public void enable() {
         CommandBook.registerEvents(this);
 
+        CommandBook.registerEvents(new DemonicRuneListener(this));
         CommandBook.registerEvents(new LevelAdjustmentListener(this));
         CommandBook.registerEvents(new MobListener(this));
         CommandBook.registerEvents(new SilverfishClusterListener(this));
@@ -235,6 +236,20 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
 
         int yChunk = location.getBlockY() >> 4;
         return ChanceUtil.getChance(yChunk * config.demonicAshesPerYChunk);
+    }
+
+    protected int getDropCountModifier(int worldLevel, double monsterTypeModifier, double percentDamageDone) {
+        return Math.max(
+            1,
+            (int) Math.min(
+                config.mobsDropTableItemCountMax,
+                monsterTypeModifier * config.mobsDropTableItemCountPerLevel * worldLevel * percentDamageDone
+            )
+        );
+    }
+
+    protected double getDropValueModifier(int worldLevel, double monsterTypeModifier, double percentDamageDone) {
+        return monsterTypeModifier * worldLevel * percentDamageDone;
     }
 
     protected void spawnDemonicAshes(Player player, Location location) {

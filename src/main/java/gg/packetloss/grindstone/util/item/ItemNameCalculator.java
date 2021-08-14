@@ -138,16 +138,29 @@ public class ItemNameCalculator {
         Validate.isTrue(qualifiedName.contains(":"));
         return qualifiedName.split(":")[1].replace(SERIALIZATION_SPLIT, "_");
     }
+
+    public static String getUnqualifiedName(CustomItems item) {
+        return item.getSnakecaseName();
+    }
+
     public static String getSystemDisplayNameNoColor(String itemName) {
         return toUppercaseTitle(getUnqualifiedName(itemName));
     }
 
-    public static Optional<String> computeBlockName(Block block) {
-        return Optional.of(block.getType().getKey().toString());
+    public static String getSystemDisplayNameNoColor(CustomItems item) {
+        return toUppercaseTitle(getUnqualifiedName(item));
     }
 
     public static Text getSystemDisplayName(String itemName) {
         return Text.of(ChatColor.BLUE, getSystemDisplayNameNoColor(itemName));
+    }
+
+    public static Text getSystemDisplayName(CustomItems item) {
+        return Text.of(ChatColor.BLUE, getSystemDisplayNameNoColor(item));
+    }
+
+    public static Optional<String> computeBlockName(Block block) {
+        return Optional.of(block.getType().getKey().toString());
     }
 
     public static Optional<String> computeBlockName(BlockState block) {

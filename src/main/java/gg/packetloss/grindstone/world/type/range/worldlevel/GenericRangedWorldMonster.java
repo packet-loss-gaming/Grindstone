@@ -10,8 +10,6 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.sacrifice.SacrificeComponent;
-import gg.packetloss.grindstone.sacrifice.SacrificeInformation;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
 import gg.packetloss.grindstone.util.dropttable.OSBLKillInfo;
@@ -28,7 +26,7 @@ import gg.packetloss.openboss.instruction.UnbindInstruction;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 
-import static gg.packetloss.grindstone.util.EnvironmentUtil.isFrozenBiome;
+import static gg.packetloss.grindstone.world.type.range.worldlevel.DemonicRuneListener.DemonicRuneState.fromMonsterKill;
 
 public class GenericRangedWorldMonster {
     private static class GenericMonsterHandler extends BukkitBossDeclaration<GenericDetail> {
@@ -97,42 +95,21 @@ public class GenericRangedWorldMonster {
                 PerformanceKillInfo killInfo = info.getKillInfo();
                 float percentDamageDone = killInfo.getPercentDamageDone(player).orElseThrow();
 
-                WorldLevelConfig config = worldLevelComponent.getConfig();
+                // Handle "live dropped" drops
+                if (level > 10) {
+                    int dropCountModifier = worldLevelComponent.getDropCountModifier(level, typeModifier, percentDamageDone);
+                    double dropValueModifier = worldLevelComponent.getDropValueModifier(level, typeModifier, percentDamageDone);
 
-                int dropCountModifier = Math.max(
-                    1,
-                    (int) Math.min(
-                        config.mobsDropTableItemCountMax,
-                        typeModifier * config.mobsDropTableItemCountPerLevel * percentDamageDone
-                    )
-                );
-                double dropValueModifier = typeModifier * level * percentDamageDone;
-
-                // Handle unique drops
-                boolean isFrozenBiome = isFrozenBiome(player.getLocation().getBlock().getBiome());
-                for (int i = 0; i < dropCountModifier; ++i) {
-                    if (ChanceUtil.getChance(2000 / dropValueModifier)) {
-                        consumer.accept(CustomItemCenter.build(CustomItems.POTION_OF_RESTITUTION));
-                    }
-
-                    if (ChanceUtil.getChance(2000 / dropValueModifier)) {
-                        consumer.accept(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
-                    }
-
-                    if (ChanceUtil.getChance((isFrozenBiome ? 1000 : 2000) / dropValueModifier)) {
-                        consumer.accept(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
+                    for (int i = 0; i < dropCountModifier; ++i) {
+                        if (ChanceUtil.getChance(2000 / dropValueModifier)) {
+                            consumer.accept(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
+                        }
                     }
                 }
 
-                // Handle sacrificial pit generated drops
-                SacrificeInformation sacrificeInfo = new SacrificeInformation(
-                    CommandBook.server().getConsoleSender(),
-                    dropCountModifier,
-                    dropValueModifier * config.mobsDropTableSacrificeValue
-                );
-                for (ItemStack itemStack : SacrificeComponent.getCalculatedLoot(sacrificeInfo)) {
-                    consumer.accept(itemStack);
-                }
+                ItemStack demonicRune = CustomItemCenter.build(CustomItems.DEMONIC_RUNE);
+                DemonicRuneListener.setRuneTier(demonicRune, fromMonsterKill(level, typeModifier, percentDamageDone));
+                consumer.accept(demonicRune);
             }
         );
     }

@@ -183,16 +183,35 @@ public class EnvironmentUtil {
         return SAPLINGS.contains(type);
     }
 
+    private static final Set<Material> PORTABLE_CONTAINER_BLOCKS;
+
+    static {
+        List<Material> newPortableContainerBlocks = new ArrayList<>(List.of(
+            Material.SHULKER_BOX
+        ));
+
+        newPortableContainerBlocks.addAll(Tag.SHULKER_BOXES.getValues());
+
+        PORTABLE_CONTAINER_BLOCKS = Set.copyOf(newPortableContainerBlocks);
+    }
+
+    public static boolean isPortableContainer(Block block) {
+        return isPortableContainer(block.getType());
+    }
+
+    public static boolean isPortableContainer(Material type) {
+        return PORTABLE_CONTAINER_BLOCKS.contains(type);
+    }
+
     private static final Set<Material> CONTAINER_BLOCKS;
 
     static {
         List<Material> newContainerBlocks = new ArrayList<>(List.of(
-                Material.BREWING_STAND, Material.CHEST, Material.DISPENSER, Material.DROPPER, Material.FURNACE,
-                Material.JUKEBOX, Material.ENDER_CHEST, Material.TRAPPED_CHEST, Material.HOPPER,
-                Material.SHULKER_BOX
+            Material.BREWING_STAND, Material.CHEST, Material.DISPENSER, Material.DROPPER, Material.FURNACE,
+            Material.JUKEBOX, Material.ENDER_CHEST, Material.TRAPPED_CHEST, Material.HOPPER,Material.BARREL
         ));
 
-        newContainerBlocks.addAll(Tag.SHULKER_BOXES.getValues());
+        newContainerBlocks.addAll(PORTABLE_CONTAINER_BLOCKS);
 
         CONTAINER_BLOCKS = Set.copyOf(newContainerBlocks);
     }

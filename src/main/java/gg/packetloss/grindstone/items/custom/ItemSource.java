@@ -22,6 +22,7 @@ public enum ItemSource {
     ),
     SACRIFICIAL_EXCHANGE("Sacrificial Exchange"),
     RANGED_WORLD_MINING("Ranged World Mining"),
+    RANGED_WORLD_COMBAT("Ranged World Combat"),
     MARKET("Market"),
     NINJA_GUILD("Ninja Guild"),
     GOLD_RUSH("Gold Rush"),
