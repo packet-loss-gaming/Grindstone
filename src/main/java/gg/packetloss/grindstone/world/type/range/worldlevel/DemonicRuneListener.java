@@ -20,6 +20,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -273,7 +274,7 @@ class DemonicRuneListener implements Listener {
                     );
                 }
 
-                if (ChanceUtil.getChance(5)) {
+                if (ChanceUtil.getChance(5) && areaHasRoomForMoreItems()) {
                     DemonicPortalEntry entry = CollectionUtil.getElement(portalEntries);
                     spawnEntryItem(entry);
                     if (entry.isEmpty()) {
@@ -292,6 +293,10 @@ class DemonicRuneListener implements Listener {
             });
 
             taskBuilder.build();
+        }
+
+        private boolean areaHasRoomForMoreItems() {
+            return portalLocation.getNearbyEntitiesByType(Item.class, 3).stream().count() < 30;
         }
 
         public void addEntry(DemonicPortalEntry entry) {
