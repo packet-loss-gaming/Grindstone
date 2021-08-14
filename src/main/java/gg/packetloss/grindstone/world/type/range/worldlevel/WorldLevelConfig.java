@@ -12,6 +12,8 @@ import com.zachsthings.libcomponents.config.Setting;
 public class WorldLevelConfig extends ConfigurationBase {
     @Setting("demonic-ashes.per-y-chunk")
     public double demonicAshesPerYChunk = 25;
+    @Setting("mobs.creeper-explosion.multiply-every-x-levels")
+    public int mobsCreeperExplosionMultiplyEveryXLevels = 10;
     @Setting("mobs.drop-table.item-count.max")
     public int mobsDropTableItemCountMax = 20;
     @Setting("mobs.drop-table.item-count.per-level")
@@ -28,6 +30,8 @@ public class WorldLevelConfig extends ConfigurationBase {
     public double mobsDropTableTypeModifiersWither = 5;
     @Setting("mobs.drop-table.sacrifice-value")
     public int mobsDropTableSacrificeValue = 256;
+    @Setting("mobs.lightning-projectiles.level-enabled-at")
+    public int mobsLightningProjectilesLevelEnabledAt = 5;
     @Setting("mobs.silverfish.level-enabled-at")
     public int mobsSilverfishLevelEnabledAt = 5;
     @Setting("mobs.silverfish.max-chance")

@@ -11,6 +11,7 @@ import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.combat.PvMComponent;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
@@ -104,6 +105,8 @@ class MobListener implements Listener {
         IGNORED_DAMAGE.add(EntityDamageEvent.DamageCause.STARVATION);
         IGNORED_DAMAGE.add(EntityDamageEvent.DamageCause.SUFFOCATION);
         IGNORED_DAMAGE.add(EntityDamageEvent.DamageCause.VOID);
+        // Note while explosions are modified for general purposes,
+        // creeper explosions are modified in the onPlayerDamaged handler.
         IGNORED_DAMAGE.add(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION);
         IGNORED_DAMAGE.add(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION);
     }
@@ -135,21 +138,16 @@ class MobListener implements Listener {
             }
         }
 
-        if (!(entity instanceof Player) || IGNORED_DAMAGE.contains(event.getCause())) {
+        if (!(entity instanceof Player player) || IGNORED_DAMAGE.contains(event.getCause())) {
             return;
         }
 
-        // If the level > 1, scale the damage to the player
-        Player player = (Player) entity;
         int level = parent.getWorldLevel(player);
         if (level == 1) {
             return;
         }
 
         event.setDamage(event.getDamage() + ChanceUtil.getRandomNTimes(level, 2) - 1);
-        if (((Player) entity).isFlying() && event.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
-            event.setDamage(event.getDamage() * 2);
-        }
     }
 
     private static EDBEExtractor<Player, LivingEntity, Projectile> DAMAGE_EXTRACTOR = new EDBEExtractor<>(
@@ -195,11 +193,45 @@ class MobListener implements Listener {
 
     public boolean onPlayerDamaged(EntityDamageByEntityEvent event) {
         CombatantPair<LivingEntity, Player, Projectile> result = DAMAGED_EXTRACTOR.extractFrom(event);
+        // The pattern didn't match, revert to default damage processing.
         if (result == null) {
             return false;
         }
 
         // If the attacker doesn't have scaled health, return true to kill the damage processing.
-        return !parent.hasScaledHealth(result.getAttacker());
+        if (!parent.hasScaledHealth(result.getAttacker())) {
+            return true;
+        }
+
+        Player player = result.getDefender();
+
+        int level = parent.getWorldLevel(player);
+        if (level == 1) {
+            return true;
+        }
+
+        if (result.getAttacker() instanceof Creeper) {
+            int modifyEveryXLevels = parent.getConfig().mobsCreeperExplosionMultiplyEveryXLevels;
+            // Reduce by 1 level and add the multiplier interval.
+            //
+            // If the constant is 10, this should mean that level 2 results in an 11 / 10 modifier (1.1x).
+            int adjustedLevel = ((level - 1) + modifyEveryXLevels);
+            event.setDamage(event.getDamage() * ((double) adjustedLevel / modifyEveryXLevels));
+            return true;
+        }
+
+        if (player.isFlying() && result.hasProjectile()) {
+            if (level >= parent.getConfig().mobsLightningProjectilesLevelEnabledAt) {
+                // Strike with real lightning
+                player.getWorld().strikeLightning(player.getLocation());
+                // Reset no damage ticks for combo with the currently processed event.
+                player.setNoDamageTicks(0);
+
+                // Make the player fall
+                GeneralPlayerUtil.takeFlightSafely(player);
+            }
+        }
+
+        return true;
     }
 }
