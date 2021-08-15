@@ -18,6 +18,7 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Item;
@@ -173,6 +174,12 @@ class DemonicRuneListener implements Listener {
 
             // Populate the loot buffer
             lootBuffer.addAll(SacrificeComponent.getCalculatedLoot(sacrificeInfo).getItemStacks());
+
+            // The system always expects something to be added after a rune is consumed. If nothing else
+            // was added, add some gold nuggets.
+            if (lootBuffer.isEmpty()) {
+                lootBuffer.add(new ItemStack(Material.GOLD_NUGGET, ChanceUtil.getRandom(64)));
+            }
 
             // Decrement the number of runes remaining
             --numberOfRunes;
