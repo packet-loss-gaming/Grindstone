@@ -9,6 +9,8 @@ package gg.packetloss.grindstone;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
@@ -31,12 +33,16 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @ComponentInformation(friendlyName = "Randomized Skulls", desc = "Get a random subset of skulls for players")
+@Depend(components = {ProfanityComponent.class})
 public class RandomizedSkullsComponent extends BukkitComponent implements Runnable {
     private final ReadWriteLock randomizedProfilesLock = new ReentrantReadWriteLock();
     private final AtomicInteger timesUsed = new AtomicInteger(0);
     private final AtomicBoolean beingUpdated = new AtomicBoolean(false);
     private List<PlayerProfile> randomizedProfiles = List.of();
 
+    @InjectComponent
+    private ProfanityComponent profanity;
+    
     private LocalConfiguration config;
 
     @Override
@@ -84,13 +90,30 @@ public class RandomizedSkullsComponent extends BukkitComponent implements Runnab
 
         PluginTaskExecutor.submitAsync(() -> updatePlayersTo(targetPlayers));
     }
+    
+    private boolean hasUnacceptableUsername(OfflinePlayer player) {
+        // We don't know their name, assume the worst.
+        if (player.getName() == null) {
+            return true;
+        }
+        
+        if (profanity.containsCensoredWord(player.getName())) {
+            return true;
+        }
+
+        return false;
+    }
 
     private List<PlayerProfile> getRandomSetOfPlayers() {
         OfflinePlayer[] offlinePlayers = CommandBook.server().getOfflinePlayers();
 
         HashMap<UUID, PlayerProfile> targetPlayers = new HashMap<>();
-        while (targetPlayers.size() < Math.min(offlinePlayers.length, config.numberOfPlayers)) {
+        for (int i = 0; i < offlinePlayers.length * 2 && targetPlayers.size() != config.numberOfPlayers; ++i) {
             OfflinePlayer offlinePlayer = CollectionUtil.getElement(offlinePlayers);
+            if (hasUnacceptableUsername(offlinePlayer)) {
+                continue;
+            }
+            
             targetPlayers.put(
                     offlinePlayer.getUniqueId(),
                     Bukkit.createProfile(offlinePlayer.getUniqueId(), offlinePlayer.getName())

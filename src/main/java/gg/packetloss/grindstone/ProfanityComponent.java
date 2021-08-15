@@ -26,9 +26,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.ChatUtil.loonizeWord;
@@ -64,7 +62,7 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
         @Setting("enable-chat-censor")
         public boolean enableChatCensor = false;
         @Setting("censored-words")
-        public Set<String> blackListedWords = new HashSet<>(Arrays.asList(
+        public List<String> censoredWords = List.of(
                 "shit", "fuck", "penis", "bitch", "piss", "retard", "bastard", "likes dick", "kunt", "cunt", "slut",
                 "pussy",
                 "pussies", "gay", "whore", "wanker", "bloody hell", "rape", "strip club", "stripper club", "twat",
@@ -72,7 +70,7 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
                 "doosh", "handjob", "hand job", "blowjob", "blow job", "fuc", "rimming", "cum", "dildo", "ball sack",
                 "ballsack", "hardon", "hard on", "fag", "faggot", "sexual", "jizz", "jackass", "jack ass", "jackoff",
                 "jack off", "niger", "nigger", "nutsack", "prick", "queef", "queer", "titty", "tit", "testicle",
-                "hooker"));
+                "hooker");
     }
 
     // Sign Censor
@@ -94,7 +92,6 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
 
             // Check for profanity and explode if needed
             if (inBlackListedWord(signLine)) {
-
                 // Get rid of that sign!
                 ExplosionStateFactory.createFakeExplosion(blockLoc);
                 blockLoc.getBlock().breakNaturally();
@@ -133,16 +130,19 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
         event.setMessage(filterString(event.getMessage(), false));
     }
 
+    public boolean containsCensoredWord(String string) {
+        for (String word : config.censoredWords) {
+            if (string.toLowerCase().contains(word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean inBlackListedWord(String[] lines) {
-
-        // Check for cuss words
-        Object[] bLW = config.blackListedWords.toArray();
-
-        for (int i = 0; i < config.blackListedWords.size(); i++) {
-            for (String line : lines) {
-                if (line.toLowerCase().contains(bLW[i].toString())) {
-                    return true;
-                }
+        for (String line : lines) {
+            if (containsCensoredWord(line)) {
+                return true;
             }
         }
 
@@ -150,34 +150,22 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
     }
 
     public String filterString(String string) {
-
         return filterString(string, true);
     }
 
     public String filterString(String string, boolean useColor) {
-
-        Object[] bLW = config.blackListedWords.toArray();
-        String[] words = string.split(" ");
         StringBuilder out = new StringBuilder();
 
-        for (String word : words) {
-
-            if (useColor) {
-                for (Object aBLW : bLW) {
-
-                    if (word.toLowerCase().contains(aBLW.toString().toLowerCase())) {
-                        word = loonizeWord(word, true) + ChatColor.WHITE;
-                    }
+        for (String word : string.split(" ")) {
+            if (containsCensoredWord(word)) {
+                out.append(loonizeWord(word, useColor));
+                if (useColor) {
+                    out.append(ChatColor.WHITE);
                 }
             } else {
-                for (Object aBLW : bLW) {
-
-                    if (word.toLowerCase().contains(aBLW.toString().toLowerCase())) {
-                        word = loonizeWord(word, false);
-                    }
-                }
+                out.append(word);
             }
-            out.append(word).append(" ");
+            out.append(" ");
         }
         return out.toString();
     }
