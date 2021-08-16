@@ -187,7 +187,7 @@ public class EnvironmentUtil {
 
     static {
         List<Material> newPortableContainerBlocks = new ArrayList<>(List.of(
-            Material.SHULKER_BOX
+            Material.SHULKER_BOX, Material.ENDER_CHEST
         ));
 
         newPortableContainerBlocks.addAll(Tag.SHULKER_BOXES.getValues());
@@ -208,7 +208,7 @@ public class EnvironmentUtil {
     static {
         List<Material> newContainerBlocks = new ArrayList<>(List.of(
             Material.BREWING_STAND, Material.CHEST, Material.DISPENSER, Material.DROPPER, Material.FURNACE,
-            Material.JUKEBOX, Material.ENDER_CHEST, Material.TRAPPED_CHEST, Material.HOPPER,Material.BARREL
+            Material.JUKEBOX, Material.TRAPPED_CHEST, Material.HOPPER, Material.BARREL
         ));
 
         newContainerBlocks.addAll(PORTABLE_CONTAINER_BLOCKS);
