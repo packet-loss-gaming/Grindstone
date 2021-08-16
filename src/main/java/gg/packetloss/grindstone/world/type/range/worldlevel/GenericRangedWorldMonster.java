@@ -108,7 +108,7 @@ public class GenericRangedWorldMonster {
                 }
 
                 ItemStack demonicRune = CustomItemCenter.build(CustomItems.DEMONIC_RUNE);
-                DemonicRuneListener.setRuneTier(demonicRune, fromMonsterKill(level, typeModifier, percentDamageDone));
+                DemonicRuneListener.setRuneState(demonicRune, fromMonsterKill(level, typeModifier, percentDamageDone));
                 consumer.accept(demonicRune);
             }
         );

@@ -40,6 +40,14 @@ public class LocationUtil {
         return distanceSquared2D(a, b) <= Math.pow(distance, 2);
     }
 
+    public static boolean isWithinDistance(Location a, Location b, int distance) {
+        if (!a.getWorld().equals(b.getWorld())) {
+            return false;
+        }
+
+        return a.distanceSquared(b) <= Math.pow(distance, 2);
+    }
+
     public static Location grandBank(World world) {
 
         if (!world.getName().equals("City")) return null;

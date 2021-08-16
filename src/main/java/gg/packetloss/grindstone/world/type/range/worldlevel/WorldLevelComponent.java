@@ -61,6 +61,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     private PlayerPlacedOresState state = new PlayerPlacedOresState();
     private SingleFileFilesystemStateHelper<PlayerPlacedOresState> stateHelper;
 
+    private DemonicRuneListener demonicRunes;
     private WorldLevelConfig config;
 
     protected int sourceDamageLevel = 0;
@@ -69,7 +70,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
     public void enable() {
         CommandBook.registerEvents(this);
 
-        CommandBook.registerEvents(new DemonicRuneListener(this));
+        CommandBook.registerEvents(demonicRunes = new DemonicRuneListener(this));
         CommandBook.registerEvents(new LevelAdjustmentListener(this));
         CommandBook.registerEvents(new MobListener(this));
         CommandBook.registerEvents(new SilverfishClusterListener(this));
@@ -132,6 +133,8 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        demonicRunes.finishPortalsNow();
     }
 
     private TaskFuture<Optional<Integer>> loadWorldLevel(Player player) {

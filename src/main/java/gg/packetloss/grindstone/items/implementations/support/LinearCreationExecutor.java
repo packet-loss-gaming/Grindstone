@@ -112,7 +112,7 @@ public class LinearCreationExecutor {
                 break;
             }
 
-            if (blocksPlaced > heldItem.getAmount()) {
+            if (blocksPlaced >= heldItem.getAmount()) {
                 break;
             }
 

@@ -6,74 +6,51 @@
 
 package gg.packetloss.grindstone.util.item.inventory;
 
-import gg.packetloss.grindstone.util.item.ItemUtil;
-import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
-    private final Player player;
-    private final PlayerInventory playerInventory;
+    private static final int[] TRANSLATION_TABLE = new int[InventoryConstants.PLAYER_INV_LENGTH - InventoryConstants.PLAYER_INV_ARMOUR_LENGTH];
 
-    private final int length;
-    private final ItemStack[] itemStacks;
-    private final boolean[] updateMask;
+    static {
+        int k = 0;
+        // First we're going for the storage area
+        for (int i = 0; i < InventoryConstants.PLAYER_INV_STORAGE_LENGTH; ++i, ++k) {
+            TRANSLATION_TABLE[k] = InventoryConstants.PLAYER_INV_ROW_LENGTH + i;
+        }
+        // Then we're going for the hotbar
+        for (int i = 0; i < InventoryConstants.PLAYER_INV_ROW_LENGTH; ++i, ++k) {
+            TRANSLATION_TABLE[k] = i;
+        }
+        // Then we're going for the offhand
+        TRANSLATION_TABLE[k] = InventoryConstants.PLAYER_INV_OFFHAND_ITEM_INDEX;
+
+        TranslationTableAdapter.runExpensiveTableValidation(TRANSLATION_TABLE);
+    }
+
+    private final TranslationTableAdapter underlyingAdapter;
 
     public PlayerStoragePriorityInventoryAdapter(Player player) {
-        this.player = player;
-
-        this.playerInventory = player.getInventory();
-
-        this.length = playerInventory.getSize();
-        this.itemStacks = playerInventory.getContents();
-        this.updateMask = new boolean[length];
-
-        Validate.isTrue(length == InventoryConstants.PLAYER_INV_LENGTH);
-        Validate.isTrue(itemStacks.length == InventoryConstants.PLAYER_INV_LENGTH);
+        this.underlyingAdapter = new TranslationTableAdapter(TRANSLATION_TABLE, player);
     }
 
     private PlayerStoragePriorityInventoryAdapter(PlayerStoragePriorityInventoryAdapter adapter) {
-        this.player = adapter.player;
-
-        this.playerInventory = adapter.playerInventory;
-        this.length = adapter.length;
-        this.itemStacks = ItemUtil.clone(adapter.itemStacks);
-        this.updateMask = adapter.updateMask.clone();
+        this.underlyingAdapter = adapter.underlyingAdapter.copy();
     }
 
     @Override
     public int size() {
-        return InventoryConstants.PLAYER_INV_LENGTH - InventoryConstants.PLAYER_INV_ARMOUR_LENGTH;
-    }
-
-    private int inflateExternalIndex(int index) {
-        if (index >= InventoryConstants.PLAYER_INV_ROWS_TOTAL_LENGTH) {
-            return index + InventoryConstants.PLAYER_INV_ARMOUR_LENGTH;
-        }
-        return index;
-    }
-
-    private int prioritizeInternalIndex(int index) {
-        if (index > InventoryConstants.PLAYER_INV_ROWS_TOTAL_LENGTH) {
-            return index;
-        }
-        return (index + InventoryConstants.PLAYER_INV_ROW_LENGTH) % InventoryConstants.PLAYER_INV_ROWS_TOTAL_LENGTH;
-    }
-
-    private int translateExternalIndexToInternal(int index) {
-        return prioritizeInternalIndex(inflateExternalIndex(index));
+        return underlyingAdapter.size();
     }
 
     @Override
     public ItemStack getAt(int index) {
-        return itemStacks[translateExternalIndexToInternal(index)];
+        return underlyingAdapter.getAt(index);
     }
 
     @Override
     public void setAt(int index, ItemStack stack) {
-        itemStacks[translateExternalIndexToInternal(index)] = stack;
-        updateMask[translateExternalIndexToInternal(index)] = true;
+        underlyingAdapter.setAt(index, stack);
     }
 
     @Override
@@ -83,10 +60,6 @@ public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
 
     @Override
     public void applyChanges() {
-        for (int i = 0; i < length; ++i) {
-            if (updateMask[i]) {
-                playerInventory.setItem(i, itemStacks[i]);
-            }
-        }
+        underlyingAdapter.applyChanges();
     }
 }
