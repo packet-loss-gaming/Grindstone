@@ -16,6 +16,7 @@ import java.util.List;
 public class RogueStateSettings extends BaseStateSettings {
     private boolean blipWhileSneaking = false;
     private boolean showBerserkerBuffs = false;
+    private boolean enableRiptideEffect = false;
 
     public boolean shouldBlipWhileSneaking() {
         return blipWhileSneaking;
@@ -23,6 +24,10 @@ public class RogueStateSettings extends BaseStateSettings {
 
     public boolean shouldShowBerserkerBuffs() {
         return showBerserkerBuffs;
+    }
+
+    public boolean shouldEnableRiptideEffect() {
+        return enableRiptideEffect;
     }
 
     // Wrappers
@@ -34,6 +39,10 @@ public class RogueStateSettings extends BaseStateSettings {
             "Show Berserker Buffs", () -> showBerserkerBuffs
     );
 
+    private transient BooleanGuildSetting enableRiptideEffectWrapper = new BooleanGuildSetting(
+            "Enable Riptide Animation on Blip", () -> enableRiptideEffect
+    );
+
     @Override
     public List<GuildSetting> getAll() {
         List<GuildSetting> baseSetting = new ArrayList<>();
@@ -41,7 +50,8 @@ public class RogueStateSettings extends BaseStateSettings {
         baseSetting.addAll(super.getAll());
         baseSetting.addAll(List.of(
                 blipWhileSneakingWrapper,
-                showBerserkerBuffsWrapper
+                showBerserkerBuffsWrapper,
+                enableRiptideEffectWrapper
         ));
 
         return baseSetting;
@@ -58,6 +68,9 @@ public class RogueStateSettings extends BaseStateSettings {
             return true;
         } else if (setting.getSetting().getKey().equals(showBerserkerBuffsWrapper.getKey())) {
             showBerserkerBuffs = Boolean.parseBoolean(setting.getNewValue());
+            return true;
+        } else if (setting.getSetting().getKey().equals(enableRiptideEffectWrapper.getKey())) {
+            enableRiptideEffect = Boolean.parseBoolean(setting.getNewValue());
             return true;
         }
 

@@ -47,7 +47,6 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.util.List;
@@ -57,11 +56,12 @@ import java.util.function.Function;
 public class RogueListener implements Listener {
     private static final float DEFAULT_SPEED = .2F;
 
-    private Function<Player, InternalGuildState> internalStateLookup;
+    private final Function<Player, InternalGuildState> internalStateLookup;
 
-    private PacketContainer packetContainer = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_METADATA);
-    private WrappedDataWatcher watcher = new WrappedDataWatcher();
-    private WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
+    private final PacketContainer packetContainer = ProtocolLibrary.getProtocolManager().createPacket(PacketType.Play.Server.ENTITY_METADATA);
+    private final WrappedDataWatcher watcher = new WrappedDataWatcher();
+    private final WrappedDataWatcher.Serializer serializer = WrappedDataWatcher.Registry.get(Byte.class);
+    private final TaskBuilder.Countdown task = TaskBuilder.countdown();
 
     private static final byte ENABLE_RIPTIDE = 0x04;
     private static final byte DISABLE_RIPTIDE = 0x00;
@@ -73,10 +73,34 @@ public class RogueListener implements Listener {
     private void sendRiptidePacket(Player player, byte packetVal) {
         packetContainer.getIntegers().write(0, player.getEntityId());
         watcher.setEntity(player);
-        watcher.setObject(7, serializer, packetVal);
+        watcher.setObject(8, serializer, packetVal);
         packetContainer.getWatchableCollectionModifier().write(0, watcher.getWatchableObjects());
         ProtocolLibrary.getProtocolManager().broadcastServerPacket(packetContainer, player, true);
-//            ProtocolLibrary.getProtocolManager().sendServerPacket(player, packetContainer);
+    }
+
+    private void handleRiptide(Player player) {
+        Optional<RogueState> rogueState = getState(player);
+        if (!rogueState.isPresent()) {
+            return;
+        }
+
+        if (!rogueState.get().getSettings().shouldEnableRiptideEffect()) {
+            return;
+        }
+
+        sendRiptidePacket(player, ENABLE_RIPTIDE);
+
+        task.setInterval(4);
+        task.setDelay(10);
+        task.setNumberOfRuns(1);
+        task.setAction((times) -> {
+            Material type = player.getLocation().subtract(0, 1, 0).getBlock().getType();
+            return rogueState.get().canBlip() || type.isSolid() || EnvironmentUtil.isLiquid(type);
+        });
+
+        task.setFinishAction(() -> sendRiptidePacket(player, DISABLE_RIPTIDE));
+
+        task.build();
     }
 
     private Optional<RogueState> getStateAllowDisabled(Player player) {
@@ -197,6 +221,8 @@ public class RogueListener implements Listener {
 
         CommandBook.server().getPluginManager().callEvent(new ThrowPlayerEvent(player));
 
+        handleRiptide(player);
+
         if (auto) {
             autoBlip(player, modifier);
             return;
@@ -214,30 +240,6 @@ public class RogueListener implements Listener {
         }
 
         normalBlip(player, modifier);
-        sendRiptidePacket(player, ENABLE_RIPTIDE);
-
-        TaskBuilder.Countdown task = TaskBuilder.countdown();
-
-        task.setInterval(4);
-        task.setDelay(20);
-        task.setNumberOfRuns(1);
-        task.setAction((times) -> {
-            Material type = player.getLocation().subtract(0, 1, 0).getBlock().getType();
-            Optional<RogueState> rogueState = getState(player);
-            if (rogueState.isPresent()) {
-                if (rogueState.get().canBlip() || type.isSolid() || EnvironmentUtil.isLiquid(type)) {
-                    return true;
-                }
-            }
-            return false;
-        });
-
-        task.setFinishAction(() -> sendRiptidePacket(player, DISABLE_RIPTIDE));
-
-        task.build();
-
-
-
     }
 
     public void grenade(Player player, RogueState state) {
@@ -361,7 +363,7 @@ public class RogueListener implements Listener {
         }
     }
 
-    private static EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
+    private static final EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
             LivingEntity.class,
             LivingEntity.class,
             Projectile.class
@@ -438,7 +440,7 @@ public class RogueListener implements Listener {
         }
     }
 
-    private static List<EntityDamageEvent.DamageCause> MELEE_HIT_CAUSES = List.of(
+    private static final List<EntityDamageEvent.DamageCause> MELEE_HIT_CAUSES = List.of(
             EntityDamageEvent.DamageCause.ENTITY_ATTACK, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
     );
 
