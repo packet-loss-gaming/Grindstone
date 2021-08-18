@@ -222,6 +222,7 @@ public class RogueListener implements Listener {
             Vector vector = new Vector(xAdjustment, 1, zAdjustment);
             snowball.setVelocity(snowball.getVelocity().multiply(vector));
             snowball.setMetadata("rogue-snowball", new FixedMetadataValue(CommandBook.inst(), true));
+            snowball.setMetadata("guild-exp-modifier", new FixedMetadataValue(CommandBook.inst(), 0D));
             if (rocketJump) {
                 snowball.setMetadata("rocket-jump", new FixedMetadataValue(CommandBook.inst(), true));
             }

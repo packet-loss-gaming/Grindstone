@@ -15,6 +15,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.ProjectileWatchingComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.bosses.manager.apocalypse.*;
@@ -71,6 +72,7 @@ import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
 import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 
@@ -189,6 +191,16 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             Projectile.class
     );
 
+    private boolean isProjectileBowFired(Projectile projectile) {
+        ProjectileWatchingComponent.getSpawningItem(projectile);
+        Optional<ItemStack> optSpawningItem = getSpawningItem(projectile);
+        if (optSpawningItem.isEmpty()) {
+            return false;
+        }
+
+        return ItemUtil.isBow(optSpawningItem.get());
+    }
+
     private SpecialAttack getOverlordAttack(Player player, LivingEntity target, SpecType specType) {
         switch (specType) {
             case MELEE:
@@ -276,6 +288,11 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             default: {
                 if (attacker instanceof Player && checkEntity(target)) {
                     Player player = (Player) attacker;
+
+                    Projectile projectile = result.getProjectile();
+                    if (projectile != null && !isProjectileBowFired(projectile)) {
+                        return;
+                    }
 
                     // Handle damage buff
                     buffComponent.getBuffLevel(Buff.APOCALYPSE_DAMAGE_BOOST, player).ifPresent((level) -> {

@@ -6,28 +6,68 @@
 
 package gg.packetloss.grindstone.prayer.effect.passive;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.prayer.PassivePrayerEffect;
 import gg.packetloss.grindstone.util.ArrowUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
-import org.bukkit.entity.Entity;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DeadlyDefenseEffect implements PassivePrayerEffect {
-    @Override
-    public void trigger(Player player) {
-        short arrow = 0;
-        for (Entity entity : player.getNearbyEntities(8, 3, 8)) {
+    private Arrow shootArrow(Player owner, LivingEntity target) {
+        Arrow arrowEnt = ArrowUtil.shootArrow(owner, (LivingEntity) target, 1.6F, 0F);
+        if (arrowEnt == null) {
+            return null;
+        }
 
-            if (arrow > 10) break;
-            if (EntityUtil.isHostileMob(entity)) {
-                if (!player.hasLineOfSight(entity)) {
-                    arrow--;
-                    continue;
-                }
-                ArrowUtil.shootArrow(player, (LivingEntity) entity, 1.6F, 0F);
+        arrowEnt.setMetadata(
+            "guild-exp-modifier",
+            new FixedMetadataValue(CommandBook.inst(), 0D)
+        );
+        return arrowEnt;
+    }
+
+    private List<Arrow> shootArrowsFor(Player player) {
+        List<Arrow> arrowEnts = new ArrayList<>();
+        for (LivingEntity entity : player.getLocation().getNearbyEntitiesByType(Mob.class, 8, 3, 8)) {
+            if (!EntityUtil.isHostileMob(entity)) {
+                continue;
+            }
+
+            if (!player.hasLineOfSight(entity)) {
+                continue;
+            }
+
+            Arrow arrowEnt = shootArrow(player, entity);
+            if (arrowEnt == null) {
+                continue;
+            }
+
+            arrowEnts.add(arrowEnt);
+            if (arrowEnts.size() >= 10) {
+                break;
             }
         }
+        return arrowEnts;
+    }
+
+    private void registerArrowCleanup(List<Arrow> arrowEnts) {
+        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            for (Arrow arrowEnt : arrowEnts) {
+                arrowEnt.remove();
+            }
+        }, 20 * 3);
+    }
+
+    @Override
+    public void trigger(Player player) {
+        registerArrowCleanup(shootArrowsFor(player));
     }
 
     @Override

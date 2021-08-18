@@ -12,9 +12,9 @@ import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -30,10 +30,10 @@ public class GuildCombatXPListener implements Listener {
         this.stateLookup = stateLookup;
     }
 
-    private static EDBEExtractor<Player, LivingEntity, Arrow> extractor = new EDBEExtractor<>(
+    private static EDBEExtractor<Player, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
             Player.class,
             LivingEntity.class,
-            Arrow.class
+            Projectile.class
     );
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -42,7 +42,7 @@ public class GuildCombatXPListener implements Listener {
             return;
         }
 
-        CombatantPair<Player, LivingEntity, Arrow> result = extractor.extractFrom(event);
+        CombatantPair<Player, LivingEntity, Projectile> result = extractor.extractFrom(event);
         if (result == null) return;
 
         final Player attacker = result.getAttacker();
@@ -51,12 +51,19 @@ public class GuildCombatXPListener implements Listener {
             GuildCalculateCombatExpEvent expCalc = new GuildCalculateCombatExpEvent(
                 attacker,
                 defender,
+                result.getProjectile(),
                 guildState.getType(),
                 EntityUtil.descaleDamage(attacker, defender, event.getFinalDamage()),
                 EntityUtil.getMaxHealth(attacker, defender)
             );
             CommandBook.callEvent(expCalc);
-            guildState.grantExp(expCalc.getCalculatedExp());
+
+            double calculatedExp = expCalc.getCalculatedExp();
+            if (calculatedExp < 0.01) {
+                return;
+            }
+
+            guildState.grantExp(calculatedExp);
         });
     }
 }
