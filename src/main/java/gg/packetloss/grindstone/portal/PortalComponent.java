@@ -178,6 +178,7 @@ public class PortalComponent extends BukkitComponent implements Listener {
         if (remappingFunction.isPresent()) {
             WorldResolver resolver = remappingFunction.get();
             if (!resolver.accepts(player)) {
+                event.setCancelled(true);
                 ChatUtil.sendError(player, "The world gate refuses to let you through.");
                 return;
             }
