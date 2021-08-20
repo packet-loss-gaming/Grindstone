@@ -60,6 +60,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
@@ -507,28 +508,17 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }, 1);
     }
 
-    private static Set<PlayerTeleportEvent.TeleportCause> watchedCauses = new HashSet<>();
-
-    static {
-        watchedCauses.add(PlayerTeleportEvent.TeleportCause.ENDER_PEARL);
-        watchedCauses.add(PlayerTeleportEvent.TeleportCause.CHORUS_FRUIT);
-        watchedCauses.add(PlayerTeleportEvent.TeleportCause.COMMAND);
-        watchedCauses.add(PlayerTeleportEvent.TeleportCause.PLUGIN);
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
-        if (parent.isHostileTempleArea(event.getFrom()) && event.getCause().equals(PlayerTeleportEvent.TeleportCause.NETHER_PORTAL)) {
+        if (parent.isHostileTempleArea(event.getFrom()) && event.getCause().equals(TeleportCause.NETHER_PORTAL)) {
             event.setCancelled(true);
-            event.getPlayer().teleport(parent.getRandomHeadstoneOrSpawn(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+            event.getPlayer().teleport(parent.getRandomHeadstoneOrSpawn(), TeleportCause.UNKNOWN);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
-        Player player = event.getPlayer();
-        if (parent.isHostileTempleArea(event.getTo()) && !parent.admin.isAdmin(player)) {
-            if (!watchedCauses.contains(event.getCause())) return;
+        if (parent.isHostileTempleArea(event.getTo()) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
             if (parent.contains(event.getFrom())) {
                 event.setCancelled(true);
             } else {
@@ -586,7 +576,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             case RIGHT_CLICK_BLOCK:
                 if (ItemUtil.isItem(stack, CustomItems.PHANTOM_CLOCK)) {
                     if (parent.getContainedParticipantsIn(parent.rewards).isEmpty()) {
-                        player.teleport(new Location(parent.getWorld(), -126, 42, -685), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                        player.teleport(new Location(parent.getWorld(), -126, 42, -685), TeleportCause.UNKNOWN);
                         final int amt = stack.getAmount() - 1;
                         server.getScheduler().runTaskLater(inst, () -> {
                             ItemStack newStack = null;
@@ -637,7 +627,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         Validate.isTrue(removed);
 
         ChatUtil.sendNotice(player, "A spirit carries you through the maze!");
-        player.teleport(endOfMaze, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        player.teleport(endOfMaze, TeleportCause.UNKNOWN);
     }
 
     @EventHandler
@@ -838,6 +828,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
 
         targetLocation.setDirection(VectorUtil.createDirectionalVector(targetLocation, pointOfInterest));
-        player.teleport(targetLocation, PlayerTeleportEvent.TeleportCause.UNKNOWN);
+        player.teleport(targetLocation, TeleportCause.UNKNOWN);
     }
 }
