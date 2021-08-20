@@ -8,10 +8,7 @@ package gg.packetloss.grindstone.world.type.city.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
-import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
-import gg.packetloss.grindstone.events.PlayerGraveProtectItemsEvent;
-import gg.packetloss.grindstone.events.PlayerSacrificeItemEvent;
-import gg.packetloss.grindstone.events.PrayerTriggerEvent;
+import gg.packetloss.grindstone.events.*;
 import gg.packetloss.grindstone.events.apocalypse.*;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.RepairItemEvent;
@@ -525,6 +522,13 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                 event.setTo(parent.getRandomHeadstoneOrSpawn());
             }
             ChatUtil.sendWarning(event.getPlayer(), "It would seem your teleport has failed to penetrate the temple.");
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPortalRecord(PortalRecordEvent event) {
+        if (parent.isHostileTempleArea(event.getPortalLocation())) {
+            event.setCancelled(true);
         }
     }
 
