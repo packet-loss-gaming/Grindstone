@@ -370,7 +370,7 @@ public class MarketCommands {
 
                 builder.append(Text.of(
                         ChatColor.BLUE,
-                        TextAction.Click.runCommand("/market sellgui"),
+                        TextAction.Click.runCommand("/market sell"),
                         TextAction.Hover.showText(Text.of(
                                 "Sell " + item.getDisplayNameNoColor() + " using a GUI"
                         )),
@@ -379,7 +379,7 @@ public class MarketCommands {
                 builder.append(" -- ");
                 builder.append(Text.of(
                         ChatColor.BLUE,
-                        TextAction.Click.runCommand("/market sellgui " + item.getName()),
+                        TextAction.Click.runCommand("/market sell " + item.getLookupName()),
                         TextAction.Hover.showText(Text.of(
                                 "Sell all " + item.getDisplayNameNoColor() + " using a GUI"
                         )),
