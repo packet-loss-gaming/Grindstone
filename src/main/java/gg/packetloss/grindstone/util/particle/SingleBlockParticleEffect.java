@@ -15,15 +15,34 @@ public class SingleBlockParticleEffect {
     public static void puffOfSmoke(Location loc) {
         for (int i = 0; i < 10; ++i) {
             loc.getWorld().spawnParticle(
-                    Particle.SMOKE_NORMAL,
-                    loc.getX(),
-                    loc.getY(),
-                    loc.getZ(),
-                    0,
-                    ChanceUtil.getRangedRandom(-.07, .07),
-                    .1,
-                    ChanceUtil.getRangedRandom(-.07, .07)
+                Particle.SMOKE_NORMAL,
+                loc.getX(),
+                loc.getY(),
+                loc.getZ(),
+                0,
+                ChanceUtil.getRangedRandom(-.07, .07),
+                .1,
+                ChanceUtil.getRangedRandom(-.07, .07)
             );
+        }
+    }
+
+    public static void randomStar(Location loc) {
+        loc.getWorld().spawnParticle(
+            Particle.VILLAGER_HAPPY,
+            loc.getX() + ChanceUtil.getRangedRandom(0D, 1D),
+            loc.getY() + ChanceUtil.getRangedRandom(0D, 1D),
+            loc.getZ() + ChanceUtil.getRangedRandom(0D, 1D),
+            0,
+            0,
+            0,
+            0
+        );
+    }
+
+    public static void burstOfStars(Location loc) {
+        for (int i = 0; i < 25; ++i) {
+            randomStar(loc);
         }
     }
 

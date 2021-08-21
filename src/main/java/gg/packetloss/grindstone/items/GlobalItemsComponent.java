@@ -201,9 +201,11 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         HymnImpl hymnImpl = handle(new HymnImpl());
         hymnImpl.addHymn(CustomItems.PHANTOM_HYMN, HymnSingEvent.Hymn.PHANTOM);
         hymnImpl.addHymn(CustomItems.CHICKEN_HYMN, HymnSingEvent.Hymn.CHICKEN);
+        hymnImpl.addHymn(CustomItems.HYMN_OF_HARVEST, HymnSingEvent.Hymn.HARVEST);
         hymnImpl.addHymn(CustomItems.HYMN_OF_SUMMATION, HymnSingEvent.Hymn.SUMMATION);
 
         handle(new ChickenHymnImpl());
+        handle(new HymnOfHarvestImpl());
         handle(new SummationHymnImpl(SUMMATION_CONDENSER));
     }
 

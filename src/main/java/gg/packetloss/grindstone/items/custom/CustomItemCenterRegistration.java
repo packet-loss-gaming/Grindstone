@@ -772,7 +772,7 @@ public class CustomItemCenterRegistration {
         CustomItem tomeOfShadows = new CustomItem(HYMN_OF_HARVEST, Material.BOOK);
         tomeOfShadows.addSource(ItemSource.FROSTBORN);
         tomeOfShadows.addSource(ItemSource.MARKET);
-        tomeOfShadows.addUse("Upon use will immediately grow a crop.");
+        tomeOfShadows.addUse("Upon use will harvest and replant nearby crops.");
         itemConsumer.accept(tomeOfShadows);
 
         // Party Box
