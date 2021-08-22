@@ -42,6 +42,14 @@ public class WorldLevelConfig extends ConfigurationBase {
     public int mobsSilverfishInitialSilverfishChance = 3;
     @Setting("ores.per-level")
     public double oresPerLevel = 3;
+    @Setting("ores.per-run-increment")
+    public int oresPerRunIncrement = 10;
+    @Setting("ores.chance-of-attention.base")
+    public int oresChanceOfAttentionBase = 1000;
+    @Setting("ores.chance-of-attention.per-level")
+    public int oresChanceOfAttentionPerLevel = 25;
+    @Setting("ores.chance-of-attention.min-chance")
+    public int oresChanceOfAttentionMinChance = 10;
     @Setting("adjustment.death-penalty")
     public double adjustmentDeathPenalty = .5;
 }
