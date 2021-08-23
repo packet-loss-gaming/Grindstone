@@ -22,19 +22,18 @@ import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue.Nightmare;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EntityDistanceComparator;
-import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.effects.RiptideEffectHandle;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -54,10 +53,29 @@ import java.util.function.Function;
 public class RogueListener implements Listener {
     private static final float DEFAULT_SPEED = .2F;
 
-    private Function<Player, InternalGuildState> internalStateLookup;
+    private final Function<Player, InternalGuildState> internalStateLookup;
 
     public RogueListener(Function<Player, InternalGuildState> internalStateLookup) {
         this.internalStateLookup = internalStateLookup;
+    }
+
+    private void animateBlip(Player player, RogueState rogueState) {
+        RiptideEffectHandle riptideHandle = new RiptideEffectHandle(player);
+        riptideHandle.enable();
+
+        TaskBuilder.Countdown task = TaskBuilder.countdown();
+
+        task.setInterval(4);
+        task.setDelay(10);
+
+        task.setAction((times) -> {
+            Material type = player.getLocation().subtract(0, 1, 0).getBlock().getType();
+            return rogueState.canBlip() || type.isSolid() || EnvironmentUtil.isLiquid(type);
+        });
+
+        task.setFinishAction(riptideHandle::disable);
+
+        task.build();
     }
 
     private Optional<RogueState> getStateAllowDisabled(Player player) {
@@ -177,6 +195,10 @@ public class RogueListener implements Listener {
         state.blip();
 
         CommandBook.server().getPluginManager().callEvent(new ThrowPlayerEvent(player));
+
+        if (state.getSettings().shouldAnimateBlips()) {
+            animateBlip(player, state);
+        }
 
         if (auto) {
             autoBlip(player, modifier);
@@ -319,7 +341,7 @@ public class RogueListener implements Listener {
         }
     }
 
-    private static EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
+    private static final EDBEExtractor<LivingEntity, LivingEntity, Projectile> extractor = new EDBEExtractor<>(
             LivingEntity.class,
             LivingEntity.class,
             Projectile.class
@@ -396,7 +418,7 @@ public class RogueListener implements Listener {
         }
     }
 
-    private static List<EntityDamageEvent.DamageCause> MELEE_HIT_CAUSES = List.of(
+    private static final List<EntityDamageEvent.DamageCause> MELEE_HIT_CAUSES = List.of(
             EntityDamageEvent.DamageCause.ENTITY_ATTACK, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
     );
 

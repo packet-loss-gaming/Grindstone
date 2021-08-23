@@ -16,6 +16,7 @@ import java.util.List;
 public class RogueStateSettings extends BaseStateSettings {
     private boolean blipWhileSneaking = false;
     private boolean showBerserkerBuffs = false;
+    private boolean enableBlipAnimations = true;
 
     public boolean shouldBlipWhileSneaking() {
         return blipWhileSneaking;
@@ -25,13 +26,21 @@ public class RogueStateSettings extends BaseStateSettings {
         return showBerserkerBuffs;
     }
 
+    public boolean shouldAnimateBlips() {
+        return enableBlipAnimations;
+    }
+
     // Wrappers
     private transient BooleanGuildSetting blipWhileSneakingWrapper = new BooleanGuildSetting(
-            "Blip While Sneaking", () -> blipWhileSneaking
+        "Blip While Sneaking", () -> blipWhileSneaking
     );
 
     private transient BooleanGuildSetting showBerserkerBuffsWrapper = new BooleanGuildSetting(
-            "Show Berserker Buffs", () -> showBerserkerBuffs
+        "Show Berserker Buffs", () -> showBerserkerBuffs
+    );
+
+    private transient BooleanGuildSetting enableBlipAnimationsWrapper = new BooleanGuildSetting(
+        "Animate Blips", () -> enableBlipAnimations
     );
 
     @Override
@@ -40,8 +49,9 @@ public class RogueStateSettings extends BaseStateSettings {
 
         baseSetting.addAll(super.getAll());
         baseSetting.addAll(List.of(
-                blipWhileSneakingWrapper,
-                showBerserkerBuffsWrapper
+            blipWhileSneakingWrapper,
+            showBerserkerBuffsWrapper,
+            enableBlipAnimationsWrapper
         ));
 
         return baseSetting;
@@ -58,6 +68,9 @@ public class RogueStateSettings extends BaseStateSettings {
             return true;
         } else if (setting.getSetting().getKey().equals(showBerserkerBuffsWrapper.getKey())) {
             showBerserkerBuffs = Boolean.parseBoolean(setting.getNewValue());
+            return true;
+        } else if (setting.getSetting().getKey().equals(enableBlipAnimationsWrapper.getKey())) {
+            enableBlipAnimations = Boolean.parseBoolean(setting.getNewValue());
             return true;
         }
 
