@@ -13,9 +13,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
-import gg.packetloss.grindstone.events.custom.item.FlightItemActivatedEvent;
 import gg.packetloss.grindstone.items.flight.FlightItemsComponent;
-import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.listener.BetterMobSpawningListener;
 import gg.packetloss.grindstone.util.listener.DoorRestorationListener;
@@ -31,13 +29,10 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
@@ -154,42 +149,6 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
     public void onBlockExplode(BlockExplodeEvent event) {
         if (shouldBlockExplosionAt(event.getBlock())) {
             event.blockList().clear();
-        }
-    }
-
-    private void maybeNerfFlightSpeed(Player player) {
-        flightItems.getFlightProvider(player).ifPresent((flightProvider) -> {
-            player.setFlySpeed(flightProvider.getSpeed() * .1f);
-            ChatUtil.sendNotice(player, "You feel a bit worse at flying for some reason...");
-        });
-    }
-
-    private void maybeRestoreFlightSpeed(Player player) {
-        flightItems.getFlightProvider(player).ifPresent((flightProvider) -> {
-            player.setFlySpeed(flightProvider.getSpeed());
-            ChatUtil.sendNotice(player, "Your expertise in flight returns!");
-        });
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        World from = event.getFrom().getWorld();
-        World to = event.getTo().getWorld();
-
-        Player player = event.getPlayer();
-
-        if (isRangeWorld(from) && !isRangeWorld(to)) {
-            maybeRestoreFlightSpeed(player);
-        } else if (!isRangeWorld(from) && isRangeWorld(to)) {
-            maybeNerfFlightSpeed(player);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onFlightItemActivation(FlightItemActivatedEvent event) {
-        Player player = event.getPlayer();
-        if (isRangeWorld(player.getWorld())) {
-            maybeNerfFlightSpeed(player);
         }
     }
 }
