@@ -87,6 +87,22 @@ public class ChatUtil {
         sendDebug(Text.of(objects));
     }
 
+    public static void sendAdminNotice(Text messageText) {
+        Text debugText = Text.of(ChatColor.BLACK, "[", ChatColor.DARK_RED, "ADMIN", ChatColor.BLACK, "] ", messageText);
+        BaseComponent[] builtAdminMessage = debugText.build();
+
+        CommandBook.logger().info(messageText.toString());
+        Bukkit.getOnlinePlayers().forEach((player) -> {
+            if (player.hasPermission("aurora.admin.adminmode")) {
+                player.sendMessage(builtAdminMessage);
+            }
+        });
+    }
+
+    public static void sendAdminNotice(Object... objects) {
+        sendAdminNotice(Text.of(objects));
+    }
+
     public static void sendStaggered(CommandSender sender, Iterable<Text> lines) {
         int i = 0;
 

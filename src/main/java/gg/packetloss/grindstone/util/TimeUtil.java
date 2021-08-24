@@ -109,6 +109,10 @@ public class TimeUtil {
         return ticks * (TimeUnit.SECONDS.toMillis(1) / 20);
     }
 
+    public static long convertTicksToNanos(int ticks) {
+        return ticks * (TimeUnit.SECONDS.toNanos(1) / 20);
+    }
+
     public static int getNextHour(Predicate<Integer> test) {
         int hour = LocalTime.now().getHour();
 

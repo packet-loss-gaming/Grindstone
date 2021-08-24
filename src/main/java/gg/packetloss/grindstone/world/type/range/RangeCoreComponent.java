@@ -11,6 +11,8 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import com.zachsthings.libcomponents.config.ConfigurationBase;
+import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.events.custom.item.FlightItemActivatedEvent;
 import gg.packetloss.grindstone.items.flight.FlightItemsComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -24,6 +26,7 @@ import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldMassQuery;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.WorldBorder;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
@@ -40,7 +43,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.logging.Logger;
 
-
 @ComponentInformation(friendlyName = "Range Core", desc = "Operate the range worlds.")
 @Depend(components = {ManagedWorldComponent.class, FlightItemsComponent.class})
 public class RangeCoreComponent extends BukkitComponent implements Listener, Runnable {
@@ -53,8 +55,13 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
     @InjectComponent
     private FlightItemsComponent flightItems;
 
+    private LocalConfiguration config;
+
     @Override
     public void enable() {
+        config = configure(new LocalConfiguration());
+        processConfig();
+
         CommandBook.registerEvents(this);
         CommandBook.registerEvents(new UnbalancedCombatWatchdog(this::isRangeWorld));
         CommandBook.registerEvents(new DoorRestorationListener(this::isRangeWorld));
@@ -63,6 +70,33 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
 
         // Start tree growth task
         server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 2);
+    }
+
+    @Override
+    public void reload() {
+        super.reload();
+        configure(config);
+    }
+
+    private static class LocalConfiguration extends ConfigurationBase {
+        @Setting("world-border.size")
+        public double worldBorderSize = 10000;
+    }
+
+    public void setWorldBoarder() {
+        for (World world : CommandBook.server().getWorlds()) {
+            if (!isRangeWorld(world)) {
+                continue;
+            }
+
+            WorldBorder worldBorder = world.getWorldBorder();
+            worldBorder.setSize(config.worldBorderSize);
+            worldBorder.setCenter(0, 0);
+        }
+    }
+
+    private void processConfig() {
+        setWorldBoarder();
     }
 
     private void autoReplantSaplings(World world) {
