@@ -86,7 +86,7 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
 
             WorldBorder worldBorder = world.getWorldBorder();
             worldBorder.setSize(config.worldBorderSize);
-            worldBorder.setCenter(0, 0);
+            worldBorder.setCenter(world.getSpawnLocation());
         }
     }
 
