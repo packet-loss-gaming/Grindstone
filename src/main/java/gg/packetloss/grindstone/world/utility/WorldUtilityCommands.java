@@ -17,10 +17,7 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.WorldBorder;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.enginehub.piston.annotation.Command;
 import org.enginehub.piston.annotation.CommandContainer;
@@ -50,7 +47,7 @@ public class WorldUtilityCommands {
 
         WorldBorder worldBorder = world.getWorldBorder();
         Location center = worldBorder.getCenter();
-        double size = worldBorder.getSize() / 2;
+        double size = (worldBorder.getSize() / 2) + (Bukkit.getViewDistance() * 16);
 
         CuboidRegion region = new CuboidRegion(
             BlockVector3.at(
