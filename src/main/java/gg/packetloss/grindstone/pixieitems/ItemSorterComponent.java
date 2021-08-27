@@ -198,7 +198,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     PixieNetworkDetail networkDetail = optNetworkDetail.get();
                     CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
                         Location origin = networkDetail.getOrigin();
-                        if (!LocationUtil.isWithin2DDistance(block.getLocation(), origin, 50)) {
+                        if (!LocationUtil.isWithin2DDistance(block.getLocation(), origin, 100)) {
                             ChatUtil.sendError(player, "This block is too far away from the network creation point.");
                             return;
                         }
