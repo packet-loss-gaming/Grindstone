@@ -9,14 +9,10 @@ package gg.packetloss.grindstone.pixieitems;
 import com.google.common.collect.ImmutableSet;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.component.session.SessionComponent;
-import com.sk89q.commandbook.util.entity.player.PlayerUtil;
-import com.sk89q.minecraft.util.commands.*;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.bukkittext.Text;
-import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.pixieitems.broker.EconomyBroker;
 import gg.packetloss.grindstone.pixieitems.broker.VoidBroker;
@@ -26,7 +22,6 @@ import gg.packetloss.grindstone.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
-import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
@@ -35,7 +30,6 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -53,7 +47,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -86,10 +79,18 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
     public void enable() {
         setupEconomy();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
-        registerCommands(Commands.class);
+        CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            registrar.registerAsSubCommand("/sorter","Item sorter system management", (sorterRegistrar) -> {
+                sorterRegistrar.registerAsSubCommand("network", "View, select, and manage networks", (networkRegistrar) -> {
+                    networkRegistrar.register(ItemSorterNetworkCommandsRegistration.builder(), new ItemSorterNetworkCommands(sessions, manager));
+                });
+                sorterRegistrar.registerAsSubCommand("add", "Add containers to the current sorter network", (addRegistrar) -> {
+                    addRegistrar.register(ItemSorterAddCommandsRegistration.builder(), new ItemSorterAddCommands(sessions));
+                });
+            });
+        });
 
         server.getScheduler().runTaskTimerAsynchronously(
                 inst,
@@ -341,122 +342,5 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onChunkUnload(ChunkUnloadEvent event) {
         manager.handleChunkUnload(event.getChunk());
-    }
-
-    public class Commands {
-        @Command(aliases = {"/sorter"}, desc = "Item sorter system management")
-        @CommandPermissions({"aurora.itemsorter"})
-        @NestedCommand({SorterCommands.class})
-        public void subCmds(CommandContext args, CommandSender sender) throws CommandException {
-
-        }
-    }
-
-    public class SorterCommands {
-        @Command(aliases = {"network", "networks"}, desc = "View, select, and manage networks")
-        @NestedCommand({NetworkCommands.class})
-        public void networksSubCmds(CommandContext args, CommandSender sender) throws CommandException {
-        }
-
-        @Command(aliases = {"add"}, desc = "Add chests to the current sorter network")
-        @NestedCommand({AdditionCommands.class})
-        public void additionSubCmds(CommandContext args, CommandSender sender) throws CommandException {
-        }
-    }
-
-    public class NetworkCommands {
-        @Command(aliases = {"create", "add"},
-                 usage = "<network name>", desc = "Create a new sorter system", min = 1, max = 1)
-        public void createCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Player owner = PlayerUtil.checkPlayer(sender);
-            String name = args.getString(0).toUpperCase();
-
-            manager.createNetwork(owner.getUniqueId(), name, owner.getLocation()).thenAccept((optNetworkDetail) -> {
-                if (optNetworkDetail.isEmpty()) {
-                    ChatUtil.sendError(sender, "Failed to create network!");
-                    return;
-                }
-
-                ChatUtil.sendNotice(sender, "New item sorter network '" + name + "' created!");
-
-                PixieCommandSession session = sessions.getSession(PixieCommandSession.class, sender);
-                session.setCurrentNetwork(optNetworkDetail.get());
-            });
-        }
-
-        @Command(aliases = {"use", "select"},
-                 usage = "<network name>", desc = "Work with an existing sorter system", min = 1, max = 1)
-        public void useCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Player owner = PlayerUtil.checkPlayer(sender);
-            String name = args.getString(0).toUpperCase();
-
-            manager.selectNetwork(owner.getUniqueId(), name).thenAccept((optNetworkDetail) -> {
-                if (optNetworkDetail.isEmpty()) {
-                    ChatUtil.sendError(sender, "Failed to find an item sorter network by that name!");
-                    return;
-                }
-
-                ChatUtil.sendNotice(sender, "Item sorter network '" + name + "' selected!");
-
-                PixieCommandSession session = sessions.getSession(PixieCommandSession.class, sender);
-                session.setCurrentNetwork(optNetworkDetail.get());
-            });
-        }
-
-        @Command(aliases = {"list"}, desc = "List sorter networks",
-                 usage = "[-p <page>]", min = 0, max = 0)
-        public void listNetworksCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Player owner = PlayerUtil.checkPlayer(sender);
-
-            manager.selectNetworks(owner.getUniqueId()).thenAcceptAsynchronously((networks) -> {
-                Collections.sort(networks);
-                server.getScheduler().runTask(inst, () -> {
-                    new TextComponentChatPaginator<PixieNetworkDetail>(ChatColor.GOLD, "Networks") {
-                        @Override
-                        public Optional<String> getPagerCommand(int page) {
-                            return Optional.of("//sorter networks list -p " + page);
-                        }
-
-                        @Override
-                        public Text format(PixieNetworkDetail network) {
-                            return Text.of(
-                                    ChatColor.BLUE,
-                                    network.getName(),
-                                    TextAction.Hover.showText(Text.of("Use ", network.getName()," network")),
-                                    TextAction.Click.runCommand("//sorter networks use " + network.getName())
-                            );
-                        }
-                    }.display(sender, networks, args.getFlagInteger('p', 1));
-                });
-            });
-        }
-    }
-
-    public class AdditionCommands {
-        @Command(aliases = {"source"}, desc = "Add a source to the network", min = 0, max = 0)
-        public void addSourceCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Player owner = PlayerUtil.checkPlayer(sender);
-
-            PixieCommandSession session = sessions.getSession(PixieCommandSession.class, owner);
-            session.commandToAddSource();
-
-            ChatUtil.sendNotice(sender, "Punch the chest you'd like to make a source.");
-        }
-
-        @Command(aliases = {"sink"}, desc = "Add a sink to the network", usage = "[mode]", min = 0, max = 1)
-        public void addSinkCmd(CommandContext args, CommandSender sender) throws CommandException {
-            Player owner = PlayerUtil.checkPlayer(sender);
-
-            PixieCommandSession session = sessions.getSession(PixieCommandSession.class, owner);
-
-            String variant = args.getString(0, "overwrite").toUpperCase();
-            try {
-                session.commandToAddSink(PixieSinkVariant.valueOf(variant));
-            } catch (IllegalArgumentException ex) {
-                throw new CommandException("Valid modes are: overwrite, add, void");
-            }
-
-            ChatUtil.sendNotice(sender, "Punch the container you'd like to make a sink.");
-        }
     }
 }
