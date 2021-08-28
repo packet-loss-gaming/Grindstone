@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.pixieitems.manager;
 
-import com.google.common.primitives.Ints;
 import gg.packetloss.grindstone.util.item.inventory.DirectInventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.TranslationTableInventoryAdapter;
@@ -38,6 +37,9 @@ class PixieSink {
             return new DirectInventoryAdapter(inventory);
         }
 
-        return new TranslationTableInventoryAdapter(Ints.toArray(availableSlots), inventory);
+        int[] translationTable = availableSlots.stream().filter(
+            (i) -> i < inventory.getSize()
+        ).mapToInt(Integer::intValue).toArray();
+        return new TranslationTableInventoryAdapter(translationTable, inventory);
     }
 }
