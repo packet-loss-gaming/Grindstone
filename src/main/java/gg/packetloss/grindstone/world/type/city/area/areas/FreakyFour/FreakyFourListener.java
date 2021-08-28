@@ -20,6 +20,7 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
+import gg.packetloss.grindstone.items.specialattack.attacks.hybrid.unleashed.EvilFocus;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.FearBlaze;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.fear.SoulSmite;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear.Disarm;
@@ -121,17 +122,26 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
     @EventHandler(ignoreCancelled = true)
     public void onSpecialAttack(SpecialAttackSelectEvent event) {
         SpecialAttack attack = event.getSpec();
-        if (!parent.contains(attack.getLocation())) {
+        Location attackLoc = attack.getLocation();
+        if (!parent.contains(attackLoc)) {
+            return;
+        }
+
+        if (isAffectedBySpiderBite(event.getPlayer())) {
+            event.setCancelled(true);
             return;
         }
 
         Class<?> specClass = attack.getClass();
         if (SPECIAL_ATTACK_DENY_LIST.contains(specClass)) {
             event.tryAgain();
+            return;
         }
 
-        if (isAffectedBySpiderBite(event.getPlayer())) {
-            event.setCancelled(true);
+        // Don't allow da bomb to be trapped as this can lead to bugs with the teleporting process of the fight
+        // that ultimately result in a greatly increased chance of death.
+        if (parent.getBossAtLocation(attackLoc) == FreakyFourBoss.DA_BOMB && specClass.equals(EvilFocus.class)) {
+            event.tryAgain();
         }
     }
 
@@ -241,7 +251,8 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             }
         }
 
-        if (entity instanceof Monster && damager instanceof Player player) {
+        // Exclude Da Bomb he has his own mechanic for shuffling the deck
+        if (entity instanceof Monster && !(entity instanceof Creeper) && damager instanceof Player player) {
             FreakyFourBoss boss = parent.getBossAtLocation(entity.getLocation());
             Location lastDamageLoc = bossLastDamageLoc.get(boss);
             if (lastDamageLoc != null && LocationUtil.isWithin2DDistance(entity.getLocation(), lastDamageLoc, 3)) {
@@ -261,8 +272,13 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
         if (entity instanceof Creeper) {
             // Teleport Da Bomb randomly somewhere in the room
             if (damager instanceof Player) {
-                BlockVector3 damagerLoc = WorldEditBridge.toBlockVec3(damager.getLocation());
                 final double minDist = Math.pow(parent.getConfig().daBombTeleMinDist, 2);
+
+                Location newDamagerLoc = parent.getLocationInBossRoom(FreakyFourBoss.DA_BOMB, (ignored) -> true);
+                newDamagerLoc.setDirection(damager.getLocation().getDirection());
+                damager.teleport(newDamagerLoc, TeleportCause.UNKNOWN);
+
+                BlockVector3 damagerLoc = WorldEditBridge.toBlockVec3(damager.getLocation());
                 entity.teleport(parent.getLocationInBossRoom(
                     FreakyFourBoss.DA_BOMB,
                     (vector) -> LocationUtil.distanceSquared2D(vector, damagerLoc) > minDist
