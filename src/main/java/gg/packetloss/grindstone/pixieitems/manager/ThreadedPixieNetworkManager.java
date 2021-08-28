@@ -20,10 +20,7 @@ import gg.packetloss.grindstone.util.RefCountedTracker;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
@@ -81,16 +78,17 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     private List<Location> getLocationsToAdd(Block block) {
-        Container chest = (Container) block.getState();
-        if (chest.getInventory() instanceof DoubleChestInventory) {
-            DoubleChest doubleChest = (DoubleChest) chest.getInventory().getHolder();
-            Chest leftChest = (Chest) doubleChest.getLeftSide();
-            Chest rightChest = (Chest) doubleChest.getRightSide();
+        BlockState state = block.getState();
+        if (state instanceof Container container) {
+            if (container.getInventory() instanceof DoubleChestInventory) {
+                DoubleChest doubleChest = (DoubleChest) container.getInventory().getHolder();
+                Chest leftChest = (Chest) doubleChest.getLeftSide();
+                Chest rightChest = (Chest) doubleChest.getRightSide();
 
-            return Lists.newArrayList(leftChest.getLocation(), rightChest.getLocation());
-        } else {
-            return Lists.newArrayList(block.getLocation());
+                return Lists.newArrayList(leftChest.getLocation(), rightChest.getLocation());
+            }
         }
+        return Lists.newArrayList(block.getLocation());
     }
 
     private void clearSinkAtBlock(@Nullable PixieNetworkGraph network, Location location) {
@@ -311,9 +309,28 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         });
     }
 
+    private Inventory getInventoryAtBlock(OfflinePlayer player, BlockState state) {
+        if (state instanceof EnderChest) {
+            // The player isn't online, this can't be considered at the moment
+            if (!player.isOnline()) {
+                return null;
+            }
+
+            return new RelocatedInventory(
+                Objects.requireNonNull(player.getPlayer()).getEnderChest(),
+                state.getLocation()
+            );
+        } else if (state instanceof Container container) {
+            return container.getInventory();
+        }
+
+        throw new IllegalStateException();
+    }
+
     @Override
-    public TaskFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkCreationMode variant) {
-        Inventory chestInventory = ((Container) block.getState()).getInventory();
+    public TaskFuture<NewSinkResult> addSink(OfflinePlayer player, int networkID, Block block,
+                                             PixieSinkCreationMode variant) {
+        Inventory chestInventory = Objects.requireNonNull(getInventoryAtBlock(player, block.getState()));
         Map<String, List<Integer>> itemMapping = switch (variant) {
             case VOID -> Map.of();
             case ADD, OVERWRITE -> createItemMapping(chestInventory, false);
@@ -466,7 +483,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public void sourceItems(TransactionBroker broker, int networkID, Inventory inventory) {
+    public void sourceItems(OfflinePlayer player, TransactionBroker broker, int networkID, Inventory inventory) {
         networkLock.readLock().lock();
 
         try {
@@ -489,13 +506,17 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 for (PixieSink sink : network.getSinksForItem(itemName)) {
                     BlockState state = sink.getBlock().getState();
 
-                    // If we found an invalid chest, remove it.
-                    if (!(state instanceof Container)) {
+                    Inventory destInv;
+                    try {
+                        destInv = getInventoryAtBlock(player, state);
+                        if (destInv == null) {
+                            continue;
+                        }
+                    } catch (IllegalStateException ignored) {
+                        // If we found an invalid chest, remove it.
                         removeContainer(sink.getLocation());
                         continue;
                     }
-
-                    Inventory destInv = ((Container) state).getInventory();
 
                     InventoryAdapter adapter = sink.adaptInventory(destInv);
                     item = adapter.add(Objects.requireNonNull(item));

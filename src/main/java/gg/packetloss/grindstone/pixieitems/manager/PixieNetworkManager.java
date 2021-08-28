@@ -12,6 +12,7 @@ import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.Inventory;
 
@@ -26,7 +27,7 @@ public interface PixieNetworkManager {
     TaskFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace);
 
     TaskFuture<NewSourceResult> addSource(int networkID, Block block);
-    TaskFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkCreationMode variant);
+    TaskFuture<NewSinkResult> addSink(OfflinePlayer player, int networkID, Block block, PixieSinkCreationMode variant);
 
     boolean maybeExpandChest(Block block);
 
@@ -34,7 +35,7 @@ public interface PixieNetworkManager {
 
     Optional<Integer> getNetworkFromSourceContainers(Block... blocks);
 
-    void sourceItems(TransactionBroker broker, int networkID, Inventory inventory);
+    void sourceItems(OfflinePlayer player, TransactionBroker broker, int networkID, Inventory inventory);
 
     void handleChunkLoad(Chunk chunk);
     void handleChunkUnload(Chunk chunk);

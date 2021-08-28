@@ -128,7 +128,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
     private static final Set<Material> SINK_CONTAINERS = Set.of(
             Material.CHEST, Material.TRAPPED_CHEST, Material.DISPENSER, Material.DROPPER, Material.SHULKER_BOX,
-            Material.BARREL
+            Material.BARREL, Material.ENDER_CHEST
     );
 
     private boolean shouldConsiderAsSink(Block block) {
@@ -218,7 +218,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     return;
                 }
 
-                manager.addSink(networkID, block, session.getTargetSinkVariant()).thenAcceptAsynchronously((result) -> {
+                manager.addSink(player, networkID, block, session.getTargetSinkVariant()).thenAcceptAsynchronously((result) -> {
                     ChatUtil.sendNotice(player, "Container updated to sink! Accepts:");
 
                     ImmutableSet<String> sinkItems = result.getItemNames();
@@ -311,8 +311,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
                 OfflinePlayer player = GeneralPlayerUtil.findOfflinePlayer(networkDetail.getNamespace());
                 TransactionBroker broker = player != null ?  new EconomyBroker(economy, player) : new VoidBroker();
-
-                manager.sourceItems(broker, networkID, inventory);
+                manager.sourceItems(player, broker, networkID, inventory);
             });
         }, 1);
     }
