@@ -94,19 +94,27 @@ public class EntityUtil {
         }
 
         // Check living
-        if (!(entity instanceof LivingEntity)) {
+        if (!(entity instanceof LivingEntity living)) {
             return;
         }
 
         // Check damageable
-        if (entity instanceof Player && GeneralPlayerUtil.hasInvulnerableGamemode((Player) entity)) {
+        if (living instanceof Player && GeneralPlayerUtil.hasInvulnerableGamemode((Player) living)) {
             return;
         }
 
-        double cur = ((LivingEntity) entity).getHealth();
+        // Update Absorption
+        double curAbsorption = living.getAbsorptionAmount();
+        double absorptionRemoved = Math.min(curAbsorption, amt);
+        living.setAbsorptionAmount(curAbsorption - absorptionRemoved);
+        amt -= absorptionRemoved;
 
-        ((LivingEntity) entity).setHealth(Math.max(cur - amt, 0));
-        entity.playEffect(EntityEffect.HURT);
+        // Update base health
+        double cur = living.getHealth();
+        living.setHealth(Math.max(cur - amt, 0));
+
+        // Play damage effect
+        living.playEffect(EntityEffect.HURT);
     }
 
     public static void forceDamage(Player context, LivingEntity entity, double amt) {
