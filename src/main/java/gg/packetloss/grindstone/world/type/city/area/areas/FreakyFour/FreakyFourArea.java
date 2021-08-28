@@ -28,6 +28,7 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.checker.Expression;
 import gg.packetloss.grindstone.util.checker.NonSolidRegionChecker;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
@@ -663,6 +664,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
                     return CustomItemCenter.build(CustomItems.ANCIENT_BOOTS);
                 }
             },
+            () -> new ItemStack(CollectionUtil.getElement(ItemUtil.getMusicDiscs())),
             () -> new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandom(64)),
             () -> new ItemStack(Material.DIAMOND, ChanceUtil.getRandom(64)),
             () -> new ItemStack(Material.EMERALD, ChanceUtil.getRandom(64)),

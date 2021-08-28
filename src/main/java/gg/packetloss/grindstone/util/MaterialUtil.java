@@ -33,6 +33,10 @@ public class MaterialUtil {
         return results;
     }
 
+    public static Set<Material> generatePrefixMaterialSet(String postfix) {
+        return generateMaterialSet((material) -> material.name().startsWith(postfix));
+    }
+
     public static Set<Material> generatePostfixMaterialSet(String postfix) {
         return generateMaterialSet((material) -> material.name().endsWith(postfix));
     }

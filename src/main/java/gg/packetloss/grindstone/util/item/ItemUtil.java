@@ -29,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static gg.packetloss.grindstone.util.MaterialUtil.generatePostfixMaterialSet;
+import static gg.packetloss.grindstone.util.MaterialUtil.generatePrefixMaterialSet;
 
 public class ItemUtil {
     public static final String EXPIRY_DATE_START = ChatColor.RED + "Expires: ";
@@ -286,6 +287,20 @@ public class ItemUtil {
 
     public static boolean isTool(ItemStack stack) {
         return isTool(stack.getType());
+    }
+
+    private static final Set<Material> MUSIC_DISCS = generatePrefixMaterialSet("MUSIC_DISC_");
+
+    public static Set<Material> getMusicDiscs() {
+        return MUSIC_DISCS;
+    }
+
+    public static boolean isMusicDisc(Material item) {
+        return MUSIC_DISCS.contains(item);
+    }
+
+    public static boolean isMusicDisc(ItemStack stack) {
+        return isMusicDisc(stack.getType());
     }
 
     private static boolean isNotExpired(ItemStack stack, CustomItems type) {
