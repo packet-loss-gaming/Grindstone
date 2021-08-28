@@ -13,11 +13,12 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class PixieNetworkGraph {
-    private Set<Location> sources = new HashSet<>();
+    private final Set<Location> sources = new HashSet<>();
 
-    private Map<String, List<Location>> itemToDestination = new HashMap<>();
-    private Map<Location, Set<String>> destinationToItem = new HashMap<>();
-    private List<Location> anyItemDestinations = new ArrayList<>();
+    private final Map<String, List<Location>> itemToDestination = new HashMap<>();
+    private final Map<Location, Set<String>> destinationToItem = new HashMap<>();
+    private final Map<Location, Map<String, List<Integer>>> destinationPlacementFilters = new HashMap<>();
+    private final List<Location> anyItemDestinations = new ArrayList<>();
 
     public void addSource(Location location) {
         sources.add(location);
@@ -31,18 +32,30 @@ public class PixieNetworkGraph {
         return sources.stream().map(Location::clone).collect(Collectors.toSet());
     }
 
-    public void addSink(Set<String> itemNames, Location location) {
-        if (itemNames.isEmpty()) {
+    public void addSink(Map<String, List<Integer>> itemMapping, Location location) {
+        if (itemMapping.isEmpty()) {
             anyItemDestinations.add(location);
         } else {
-            for (String itemName : itemNames) {
-                itemToDestination.compute(itemName, (ignored, values) -> {
+            boolean hasLocalFilters = false;
+
+            for (Map.Entry<String, List<Integer>> itemMappingEntry : itemMapping.entrySet()) {
+                itemToDestination.compute(itemMappingEntry.getKey(), (ignored, values) -> {
                     if (values == null) {
                         values = new ArrayList<>();
                     }
                     values.add(location);
                     return values;
                 });
+
+                if (!itemMappingEntry.getValue().isEmpty()) {
+                    hasLocalFilters = true;
+                }
+            }
+
+            if (hasLocalFilters) {
+                destinationPlacementFilters.put(location, itemMapping);
+            } else {
+                destinationPlacementFilters.remove(location);
             }
         }
 
@@ -50,9 +63,8 @@ public class PixieNetworkGraph {
             if (values == null) {
                 values = new HashSet<>();
             }
-            values.addAll(itemNames);
+            values.addAll(itemMapping.keySet());
             return values;
-
         });
     }
 
@@ -65,6 +77,8 @@ public class PixieNetworkGraph {
         if (items.isEmpty()) {
             anyItemDestinations.remove(location);
         } else {
+            destinationPlacementFilters.remove(location);
+
             for (String itemName : items) {
                 itemToDestination.compute(itemName, (ignored, values) -> {
                     Objects.requireNonNull(values).remove(location);
@@ -83,20 +97,42 @@ public class PixieNetworkGraph {
         return destinationToItem.getOrDefault(location, Set.of());
     }
 
-    private List<Location> randomizedCopy(List<Location> sourceList) {
-        List<Location> newList = new ArrayList<>(sourceList.size());
-        sourceList.forEach(loc -> newList.add(loc.clone()));
-        Collections.shuffle(newList, ThreadLocalRandom.current());
+    private void toPixieSinks(List<List<PixieSink>> sinkLists, String itemName, List<Location> locations) {
+        for (Location location : locations) {
+            Map<String, List<Integer>> locationsFilters = destinationPlacementFilters.get(location);
+            List<Integer> slotFilters = locationsFilters == null ? null : locationsFilters.get(itemName);
+            if (slotFilters != null) {
+                // High Priority
+                sinkLists.get(0).add(new PixieSink(location, slotFilters));
+            } else {
+                // Medium Priority
+                sinkLists.get(1).add(new PixieSink(location, null));
+            }
+        }
+    }
+
+    private List<PixieSink> toPixieSinks(List<Location> locations) {
+        List<PixieSink> newList = new ArrayList<>(locations.size());
+        for (Location location : locations) {
+            newList.add(new PixieSink(location, null));
+        }
         return newList;
     }
 
-    public List<Location> getSinksForItem(String itemName) {
-        List<Location> targeted = randomizedCopy(itemToDestination.getOrDefault(itemName, new ArrayList<>()));
-        List<Location> misc = randomizedCopy(anyItemDestinations);
+    public List<PixieSink> getSinksForItem(String itemName) {
+        List<List<PixieSink>> prioritizedSinks = List.of(
+            new ArrayList<>(),                 // High Priority
+            new ArrayList<>(),                 // Medium Priority
+            toPixieSinks(anyItemDestinations)  // Low Priority
+        );
 
-        List<Location> combined = new ArrayList<>(targeted.size() + misc.size());
-        combined.addAll(targeted);
-        combined.addAll(misc);
-        return combined;
+        toPixieSinks(prioritizedSinks, itemName, itemToDestination.getOrDefault(itemName, new ArrayList<>()));
+
+        List<PixieSink> aggregateList = new ArrayList<>();
+        for (List<PixieSink> sinks : prioritizedSinks) {
+            Collections.shuffle(sinks, ThreadLocalRandom.current());
+            aggregateList.addAll(sinks);
+        }
+        return aggregateList;
     }
 }

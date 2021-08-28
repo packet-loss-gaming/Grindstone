@@ -9,19 +9,17 @@ package gg.packetloss.grindstone.util.item.inventory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 import java.util.HashSet;
 import java.util.Set;
 
-class TranslationTableAdapter implements InventoryAdapter {
+public class TranslationTableInventoryAdapter implements InventoryAdapter {
     private final int[] translationTable;
 
-    private final Player player;
-    private final PlayerInventory playerInventory;
+    private final Inventory inventory;
 
-    private final int length;
     private final ItemStack[] itemStacks;
     private final boolean[] updateMask;
 
@@ -34,27 +32,26 @@ class TranslationTableAdapter implements InventoryAdapter {
         Validate.isTrue(indexSet.size() == translationTable.length);
     }
 
-    protected TranslationTableAdapter(int[] translationTable, Player player) {
+    public TranslationTableInventoryAdapter(int[] translationTable, Inventory inventory) {
         this.translationTable = translationTable;
 
-        this.player = player;
-        this.playerInventory = player.getInventory();
+        this.inventory = inventory;
 
-        this.length = playerInventory.getSize();
-        this.itemStacks = playerInventory.getContents();
-        this.updateMask = new boolean[length];
+        this.itemStacks = inventory.getContents();
+        this.updateMask = new boolean[translationTable.length];
+    }
 
-        Validate.isTrue(length == InventoryConstants.PLAYER_INV_LENGTH);
+    protected TranslationTableInventoryAdapter(int[] translationTable, Player player) {
+        this(translationTable, player.getInventory());
+
         Validate.isTrue(itemStacks.length == InventoryConstants.PLAYER_INV_LENGTH);
     }
 
-    private TranslationTableAdapter(TranslationTableAdapter adapter) {
+    private TranslationTableInventoryAdapter(TranslationTableInventoryAdapter adapter) {
         this.translationTable = adapter.translationTable;
 
-        this.player = adapter.player;
-        this.playerInventory = adapter.playerInventory;
+        this.inventory = adapter.inventory;
 
-        this.length = adapter.length;
         this.itemStacks = ItemUtil.clone(adapter.itemStacks);
         this.updateMask = adapter.updateMask.clone();
     }
@@ -64,32 +61,37 @@ class TranslationTableAdapter implements InventoryAdapter {
         return translationTable.length;
     }
 
-    private int translateExternalIndexToInternal(int index) {
+    private int translateToRealSlot(int index) {
         return translationTable[index];
     }
 
     @Override
     public ItemStack getAt(int index) {
-        return itemStacks[translateExternalIndexToInternal(index)];
+        return itemStacks[translateToRealSlot(index)];
     }
 
     @Override
     public void setAt(int index, ItemStack stack) {
-        itemStacks[translateExternalIndexToInternal(index)] = stack;
-        updateMask[translateExternalIndexToInternal(index)] = true;
+        itemStacks[translateToRealSlot(index)] = stack;
+        updateMask[index] = true;
     }
 
     @Override
-    public TranslationTableAdapter copy() {
-        return new TranslationTableAdapter(this);
+    public TranslationTableInventoryAdapter copy() {
+        return new TranslationTableInventoryAdapter(this);
     }
 
     @Override
-    public void applyChanges() {
-        for (int i = 0; i < length; ++i) {
+    public boolean applyChanges() {
+        boolean anyChanged = false;
+        for (int i = 0; i < size(); ++i) {
             if (updateMask[i]) {
-                playerInventory.setItem(i, itemStacks[i]);
+                anyChanged = true;
+
+                int realIndex = translateToRealSlot(i);
+                inventory.setItem(realIndex, itemStacks[realIndex]);
             }
         }
+        return anyChanged;
     }
 }

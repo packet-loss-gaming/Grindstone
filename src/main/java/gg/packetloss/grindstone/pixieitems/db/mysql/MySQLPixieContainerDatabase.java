@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.pixieitems.db.mysql;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import gg.packetloss.grindstone.data.MySQLHandle;
 import gg.packetloss.grindstone.pixieitems.db.PixieChestDefinition;
@@ -27,7 +28,9 @@ import static gg.packetloss.grindstone.util.DBUtil.preparePlaceHolders;
 import static gg.packetloss.grindstone.util.DBUtil.setIntValues;
 
 public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
-    private boolean addChests(int networkID, String itemNames, Location... locations) {
+    private static final Gson GSON = new Gson();
+
+    private boolean addChests(int networkID, String itemMapping, Location... locations) {
         try (Connection connection = MySQLHandle.getConnection()) {
             String sql = "INSERT INTO `pixie-chests` (`network-id`, `world`, `x`, `y`, `z`, `cx`, `cz`, `item-names`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -39,7 +42,7 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
                     statement.setInt(5, loc.getBlockZ());
                     statement.setInt(6, loc.getBlockX() >> 4);
                     statement.setInt(7, loc.getBlockZ() >> 4);
-                    statement.setString(8, itemNames);
+                    statement.setString(8, itemMapping);
                     statement.addBatch();
                 }
 
@@ -59,14 +62,30 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
     }
 
     @Override
-    public boolean addSink(int networkID, Set<String> itemNames, Location... locations) {
-        return addChests(networkID, new Gson().toJson(itemNames), locations);
+    public boolean addSink(int networkID, Map<String, List<Integer>> itemMapping, Location... locations) {
+        return addChests(networkID, GSON.toJson(itemMapping), locations);
     }
 
     private String getChestDetailLookupSQL(Location location) {
         StringBuilder sqlBuilder = new StringBuilder("SELECT `network-id`, `item-names` FROM `pixie-chests` WHERE ");
         appendBlockPlaceHolders(sqlBuilder, location);
         return sqlBuilder.toString();
+    }
+
+    private Map<String, List<Integer>> deserializeItemMapping(String itemMappingJson) {
+        try {
+            Type itemNamesSetType = new TypeToken<HashMap<String, List<Integer>>>() { }.getType();
+            return GSON.fromJson(itemMappingJson, itemNamesSetType);
+        } catch (JsonParseException ex) {
+            Type itemNamesSetType = new TypeToken<HashSet<String>>() { }.getType();
+            Set<String> itemNames = GSON.fromJson(itemMappingJson, itemNamesSetType);
+
+            Map<String, List<Integer>> itemMapping = new HashMap<>();
+            for (String itemName : itemNames) {
+                itemMapping.put(itemName, new ArrayList<>());
+            }
+            return itemMapping;
+        }
     }
 
     @Override
@@ -77,11 +96,8 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
 
                 try (ResultSet results = statement.executeQuery()) {
                     if (results.next()) {
-                        Gson gson = new Gson();
-                        Type itemNamesSetType = new TypeToken<HashSet<String>>() { }.getType();
-
-                        HashSet<String> itemNames = gson.fromJson(results.getString(2), itemNamesSetType);
-                        return Optional.of(new PixieChestDetail(results.getInt(1), itemNames));
+                        Map<String, List<Integer>> itemMapping = deserializeItemMapping(results.getString(2));
+                        return Optional.of(new PixieChestDetail(results.getInt(1), itemMapping));
                     }
                 }
             }
@@ -199,9 +215,6 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
                 try (ResultSet results = statement.executeQuery()) {
                     Map<Integer, PixieNetworkDefinition> networkIds = new HashMap<>();
 
-                    Gson gson = new Gson();
-                    Type itemNamesSetType = new TypeToken<HashSet<String>>() { }.getType();
-
                     while (results.next()) {
                         int networkID = results.getInt(1);
 
@@ -209,14 +222,13 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
                             return Objects.requireNonNullElseGet(value, () -> new PixieNetworkDefinition(networkID));
                         });
 
-                        HashSet<String> itemNames = gson.fromJson(results.getString(6), itemNamesSetType);
-
+                        Map<String, List<Integer>> itemMapping = deserializeItemMapping(results.getString(6));
                         definition.getChests().add(new PixieChestDefinition(
                                 results.getString(2),
                                 results.getInt(3),
                                 results.getInt(4),
                                 results.getInt(5),
-                                itemNames
+                                itemMapping
                         ));
                     }
 

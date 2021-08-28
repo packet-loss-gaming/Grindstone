@@ -6,15 +6,16 @@
 
 package gg.packetloss.grindstone.pixieitems.db;
 
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 public class PixieChestDetail {
     private final int networkID;
-    private final Set<String> itemNames;
+    private final Map<String, List<Integer>> itemMapping;
 
-    public PixieChestDetail(int networkID, Set<String> itemNames) {
+    public PixieChestDetail(int networkID, Map<String, List<Integer>> itemMapping) {
         this.networkID = networkID;
-        this.itemNames = itemNames;
+        this.itemMapping = itemMapping;
     }
 
     public int getNetworkID() {
@@ -22,10 +23,10 @@ public class PixieChestDetail {
     }
 
     public ChestKind getChestKind() {
-        return itemNames == null ? ChestKind.SOURCE : ChestKind.SINK;
+        return itemMapping == null ? ChestKind.SOURCE : ChestKind.SINK;
     }
 
-    public Set<String> getSinkItems() {
-        return itemNames;
+    public Map<String, List<Integer>> getItemMapping() {
+        return itemMapping;
     }
 }

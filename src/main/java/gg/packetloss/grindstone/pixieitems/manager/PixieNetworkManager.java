@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.pixieitems.manager;
 
-import gg.packetloss.grindstone.pixieitems.PixieSinkVariant;
+import gg.packetloss.grindstone.pixieitems.PixieSinkCreationMode;
 import gg.packetloss.grindstone.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.util.task.promise.TaskFuture;
@@ -26,7 +26,7 @@ public interface PixieNetworkManager {
     TaskFuture<List<PixieNetworkDetail>> selectNetworks(UUID namespace);
 
     TaskFuture<NewSourceResult> addSource(int networkID, Block block);
-    TaskFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkVariant variant);
+    TaskFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkCreationMode variant);
 
     boolean maybeExpandChest(Block block);
 

@@ -84,12 +84,15 @@ public class PlayerStickyInventoryAdapter implements InventoryAdapter {
     }
 
     @Override
-    public void applyChanges() {
+    public boolean applyChanges() {
+        boolean anyChanged = false;
         for (int i = 0; i < itemStacks.length; ++i) {
             if (updateMask[i]) {
+                anyChanged = true;
                 playerInventory.setItem(i, itemStacks[i]);
             }
         }
+        return anyChanged;
     }
 
     public enum Priority {

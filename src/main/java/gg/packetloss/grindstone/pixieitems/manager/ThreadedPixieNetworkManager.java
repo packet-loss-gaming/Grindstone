@@ -9,7 +9,7 @@ package gg.packetloss.grindstone.pixieitems.manager;
 import com.destroystokyo.paper.ParticleBuilder;
 import com.google.common.collect.Lists;
 import gg.packetloss.grindstone.pixieitems.BrokerTransaction;
-import gg.packetloss.grindstone.pixieitems.PixieSinkVariant;
+import gg.packetloss.grindstone.pixieitems.PixieSinkCreationMode;
 import gg.packetloss.grindstone.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.pixieitems.db.*;
 import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieContainerDatabase;
@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.RefCountedTracker;
+import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Chunk;
@@ -249,18 +250,26 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         }, locations);
     }
 
-    private Set<String> extractItemNames(Inventory inventory) {
-        Set<String> itemNames = new HashSet<>();
+    private Map<String, List<Integer>> createItemMapping(Inventory inventory, boolean recordPosition) {
+        Map<String, List<Integer>> itemNames = new HashMap<>();
 
-        for (ItemStack itemStack : inventory) {
-            computeItemName(itemStack).ifPresent(itemNames::add);
+        for (int i = 0; i < inventory.getSize(); ++i) {
+            Optional<String> optItemName = computeItemName(inventory.getItem(i));
+            if (optItemName.isEmpty()) {
+                continue;
+            }
+
+            List<Integer> positions = itemNames.computeIfAbsent(optItemName.get(), (ignored) -> new ArrayList<>());
+            if (recordPosition) {
+                positions.add(i);
+            }
         }
 
         return itemNames;
     }
 
-    private void addSinkMemoryOnly(PixieNetworkGraph network, Set<String> itemNames, Location location) {
-        network.addSink(itemNames, location);
+    private void addSinkMemoryOnly(PixieNetworkGraph network, Map<String, List<Integer>> itemMapping, Location location) {
+        network.addSink(itemMapping, location);
     }
 
     private TaskFuture<Void> incrementNetworkLoad(int networkID) {
@@ -303,17 +312,13 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     }
 
     @Override
-    public TaskFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkVariant variant) {
+    public TaskFuture<NewSinkResult> addSink(int networkID, Block block, PixieSinkCreationMode variant) {
         Inventory chestInventory = ((Container) block.getState()).getInventory();
-        Set<String> itemNames;
-        switch (variant) {
-            case VOID:
-                itemNames = Set.of();
-                break;
-            default:
-                itemNames = extractItemNames(chestInventory);
-                break;
-        }
+        Map<String, List<Integer>> itemMapping = switch (variant) {
+            case VOID -> Map.of();
+            case ADD, OVERWRITE -> createItemMapping(chestInventory, false);
+            case TEMPLATE -> createItemMapping(chestInventory, true);
+        };
 
         Location[] locations = getLocationsToAdd(block).toArray(new Location[0]);
 
@@ -323,12 +328,14 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
             try {
                 for (Location location : locations) {
-                    if (variant == PixieSinkVariant.ADD) {
-                        itemNames.addAll(network.getSinksAtLocation(location));
+                    if (variant == PixieSinkCreationMode.ADD) {
+                        for (String itemName : network.getSinksAtLocation(location)) {
+                            itemMapping.computeIfAbsent(itemName, (ignored) -> new ArrayList<>());
+                        }
                     }
 
                     clearBlockMemoryOnly(network, location);
-                    addSinkMemoryOnly(network, itemNames, location);
+                    addSinkMemoryOnly(network, itemMapping, location);
                 }
             } finally {
                 networkLock.writeLock().unlock();
@@ -337,10 +344,10 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
             Optional<Integer> removedChestsCount = chestDatabase.removeContainer(networkID, locations);
             Validate.isTrue(removedChestsCount.isPresent());
 
-            boolean addedChests = chestDatabase.addSink(networkID, itemNames, locations);
+            boolean addedChests = chestDatabase.addSink(networkID, itemMapping, locations);
             Validate.isTrue(addedChests);
 
-            return new NewSinkResult(removedChestsCount.get(), itemNames);
+            return new NewSinkResult(removedChestsCount.get(), itemMapping.keySet());
         }, locations));
     }
 
@@ -372,12 +379,8 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 PixieNetworkGraph network = idToNetworkMapping.get(networkID);
                 if (network != null) {
                     switch (chestDetail.getChestKind()) {
-                        case SOURCE:
-                            network.addSource(newBlockLoc);
-                            break;
-                        case SINK:
-                            network.addSink(chestDetail.getSinkItems(), newBlockLoc);
-                            break;
+                        case SOURCE -> network.addSource(newBlockLoc);
+                        case SINK -> network.addSink(chestDetail.getItemMapping(), newBlockLoc);
                     }
                 }
             } finally {
@@ -385,12 +388,8 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
             }
 
             switch (chestDetail.getChestKind()) {
-                case SOURCE:
-                    chestDatabase.addSource(networkID, newBlockLoc);
-                    break;
-                case SINK:
-                    chestDatabase.addSink(networkID, chestDetail.getSinkItems(), newBlockLoc);
-                    break;
+                case SOURCE -> chestDatabase.addSource(networkID, newBlockLoc);
+                case SINK -> chestDatabase.addSink(networkID, chestDetail.getItemMapping(), newBlockLoc);
             }
         });
 
@@ -487,20 +486,23 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                 }
 
                 String itemName = optItemName.get();
-                for (Location location : network.getSinksForItem(itemName)) {
-                    BlockState state = location.getBlock().getState();
+                for (PixieSink sink : network.getSinksForItem(itemName)) {
+                    BlockState state = sink.getBlock().getState();
 
                     // If we found an invalid chest, remove it.
                     if (!(state instanceof Container)) {
-                        removeContainer(location);
+                        removeContainer(sink.getLocation());
                         continue;
                     }
 
                     Inventory destInv = ((Container) state).getInventory();
 
-                    playEffect(inventory, destInv);
+                    InventoryAdapter adapter = sink.adaptInventory(destInv);
+                    item = adapter.add(Objects.requireNonNull(item));
+                    if (adapter.applyChanges()) {
+                        playEffect(inventory, destInv);
+                    }
 
-                    item = destInv.addItem(item).get(0);
                     if (item == null) {
                         // We successfully moved this item, break the inner loop.
                         break;
@@ -541,7 +543,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
                         for (PixieChestDefinition chest : networkDefinition.getChests()) {
                             switch (chest.getChestKind()) {
                                 case SOURCE -> addSourceMemoryOnly(networkID, network, chest.getLocation());
-                                case SINK -> addSinkMemoryOnly(network, chest.getSinkItems(), chest.getLocation());
+                                case SINK -> addSinkMemoryOnly(network, chest.getItemMapping(), chest.getLocation());
                             }
                         }
 

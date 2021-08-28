@@ -35,7 +35,7 @@ public class PlayerHeldItemThenStoragePriorityInventoryAdapter implements Invent
         // Then we're going for the offhand
         translationTable[k] = InventoryConstants.PLAYER_INV_OFFHAND_ITEM_INDEX;
 
-        TranslationTableAdapter.runExpensiveTableValidation(translationTable);
+        TranslationTableInventoryAdapter.runExpensiveTableValidation(translationTable);
     }
 
     private static void computeOffhandTable(int[] translationTable) {
@@ -52,7 +52,7 @@ public class PlayerHeldItemThenStoragePriorityInventoryAdapter implements Invent
             translationTable[k] = i;
         }
 
-        TranslationTableAdapter.runExpensiveTableValidation(translationTable);
+        TranslationTableInventoryAdapter.runExpensiveTableValidation(translationTable);
     }
 
     static {
@@ -62,10 +62,10 @@ public class PlayerHeldItemThenStoragePriorityInventoryAdapter implements Invent
         computeOffhandTable(TRANSLATION_TABLES[InventoryConstants.PLAYER_INV_ROW_LENGTH]);
     }
 
-    private final TranslationTableAdapter underlyingAdapter;
+    private final TranslationTableInventoryAdapter underlyingAdapter;
 
     public PlayerHeldItemThenStoragePriorityInventoryAdapter(Player player, EquipmentSlot handSlot) {
-        this.underlyingAdapter = new TranslationTableAdapter(getTranslationTable(player, handSlot), player);
+        this.underlyingAdapter = new TranslationTableInventoryAdapter(getTranslationTable(player, handSlot), player);
     }
 
     private int[] getTranslationTable(Player player, EquipmentSlot slot) {
@@ -103,7 +103,7 @@ public class PlayerHeldItemThenStoragePriorityInventoryAdapter implements Invent
     }
 
     @Override
-    public void applyChanges() {
-        underlyingAdapter.applyChanges();
+    public boolean applyChanges() {
+        return underlyingAdapter.applyChanges();
     }
 }

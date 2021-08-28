@@ -18,7 +18,7 @@ class PixieCommandSession extends PersistentSession {
     public static final long MAX_AGE = TimeUnit.DAYS.toMillis(1);
 
     private PixieCommand command = PixieCommand.NOTHING;
-    private PixieSinkVariant sinkVariant = null;
+    private PixieSinkCreationMode sinkVariant = null;
     private PixieNetworkDetail network = null;
 
     protected PixieCommandSession() {
@@ -29,7 +29,7 @@ class PixieCommandSession extends PersistentSession {
         return command;
     }
 
-    public PixieSinkVariant getTargetSinkVariant() {
+    public PixieSinkCreationMode getTargetSinkVariant() {
         Validate.notNull(sinkVariant);
         return sinkVariant;
     }
@@ -53,7 +53,7 @@ class PixieCommandSession extends PersistentSession {
         setCommandAction(PixieCommand.ADD_SOURCE);
     }
 
-    public void commandToAddSink(PixieSinkVariant variant) throws CommandException {
+    public void commandToAddSink(PixieSinkCreationMode variant) throws CommandException {
         setCommandAction(PixieCommand.ADD_SINK);
         sinkVariant = variant;
     }

@@ -25,13 +25,13 @@ public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
         // Then we're going for the offhand
         TRANSLATION_TABLE[k] = InventoryConstants.PLAYER_INV_OFFHAND_ITEM_INDEX;
 
-        TranslationTableAdapter.runExpensiveTableValidation(TRANSLATION_TABLE);
+        TranslationTableInventoryAdapter.runExpensiveTableValidation(TRANSLATION_TABLE);
     }
 
-    private final TranslationTableAdapter underlyingAdapter;
+    private final TranslationTableInventoryAdapter underlyingAdapter;
 
     public PlayerStoragePriorityInventoryAdapter(Player player) {
-        this.underlyingAdapter = new TranslationTableAdapter(TRANSLATION_TABLE, player);
+        this.underlyingAdapter = new TranslationTableInventoryAdapter(TRANSLATION_TABLE, player);
     }
 
     private PlayerStoragePriorityInventoryAdapter(PlayerStoragePriorityInventoryAdapter adapter) {
@@ -59,7 +59,7 @@ public class PlayerStoragePriorityInventoryAdapter implements InventoryAdapter {
     }
 
     @Override
-    public void applyChanges() {
-        underlyingAdapter.applyChanges();
+    public boolean applyChanges() {
+        return underlyingAdapter.applyChanges();
     }
 }

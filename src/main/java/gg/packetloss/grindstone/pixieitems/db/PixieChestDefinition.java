@@ -10,21 +10,22 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 public class PixieChestDefinition {
     private final String worldName;
     private final int x;
     private final int y;
     private final int z;
-    private final Set<String> itemNames;
+    private final Map<String, List<Integer>> itemMapping;
 
-    public PixieChestDefinition(String worldName, int x, int y, int z, Set<String> itemNames) {
+    public PixieChestDefinition(String worldName, int x, int y, int z, Map<String, List<Integer>> itemMapping) {
         this.worldName = worldName;
         this.x = x;
         this.y = y;
         this.z = z;
-        this.itemNames = itemNames;
+        this.itemMapping = itemMapping;
     }
 
     public Location getLocation() {
@@ -33,10 +34,10 @@ public class PixieChestDefinition {
     }
 
     public ChestKind getChestKind() {
-        return itemNames == null ? ChestKind.SOURCE : ChestKind.SINK;
+        return itemMapping == null ? ChestKind.SOURCE : ChestKind.SINK;
     }
 
-    public Set<String> getSinkItems() {
-        return itemNames;
+    public Map<String, List<Integer>> getItemMapping() {
+        return itemMapping;
     }
 }

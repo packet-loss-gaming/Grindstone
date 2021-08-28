@@ -6,8 +6,9 @@
 
 package gg.packetloss.grindstone.pixieitems;
 
-public enum PixieSinkVariant {
+public enum PixieSinkCreationMode {
     VOID,
     ADD,
-    OVERWRITE
+    OVERWRITE,
+    TEMPLATE
 }

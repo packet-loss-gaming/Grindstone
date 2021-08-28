@@ -37,7 +37,7 @@ public class ItemSorterAddCommands {
 
         String variant = mode.toUpperCase();
         try {
-            session.commandToAddSink(PixieSinkVariant.valueOf(variant));
+            session.commandToAddSink(PixieSinkCreationMode.valueOf(variant));
         } catch (IllegalArgumentException ex) {
             throw new CommandException("Valid modes are: overwrite, add, void");
         }

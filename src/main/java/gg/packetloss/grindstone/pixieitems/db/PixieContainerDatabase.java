@@ -11,12 +11,12 @@ import org.bukkit.Location;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 public interface PixieContainerDatabase {
     boolean addSource(int networkID, Location... locations);
-    boolean addSink(int networkID, Set<String> itemNames, Location... locations);
+    boolean addSink(int networkID, Map<String, List<Integer>> itemMapping, Location... locations);
 
     Optional<Integer> removeContainer(int networkID, Location... locations);
 
