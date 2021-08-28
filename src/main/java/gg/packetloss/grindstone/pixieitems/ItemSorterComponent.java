@@ -196,24 +196,18 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     }
 
                     PixieNetworkDetail networkDetail = optNetworkDetail.get();
-                    CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
-                        Location origin = networkDetail.getOrigin();
-                        if (!LocationUtil.isWithin2DDistance(block.getLocation(), origin, 100)) {
-                            ChatUtil.sendError(player, "This block is too far away from the network creation point.");
-                            return;
-                        }
+                    Location origin = networkDetail.getOrigin();
+                    if (!LocationUtil.isWithin2DDistance(block.getLocation(), origin, 100)) {
+                        ChatUtil.sendError(player, "This block is too far away from the network creation point.");
+                        return;
+                    }
 
-                        manager.addSource(networkID, block).thenAccept((result) -> {
-                            if (result.isNew()) {
-                                ChatUtil.sendNotice(player, "Chest updated to source!");
-                            } else {
-                                ChatUtil.sendError(player, "Chest is already a source!");
-                            }
-                        }).exceptionally((ex) -> {
-                            ex.printStackTrace();
-                            ChatUtil.sendError(player, "An error occurred while attempting to create this source.");
-                            return null;
-                        });
+                    manager.addSource(networkID, block).thenAcceptAsynchronously((result) -> {
+                        if (result.isNew()) {
+                            ChatUtil.sendNotice(player, "Chest updated to source!");
+                        } else {
+                            ChatUtil.sendError(player, "Chest is already a source!");
+                        }
                     });
                 });
                 break;
@@ -223,7 +217,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     return;
                 }
 
-                manager.addSink(networkID, block, session.getTargetSinkVariant()).thenAccept((result) -> {
+                manager.addSink(networkID, block, session.getTargetSinkVariant()).thenAcceptAsynchronously((result) -> {
                     ChatUtil.sendNotice(player, "Container updated to sink! Accepts:");
 
                     ImmutableSet<String> sinkItems = result.getItemNames();
@@ -234,10 +228,6 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                             ChatUtil.sendNotice(player, " - " + ChatColor.BLUE + sinkItem.toUpperCase());
                         }
                     }
-                }).exceptionally((ex) -> {
-                    ex.printStackTrace();
-                    ChatUtil.sendError(player, "An error occurred while attempting to create this sink.");
-                    return null;
                 });
                 break;
             }
@@ -308,22 +298,20 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
             int networkID = optNetworkID.get();
             manager.selectNetwork(networkID).thenAccept((optNetworkDetail) -> {
-                server.getScheduler().runTask(inst, () -> {
-                    if (optNetworkDetail.isEmpty()) {
-                        return;
-                    }
+                if (optNetworkDetail.isEmpty()) {
+                    return;
+                }
 
-                    if (!inventory.getViewers().isEmpty()) {
-                        return;
-                    }
+                if (!inventory.getViewers().isEmpty()) {
+                    return;
+                }
 
-                    PixieNetworkDetail networkDetail = optNetworkDetail.get();
+                PixieNetworkDetail networkDetail = optNetworkDetail.get();
 
-                    OfflinePlayer player = GeneralPlayerUtil.findOfflinePlayer(networkDetail.getNamespace());
-                    TransactionBroker broker = player != null ?  new EconomyBroker(economy, player) : new VoidBroker();
+                OfflinePlayer player = GeneralPlayerUtil.findOfflinePlayer(networkDetail.getNamespace());
+                TransactionBroker broker = player != null ?  new EconomyBroker(economy, player) : new VoidBroker();
 
-                    manager.sourceItems(broker, networkID, inventory);
-                });
+                manager.sourceItems(broker, networkID, inventory);
             });
         }, 1);
     }
@@ -384,17 +372,15 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             String name = args.getString(0).toUpperCase();
 
             manager.createNetwork(owner.getUniqueId(), name, owner.getLocation()).thenAccept((optNetworkDetail) -> {
-                server.getScheduler().runTask(inst, () -> {
-                    if (optNetworkDetail.isEmpty()) {
-                        ChatUtil.sendError(sender, "Failed to create network!");
-                        return;
-                    }
+                if (optNetworkDetail.isEmpty()) {
+                    ChatUtil.sendError(sender, "Failed to create network!");
+                    return;
+                }
 
-                    ChatUtil.sendNotice(sender, "New item sorter network '" + name + "' created!");
+                ChatUtil.sendNotice(sender, "New item sorter network '" + name + "' created!");
 
-                    PixieCommandSession session = sessions.getSession(PixieCommandSession.class, sender);
-                    session.setCurrentNetwork(optNetworkDetail.get());
-                });
+                PixieCommandSession session = sessions.getSession(PixieCommandSession.class, sender);
+                session.setCurrentNetwork(optNetworkDetail.get());
             });
         }
 
@@ -405,17 +391,15 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             String name = args.getString(0).toUpperCase();
 
             manager.selectNetwork(owner.getUniqueId(), name).thenAccept((optNetworkDetail) -> {
-                server.getScheduler().runTask(inst, () -> {
-                    if (optNetworkDetail.isEmpty()) {
-                        ChatUtil.sendError(sender, "Failed to find an item sorter network by that name!");
-                        return;
-                    }
+                if (optNetworkDetail.isEmpty()) {
+                    ChatUtil.sendError(sender, "Failed to find an item sorter network by that name!");
+                    return;
+                }
 
-                    ChatUtil.sendNotice(sender, "Item sorter network '" + name + "' selected!");
+                ChatUtil.sendNotice(sender, "Item sorter network '" + name + "' selected!");
 
-                    PixieCommandSession session = sessions.getSession(PixieCommandSession.class, sender);
-                    session.setCurrentNetwork(optNetworkDetail.get());
-                });
+                PixieCommandSession session = sessions.getSession(PixieCommandSession.class, sender);
+                session.setCurrentNetwork(optNetworkDetail.get());
             });
         }
 
@@ -424,7 +408,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         public void listNetworksCmd(CommandContext args, CommandSender sender) throws CommandException {
             Player owner = PlayerUtil.checkPlayer(sender);
 
-            manager.selectNetworks(owner.getUniqueId()).thenAccept((networks) -> {
+            manager.selectNetworks(owner.getUniqueId()).thenAcceptAsynchronously((networks) -> {
                 Collections.sort(networks);
                 server.getScheduler().runTask(inst, () -> {
                     new TextComponentChatPaginator<PixieNetworkDetail>(ChatColor.GOLD, "Networks") {
