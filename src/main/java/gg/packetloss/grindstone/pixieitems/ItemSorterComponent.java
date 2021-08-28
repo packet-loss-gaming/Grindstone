@@ -22,6 +22,7 @@ import gg.packetloss.grindstone.pixieitems.manager.ThreadedPixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
+import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
@@ -82,6 +83,8 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
         CommandBook.registerEvents(this);
 
         CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
+            PixieSinkCreationModeConverter.register(registrar);
+
             registrar.registerAsSubCommand("/sorter","Item sorter system management", (sorterRegistrar) -> {
                 sorterRegistrar.registerAsSubCommand("network", "View, select, and manage networks", (networkRegistrar) -> {
                     networkRegistrar.register(ItemSorterNetworkCommandsRegistration.builder(), new ItemSorterNetworkCommands(sessions, manager));
@@ -218,7 +221,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                     return;
                 }
 
-                manager.addSink(player, networkID, block, session.getTargetSinkVariant()).thenAcceptAsynchronously((result) -> {
+                manager.addSink(player, networkID, block, session.getSinkCreationMode()).thenAcceptAsynchronously((result) -> {
                     ChatUtil.sendNotice(player, "Container updated to sink! Accepts:");
 
                     ImmutableSet<String> sinkItems = result.getItemNames();
@@ -226,7 +229,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
                         ChatUtil.sendNotice(player, " - " + ChatColor.BLUE + "ANYTHING");
                     } else {
                         for (String sinkItem : sinkItems) {
-                            ChatUtil.sendNotice(player, " - " + ChatColor.BLUE + sinkItem.toUpperCase());
+                            ChatUtil.sendNotice(player, " - " + ItemNameCalculator.getSystemDisplayName(sinkItem));
                         }
                     }
                 });

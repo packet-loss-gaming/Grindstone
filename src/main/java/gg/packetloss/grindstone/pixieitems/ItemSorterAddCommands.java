@@ -32,15 +32,10 @@ public class ItemSorterAddCommands {
 
     @Command(name = "sink", desc = "Add a sink to the network")
     public void addSinkCmd(Player owner,
-                           @Arg(desc = "network name", def = "overwrite") String mode) throws CommandException {
+                           @Arg(desc = "network name", def = "OVERWRITE") PixieSinkCreationMode mode) throws CommandException {
         PixieCommandSession session = sessions.getSession(PixieCommandSession.class, owner);
 
-        String variant = mode.toUpperCase();
-        try {
-            session.commandToAddSink(PixieSinkCreationMode.valueOf(variant));
-        } catch (IllegalArgumentException ex) {
-            throw new CommandException("Valid modes are: overwrite, add, void");
-        }
+        session.commandToAddSink(mode);
 
         ChatUtil.sendNotice(owner, "Punch the container you'd like to make a sink.");
     }

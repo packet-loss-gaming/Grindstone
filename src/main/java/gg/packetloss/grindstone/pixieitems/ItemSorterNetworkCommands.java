@@ -77,7 +77,7 @@ public class ItemSorterNetworkCommands {
                 new TextComponentChatPaginator<PixieNetworkDetail>(ChatColor.GOLD, "Networks") {
                     @Override
                     public Optional<String> getPagerCommand(int page) {
-                        return Optional.of("//sorter networks list -p " + page);
+                        return Optional.of("//sorter network list -p " + page);
                     }
 
                     @Override
@@ -86,7 +86,7 @@ public class ItemSorterNetworkCommands {
                             ChatColor.BLUE,
                             network.getName(),
                             TextAction.Hover.showText(Text.of("Use ", network.getName()," network")),
-                            TextAction.Click.runCommand("//sorter networks use " + network.getName())
+                            TextAction.Click.runCommand("//sorter network use " + network.getName())
                         );
                     }
                 }.display(owner, networks, page);
