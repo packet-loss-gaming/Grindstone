@@ -67,7 +67,7 @@ public class HellCano extends EntityAttack implements MeleeSpecial, RangedSpecia
         TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
         taskBuilder.setInterval(1);
-        int numRuns = (ChanceUtil.getRandom(6) + 3) * 2 * 20;
+        int numRuns = (ChanceUtil.getRandom(6) + 6) * 2 * 20;
         taskBuilder.setNumberOfRuns(numRuns);
 
         taskBuilder.setAction((times) -> {
@@ -75,7 +75,7 @@ public class HellCano extends EntityAttack implements MeleeSpecial, RangedSpecia
                 server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
             }
 
-            if (!hasErupted && ChanceUtil.getChance(60)) {
+            if (!hasErupted && numRuns - times >= 40 && ChanceUtil.getChance(20)) {
                 hasErupted = true;
             }
 
@@ -86,7 +86,7 @@ public class HellCano extends EntityAttack implements MeleeSpecial, RangedSpecia
             new ParticleBuilder(Particle.LAVA).count(getParticleSize()).location(lockedLocation).allPlayers().spawn();
 
             if (!hasErupted) {
-                return false;
+                return true;
             }
 
             if (times % 10 != 0) {
