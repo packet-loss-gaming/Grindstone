@@ -6,7 +6,10 @@
 
 package gg.packetloss.grindstone.highscore;
 
+import gg.packetloss.bukkittext.Text;
+import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
+import org.bukkit.ChatColor;
 
 import java.util.Optional;
 
@@ -29,8 +32,19 @@ public class AnnotatedScoreType implements ScoreType {
         return name;
     }
 
-    public String getDisplayName() {
+    public String getDisplayNameNoColor() {
         return toUppercaseTitle(name);
+    }
+
+    public Text getDisplayName() {
+        return Text.of(ChatColor.BLUE, getDisplayNameNoColor());
+    }
+
+    public Text getActiveDisplayName() {
+        return Text.of(
+            getDisplayName(),
+            TextAction.Click.runCommand("/highscore " + getLookupName())
+        );
     }
 
     @Override

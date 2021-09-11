@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.highscore;
 
 import com.google.common.base.Joiner;
 import gg.packetloss.bukkittext.Text;
-import gg.packetloss.bukkittext.TextAction;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.chat.ChatConstants;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
@@ -43,19 +42,12 @@ public class HighScoreCommands {
 
     @Command(name = "highscore", desc = "View a highscore table.")
     public void highScoreCmd(CommandSender sender, @Arg(desc = "score type") AnnotatedScoreType scoreType) {
-        ChatUtil.sendNotice(sender, ChatColor.GOLD + scoreType.getDisplayName());
+        ChatUtil.sendNotice(sender, ChatColor.GOLD + scoreType.getDisplayNameNoColor());
 
         List<ScoreEntry> scores = component.getTop(scoreType);
         for (int i = 0; i < scores.size(); ++i) {
             sender.sendMessage(createScoreLine(i + 1, scores.get(i), scoreType).build());
         }
-    }
-
-    private Text createScoreTypeLine(AnnotatedScoreType scoreType) {
-        return Text.of(
-            ChatColor.BLUE, scoreType.getDisplayName(),
-            TextAction.Click.runCommand("/highscore " + scoreType.getLookupName())
-        );
     }
 
     @Command(name = "highscores", desc = "View a list of highscore tables.")
@@ -65,7 +57,7 @@ public class HighScoreCommands {
         String tableFilter = Joiner.on(' ').join(tableFilterArgs).toUpperCase();
 
         List<AnnotatedScoreType> scoreTypes = component.getScoreTypes().stream().filter(
-            (st) -> st.getDisplayName().contains(tableFilter)
+            (st) -> st.getDisplayNameNoColor().contains(tableFilter)
         ).sorted(Comparator.comparing(AnnotatedScoreType::getLookupName)).collect(Collectors.toList());
 
         new TextComponentChatPaginator<AnnotatedScoreType>(ChatColor.GOLD, "High Score Tables") {
@@ -76,7 +68,7 @@ public class HighScoreCommands {
 
             @Override
             public Text format(AnnotatedScoreType scoreType) {
-                return createScoreTypeLine(scoreType);
+                return scoreType.getActiveDisplayName();
             }
         }.display(sender, scoreTypes, page);
     }

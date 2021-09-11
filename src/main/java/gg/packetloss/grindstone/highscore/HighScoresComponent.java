@@ -21,7 +21,6 @@ import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.PluginTaskExecutor;
-import gg.packetloss.grindstone.util.StringUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import org.bukkit.Bukkit;
@@ -97,6 +96,8 @@ public class HighScoresComponent extends BukkitComponent {
             registrar.register(HighScoreCommandsRegistration.builder(), new HighScoreCommands(this));
         });
 
+        CommandBook.registerEvents(new GobletLoginListener(this));
+
         server.getScheduler().runTaskTimerAsynchronously(inst, this::processUpdateQueue, 25, 20);
     }
 
@@ -141,8 +142,8 @@ public class HighScoresComponent extends BukkitComponent {
     private void addGobletWinner(OfflinePlayer player) {
         gobletState.addWinner(player.getUniqueId());
 
-        String friendlyGobletName = StringUtil.toTitleCase(getGobletName());
-        String winMessage = ChatColor.YELLOW + player.getName() + " has won the " + friendlyGobletName + "!";
+        String gobletName = getGobletScoreType().getDisplayNameNoColor();
+        String winMessage = ChatColor.YELLOW + player.getName() + " has won the " + gobletName + "!";
         Bukkit.broadcastMessage(winMessage);
         chatBridge.broadcast(ChatColor.stripColor(winMessage));
     }
@@ -263,12 +264,16 @@ public class HighScoresComponent extends BukkitComponent {
         return baseName + "_GOBLET";
     }
 
+    public AnnotatedScoreType getGobletScoreType() {
+        return new AnnotatedScoreType(getGobletName(), gobletScoreType);
+    }
+
     public List<AnnotatedScoreType> getScoreTypes() {
         List<AnnotatedScoreType> scoreTypes = new ArrayList<>();
         for (Map.Entry<String, ScoreType> entry : nameToScoreType.entrySet()) {
             scoreTypes.add(new AnnotatedScoreType(entry.getKey(), entry.getValue()));
         }
-        scoreTypes.add(new AnnotatedScoreType(getGobletName(), gobletScoreType));
+        scoreTypes.add(getGobletScoreType());
         return scoreTypes;
     }
 }
