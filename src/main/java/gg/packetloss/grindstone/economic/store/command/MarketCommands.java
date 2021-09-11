@@ -269,9 +269,10 @@ public class MarketCommands {
                         TextAction.Hover.showText(Text.of("Show details for " + info.getTitleCasedName()))
                     );
 
+                    double stockRepresentation = info.getStock().map(Double::valueOf).orElse(Double.POSITIVE_INFINITY);
                     return Text.of(
                         itemName,
-                        ChatColor.GRAY, " x", ChatUtil.WHOLE_NUMBER_FORMATTER.format(info.getStock()),
+                        ChatColor.GRAY, " x", ChatUtil.WHOLE_NUMBER_FORMATTER.format(stockRepresentation),
                         ChatColor.YELLOW, " (",
                         ChatColor.DARK_GREEN, "B: ", buy,
                         ChatColor.YELLOW, ", ",
@@ -293,7 +294,8 @@ public class MarketCommands {
 
         sender.sendMessage(Text.of(ChatColor.GOLD, "Price Information for: ", itemNameText).build());
 
-        String stockCount = ChatUtil.WHOLE_NUMBER_FORMATTER.format(item.getStock());
+        double stockRepresentation = item.getStock().map(Double::valueOf).orElse(Double.POSITIVE_INFINITY);
+        String stockCount = ChatUtil.WHOLE_NUMBER_FORMATTER.format(stockRepresentation);
         ChatUtil.sendNotice(sender, "There are currently " + ChatColor.GRAY + stockCount + ChatColor.YELLOW + " in stock.");
 
         // Purchase Information
@@ -332,13 +334,14 @@ public class MarketCommands {
         if (sender instanceof Player) {
             Player player = (Player) sender;
 
-            if (item.isBuyable() && item.getStock() != 0) {
+            int stock = item.getStock().orElse(Integer.MAX_VALUE);
+            if (item.isBuyable() && stock != 0) {
                 TextBuilder builder = Text.builder();
 
                 builder.append(ChatColor.YELLOW, "Quick buy: ");
 
                 for (int i : List.of(1, 16, 32, 64, 128, 256)) {
-                    if (i > item.getStock()) {
+                    if (i > stock) {
                         break;
                     }
 

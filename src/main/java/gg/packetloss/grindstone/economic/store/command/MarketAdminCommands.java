@@ -116,6 +116,7 @@ public class MarketAdminCommands {
     @Command(name = "add", desc = "Add an item to the database")
     @CommandPermissions("aurora.admin.adminstore.add")
     public void addCmd(CommandSender sender,
+                       @Switch(name = 'i', desc = "infinite stock") boolean infinite,
                        @Switch(name = 'b', desc = "disable buy") boolean disableBuy,
                        @Switch(name = 's', desc = "disable sell") boolean disableSell,
                        @Arg(name = "price", desc = "item price") double price,
@@ -127,7 +128,7 @@ public class MarketAdminCommands {
         String itemName = getItemChecked(Joiner.on(' ').join(itemNameParts));
 
         // Database operations
-        component.addItem(itemName, price, disableBuy, disableSell).thenAcceptAsynchronously((oldItem) -> {
+        component.addItem(itemName, price, infinite, disableBuy, disableSell).thenAcceptAsynchronously((oldItem) -> {
             String noticeString = oldItem == null ? " added with a price of " : " is now ";
             ChatUtil.sendNotice(sender, ChatColor.BLUE, itemName.toUpperCase(), ChatColor.YELLOW, noticeString, wallet.format(price), "!");
             if (disableBuy) {

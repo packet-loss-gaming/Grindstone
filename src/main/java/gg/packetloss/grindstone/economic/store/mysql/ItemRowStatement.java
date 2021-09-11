@@ -14,12 +14,14 @@ public class ItemRowStatement extends ItemStatement {
 
     private Connection con;
     private final double price;
+    private final boolean infinite;
     private final boolean buyable;
     private final boolean sellable;
 
-    public ItemRowStatement(String name, double price, boolean buyable, boolean sellable) {
+    public ItemRowStatement(String name, double price, boolean infinite, boolean buyable, boolean sellable) {
         super(name);
         this.price = price;
+        this.infinite = infinite;
         this.buyable = buyable;
         this.sellable = sellable;
     }
@@ -29,17 +31,31 @@ public class ItemRowStatement extends ItemStatement {
         this.con = con;
     }
 
+    private String getSQL(boolean infinite) {
+        StringBuilder sql = new StringBuilder();
+
+        sql.append("INSERT INTO `market-items` (name, price, `current-price`, stock, buyable, sellable) ");
+        sql.append("VALUES (?, ?, ?, ?, ?, ?) ");
+        sql.append("ON DUPLICATE KEY UPDATE price=values(price), `current-price`=values(`current-price`), ");
+        if (infinite) {
+            sql.append("stock=values(stock)");
+        } else {
+            sql.append("stock=GREATEST(stock, values(stock))");
+        }
+        sql.append(", buyable=values(buyable), sellable=values(sellable)");
+
+        return sql.toString();
+    }
+
     @Override
     public void executeStatements() throws SQLException {
-        String sql = "INSERT INTO `market-items` (name, price, `current-price`, buyable, sellable) VALUES (?, ?, ?, ?, ?)"
-                + "ON DUPLICATE KEY UPDATE price=values(price), `current-price`=values(`current-price`), buyable=values(buyable), sellable=values(sellable)";
-
-        try (PreparedStatement statement = con.prepareStatement(sql)) {
+        try (PreparedStatement statement = con.prepareStatement(getSQL(infinite))) {
             statement.setString(1, name);
             statement.setDouble(2, price);
             statement.setDouble(3, price);
-            statement.setBoolean(4, buyable);
-            statement.setBoolean(5, sellable);
+            statement.setDouble(4, infinite ? -1 : 0);
+            statement.setBoolean(5, buyable);
+            statement.setBoolean(6, sellable);
             statement.execute();
         }
     }

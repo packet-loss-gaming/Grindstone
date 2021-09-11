@@ -64,7 +64,11 @@ public class MarketItem implements Comparable<MarketItem> {
         return itemInfo.getSellPriceForStack(stack);
     }
 
-    public int getStock() {
+    public boolean hasInfiniteStock() {
+        return itemInfo.hasInfiniteStock();
+    }
+
+    public Optional<Integer> getStock() {
         return itemInfo.getStock();
     }
 

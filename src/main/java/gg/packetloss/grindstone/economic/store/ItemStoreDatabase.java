@@ -33,7 +33,7 @@ public interface ItemStoreDatabase {
     /**
      * Add/Set an item
      */
-    void addItem(String itemName, double price, boolean disableBuy, boolean disableSell);
+    void addItem(String itemName, double price, boolean infinite, boolean disableBuy, boolean disableSell);
 
     void removeItem(String itemName);
 

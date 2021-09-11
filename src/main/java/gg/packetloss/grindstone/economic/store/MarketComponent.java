@@ -134,7 +134,13 @@ public class MarketComponent extends BukkitComponent {
         return TaskFuture.asyncTask(() -> {
             List<MarketItemInfo> items = itemDatabase.getItemList();
             for (MarketItemInfo item : items) {
-                itemDatabase.addItem(item.getName(), item.getPrice() * factor, !item.isBuyable(), !item.isSellable());
+                itemDatabase.addItem(
+                    item.getName(),
+                    item.getPrice() * factor,
+                    item.hasInfiniteStock(),
+                    !item.isBuyable(),
+                    !item.isSellable()
+                );
             }
             itemDatabase.save();
 
@@ -142,11 +148,12 @@ public class MarketComponent extends BukkitComponent {
         });
     }
 
-    public TaskFuture<MarketItemInfo> addItem(String itemName, double price, boolean disableBuy, boolean disableSell) {
+    public TaskFuture<MarketItemInfo> addItem(String itemName, double price, boolean infinite,
+                                              boolean disableBuy, boolean disableSell) {
         return TaskFuture.asyncTask(() -> {
             MarketItemInfo oldItem = itemDatabase.getItem(itemName);
 
-            itemDatabase.addItem(itemName, price, disableBuy, disableSell);
+            itemDatabase.addItem(itemName, price, infinite, disableBuy, disableSell);
             itemDatabase.save();
 
             return oldItem;
@@ -198,10 +205,14 @@ public class MarketComponent extends BukkitComponent {
             MarketItem item = transactionLine.getItem();
             int amount = transactionLine.getAmount();
 
-            if (transactionLine.getAmount() > item.getStock()) {
-                throw new CommandException("You requested " +
-                    ChatUtil.WHOLE_NUMBER_FORMATTER.format(amount) + " however, only " +
-                    ChatUtil.WHOLE_NUMBER_FORMATTER.format(item.getStock()) + " are in stock.");
+            Optional<Integer> optStock = item.getStock();
+            if (optStock.isPresent()) {
+                int stock = optStock.get();
+                if (transactionLine.getAmount() > stock) {
+                    throw new CommandException("You requested " +
+                        ChatUtil.WHOLE_NUMBER_FORMATTER.format(amount) + " however, only " +
+                        ChatUtil.WHOLE_NUMBER_FORMATTER.format(stock) + " are in stock.");
+                }
             }
 
             totalPrice = totalPrice.add(new BigDecimal(item.getPrice() * amount));

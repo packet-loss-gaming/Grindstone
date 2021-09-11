@@ -168,8 +168,8 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public void addItem(String itemName, double price, boolean disableBuy, boolean disableSell) {
-        queue.add(new ItemRowStatement(itemName, price, !disableBuy, !disableSell));
+    public void addItem(String itemName, double price, boolean infinite, boolean disableBuy, boolean disableSell) {
+        queue.add(new ItemRowStatement(itemName, price, infinite, !disableBuy, !disableSell));
     }
 
     @Override
@@ -182,6 +182,10 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
             String updateSql = "UPDATE `market-items` SET `stock` = `stock` + ? WHERE `name` = ?";
             try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
                 for (MarketTransactionLine transactionLine : transactionLines) {
+                    if (transactionLine.getItem().hasInfiniteStock()) {
+                        continue;
+                    }
+
                     String itemName = transactionLine.getItem().getName();
                     int amount = transactionLine.getAmount();
 

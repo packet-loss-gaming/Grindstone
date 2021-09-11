@@ -109,8 +109,16 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return getSellUnitPriceForStack(stack).map((value) -> value * stack.getAmount());
     }
 
-    public int getStock() {
-        return stock;
+    public boolean hasStock() {
+        return stock != -1;
+    }
+
+    public boolean hasInfiniteStock() {
+        return !hasStock();
+    }
+
+    public Optional<Integer> getStock() {
+        return hasStock() ? Optional.of(stock) : Optional.empty();
     }
 
     public boolean isEnabled() {
