@@ -71,53 +71,31 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         return true;
     }
 
-    private int getOrderOfMagnitude(int units) {
-        return (int) Math.pow(10, units);
-    }
+    private static final int X_DIVISOR = 50;
 
     private int getMaxAutoStock(double baseValue) {
-        int digits = 0;
-
-        baseValue = Math.ceil(baseValue);
-        while (baseValue >= 1) {
-            baseValue /= 10;
-            ++digits;
-        }
-
-        // worth >= 1000 max auto stock 10    - max restock pace 1
-        // worth >=  100 max auto stock 100   - max restock pace 10
-        // worth >=   10 max auto stock 1000  - max restock pace 100
-        // worth >=    0 max auto stock 10000 - max restock pace 1000
-
-        return getOrderOfMagnitude(Math.max(0, 4 - digits) + 1);
+        baseValue = Math.round(baseValue + X_DIVISOR);
+        return (int) (10000 / (baseValue / X_DIVISOR));
     }
 
     private int getNewStock(double baseValue, int existingStock) {
-        // If we have something in the lower market loss threshold, it's self managed.
-        if (baseValue >= LOWER_MARKET_LOSS_THRESHOLD) {
-            return existingStock;
-        }
-
         int maxAutoStock = getMaxAutoStock(baseValue);
-        int restockAmount = ChanceUtil.getRangedRandom(0, maxAutoStock / 10);
+        int restockAmount = ChanceUtil.getRangedRandom(0, Math.max(1, maxAutoStock / 10));
         int restockedStock = Math.min(maxAutoStock, existingStock + restockAmount);
 
         return Math.max(existingStock, restockedStock);
     }
 
-    private int applyStockNoise(double baseValue, int newStock, boolean massSimulation) {
+    private int applyStockNoise(double baseValue, int newStock) {
         int maxAutoStock = getMaxAutoStock(baseValue);
 
         // Inject:
-        //  - 30% noise, if we're overfull and performing a mass simulation
         //  - 10% noise when more than 70% full and probability selects it
         //  - 10% noise when 100% full
         boolean chanceNoise = newStock > (maxAutoStock * .7) && ChanceUtil.getChance(3);
         boolean overfull = newStock >= maxAutoStock;
 
-        if (massSimulation && overfull) {
-            newStock = (int) (newStock * ChanceUtil.getRangedRandom(.7, 1d));
-        } else if (chanceNoise || overfull) {
+        if (chanceNoise || overfull) {
             newStock = (int) (newStock * ChanceUtil.getRangedRandom(.9, 1d));
         }
 
@@ -125,16 +103,22 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     private int getNewStock(double baseValue, int existingStock, int restockingRounds) {
-        for (int i = 0; i < restockingRounds; ++i) {
-            existingStock = getNewStock(baseValue, existingStock);
+        // If we have something in the lower market loss threshold, it's self managed.
+        if (baseValue >= LOWER_MARKET_LOSS_THRESHOLD) {
+            return existingStock;
         }
 
-        return applyStockNoise(baseValue, existingStock, restockingRounds > 1);
+        for (int i = 0; i < restockingRounds; ++i) {
+            existingStock = getNewStock(baseValue, existingStock);
+            existingStock = applyStockNoise(baseValue, existingStock);
+        }
+
+        return existingStock;
     }
 
     private double getNewValue(double baseValue, int newStock) {
-        int maxAuto = getMaxAutoStock(baseValue);
-        double percentOutOfStock = Math.max(0d, maxAuto - newStock) / maxAuto;
+        int targetStock = Math.max(10, getMaxAutoStock(baseValue));
+        double percentOutOfStock = Math.max(0d, targetStock - newStock) / targetStock;
 
         // Use multipliers that result in a net 0, from min - max fluctuation
         double multiplier = .1;
