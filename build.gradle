@@ -53,10 +53,10 @@ dependencies {
     compileOnly group: 'gg.packetloss', name: 'mc-mail-box', version: '1.16.5.1'
 
     implementation group: 'gg.packetloss', name: 'open-boss', version: '1.2'
-    implementation group: 'gg.packetloss', name: 'hackbook', version: '1.17.0.0'
-    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.17.1.0'
+    implementation group: 'gg.packetloss', name: 'hackbook', version: '1.18.1.0'
+    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.18.1.0'
 
-    compileOnly group: 'io.papermc.paper', name: 'paper-api', version: '1.17-R0.1-SNAPSHOT'
+    compileOnly group: 'io.papermc.paper', name: 'paper-api', version: '1.18.1-R0.1-SNAPSHOT'
 
     compileOnly group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.2.0-SNAPSHOT'
     compileOnly group: 'com.sk89q.worldguard', name: 'worldguard-legacy', version: '7.0.0-SNAPSHOT'
@@ -97,7 +97,7 @@ version = '1.0-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(16)
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 

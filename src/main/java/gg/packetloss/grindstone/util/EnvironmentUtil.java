@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.util;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.*;
-import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -464,18 +463,6 @@ public class EnvironmentUtil {
 
     public static boolean isSolidBlock(Block block) {
         return isSolidBlock(block.getType());
-    }
-
-    private static final Set<Biome> FROZEN_BIOMES = Set.of(
-            Biome.DEEP_FROZEN_OCEAN, Biome.FROZEN_OCEAN, Biome.FROZEN_RIVER,
-            Biome.SNOWY_BEACH, Biome.SNOWY_MOUNTAINS, Biome.SNOWY_TAIGA,
-            Biome.SNOWY_TAIGA_HILLS, Biome.SNOWY_TAIGA_MOUNTAINS, Biome.SNOWY_TUNDRA,
-            Biome.ICE_SPIKES
-    );
-
-    public static boolean isFrozenBiome(Biome biome) {
-
-        return FROZEN_BIOMES.contains(biome);
     }
 
     public static void generateRadialEffect(Location location, Effect effect) {
