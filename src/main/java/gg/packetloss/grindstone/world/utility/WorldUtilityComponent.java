@@ -8,15 +8,25 @@ package gg.packetloss.grindstone.world.utility;
 
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
+import com.zachsthings.libcomponents.Depend;
+import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.admin.ProblemDetectionComponent;
 
 @ComponentInformation(friendlyName = "World Utility", desc = "World Utility Systems")
+@Depend(components = {ProblemDetectionComponent.class})
 public class WorldUtilityComponent extends BukkitComponent {
+    @InjectComponent
+    private ProblemDetectionComponent problemDetection;
+
     @Override
     public void enable() {
         CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
             registrar.registerAsSubCommand("wutil", "World Utility Commands", (wutilRegistrar) -> {
-                wutilRegistrar.register(WorldUtilityCommandsRegistration.builder(), new WorldUtilityCommands());
+                wutilRegistrar.register(
+                    WorldUtilityCommandsRegistration.builder(),
+                    new WorldUtilityCommands(problemDetection)
+                );
             });
         });
     }

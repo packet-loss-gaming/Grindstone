@@ -21,6 +21,7 @@ import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.functional.TriFunction;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Chunk;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -45,6 +46,8 @@ public class ProblemDetectionComponent extends BukkitComponent {
     private int numOfContiguousTimeChunks = 0;
     private boolean wereMessagesSent = false;
 
+    private int knownHeavyOperationsInProgress = 0;
+
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
@@ -55,6 +58,11 @@ public class ProblemDetectionComponent extends BukkitComponent {
         }, 20 * 5);
 
         CommandBook.server().getScheduler().runTaskTimer(CommandBook.inst(), () -> {
+            if (knownHeavyOperationsInProgress > 0) {
+                // Allow heavy operations to run through, always.
+                return;
+            }
+
             // If messages were sent we continue to have problems, increment the time chunks counter,
             // otherwise, reset the time chunks counter.
             if (wereMessagesSent) {
@@ -87,6 +95,15 @@ public class ProblemDetectionComponent extends BukkitComponent {
         public int maxContiguousTimeChunks = 5;
     }
 
+    public void registerHeavyLoad() {
+        ++knownHeavyOperationsInProgress;
+    }
+
+    public void unregisterHeavyLoad() {
+        Validate.isTrue(knownHeavyOperationsInProgress > 0);
+        --knownHeavyOperationsInProgress;
+    }
+
     private void reportProblemToMods(String problem) {
         wereMessagesSent = true;
         chatBridge.modBroadcast(problem);
@@ -102,7 +119,10 @@ public class ProblemDetectionComponent extends BukkitComponent {
                     return;
                 }
 
-                reportProblemToMods("Server fell behind (by " + millsLost + " ms)!");
+                reportProblemToMods(
+                    "Server fell behind (by " + millsLost + " ms, " +
+                        knownHeavyOperationsInProgress + " known heavy operations)!"
+                );
             }
         }
     }

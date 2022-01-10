@@ -12,11 +12,13 @@ import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.bukkittext.Text;
+import gg.packetloss.grindstone.admin.ProblemDetectionComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.enginehub.piston.annotation.Command;
@@ -30,7 +32,26 @@ import java.util.Set;
 
 @CommandContainer(superTypes = CommandPermissionsConditionGenerator.Registration.class)
 public class WorldUtilityCommands {
-    private Set<String> pregenActiveSet = new HashSet<>();
+    private final Set<String> pregenActiveSet = new HashSet<>();
+    private final ProblemDetectionComponent problemDetection;
+
+    public WorldUtilityCommands(ProblemDetectionComponent problemDetection) {
+        this.problemDetection = problemDetection;
+    }
+
+    private void addActive(String worldName) {
+        boolean added = pregenActiveSet.add(worldName);
+        Validate.isTrue(added);
+
+        problemDetection.registerHeavyLoad();
+    }
+
+    private void removeActive(String worldName) {
+        boolean removed = pregenActiveSet.remove(worldName);
+        Validate.isTrue(removed);
+
+        problemDetection.unregisterHeavyLoad();
+    }
 
     @Command(name = "pregen", desc = "Used to pregenerate all chunks within a world border")
     @CommandPermissions({"aurora.admin.worldutility.pregenerate"})
@@ -43,7 +64,7 @@ public class WorldUtilityCommands {
             return;
         }
 
-        pregenActiveSet.add(worldName);
+        addActive(worldName);
 
         WorldBorder worldBorder = world.getWorldBorder();
         Location center = worldBorder.getCenter();
@@ -116,7 +137,7 @@ public class WorldUtilityCommands {
                     noticePrefix,
                     "All chunks within the world border have already been generated."
                 );
-                pregenActiveSet.remove(worldName);
+                removeActive(worldName);
                 return;
             }
 
@@ -127,7 +148,7 @@ public class WorldUtilityCommands {
                     Text.of(ChatColor.WHITE, ChatUtil.WHOLE_NUMBER_FORMATTER.format(toGenChunkList.size())),
                     " chunks would be generated."
                 );
-                pregenActiveSet.remove(worldName);
+                removeActive(worldName);
                 return;
             }
 
@@ -160,7 +181,7 @@ public class WorldUtilityCommands {
                     noticePrefix,
                     "Generation complete."
                 );
-                pregenActiveSet.remove(worldName);
+                removeActive(worldName);
             });
 
             genTaskBuilder.build();
