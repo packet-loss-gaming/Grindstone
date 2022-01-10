@@ -13,9 +13,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
-import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldTimeContext;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.io.IOException;
@@ -40,8 +38,6 @@ public class TimeTravelComponent extends BukkitComponent {
             ex.printStackTrace();
         }
 
-        CommandBook.registerEvents(new TimeTravelListener(this));
-
         CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
             TimeContextConverter.register(registrar);
 
@@ -58,13 +54,13 @@ public class TimeTravelComponent extends BukkitComponent {
         }
     }
 
-    public ManagedWorldTimeContext getTimeContextFor(Player player) {
+    public ManagedWorldTimeContext getSelectedArchivePeriod(Player player) {
         ManagedWorldTimeContext override = timeContextOverride.get(player.getUniqueId());
         if (override != null) {
             return override;
         }
 
-        return managedWorlds.getTimeContextFor(player.getWorld());
+        return ManagedWorldTimeContext.getLatestArchive();
     }
 
     public void resetOverride(Player player) {
@@ -72,35 +68,11 @@ public class TimeTravelComponent extends BukkitComponent {
     }
 
     public void setOverride(Player player, ManagedWorldTimeContext timeContext) {
-        if (timeContext == ManagedWorldTimeContext.LATEST) {
+        if (timeContext.ordinal() >= ManagedWorldTimeContext.getLatestArchive().ordinal()) {
             resetOverride(player);
             return;
         }
 
         timeContextOverride.put(player.getUniqueId(), timeContext);
-    }
-
-    protected boolean canUseTimeTravelCommand(Player player) {
-        if (managedWorlds.is(ManagedWorldIsQuery.ANY_RANGE, player.getWorld())) {
-            return false;
-        }
-        return true;
-    }
-
-    public void maybeUpdateOverride(Player player, World newWorld) {
-        if (!managedWorlds.is(ManagedWorldIsQuery.ANY_RANGE, newWorld)) {
-            return;
-        }
-
-        ManagedWorldTimeContext timeContext = managedWorlds.getTimeContextFor(newWorld);
-        if (timeContext == ManagedWorldTimeContext.LATEST) {
-            resetOverride(player);
-        } else {
-            setOverride(player, timeContext);
-        }
-    }
-
-    public void maybeUpdateOverride(Player player) {
-        maybeUpdateOverride(player, player.getWorld());
     }
 }

@@ -23,11 +23,7 @@ public class TimeTravelCommands {
 
     @Command(name = "timetravel", desc = "Change the current time travel focus")
     public void timeTravel(Player player, @Arg(desc = "version") ManagedWorldTimeContext version) {
-        if (component.canUseTimeTravelCommand(player)) {
-            component.setOverride(player, version);
-            ChatUtil.sendNotice(player, "Portal time period set.");
-        } else {
-            ChatUtil.sendError(player, "You must return to the city to change your time travel settings.");
-        }
+        component.setOverride(player, version);
+        ChatUtil.sendNotice(player, "Portal time period set.");
     }
 }

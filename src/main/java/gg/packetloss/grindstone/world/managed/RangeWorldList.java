@@ -15,8 +15,6 @@ public class RangeWorldList {
     private final Map<String, ManagedWorldTimeContext> worldToTimeContext = new HashMap<>();
 
     protected RangeWorldList() {
-        // NOTE: It's important to add these in order, from oldest to newest.
-        // The last registered will be considered ManagedWorldTimeContext.LATEST.
         register("Halzeil", ManagedWorldTimeContext.V_1_15);
         register("Crezat", ManagedWorldTimeContext.V_1_18);
 
@@ -28,10 +26,18 @@ public class RangeWorldList {
         rangeWorldEntries.add(entry);
 
         timeContextToEntry.put(timeContext, entry);
-        timeContextToEntry.put(ManagedWorldTimeContext.LATEST, entry);
     }
 
     private void completeRegistration() {
+        timeContextToEntry.put(
+            ManagedWorldTimeContext.LATEST_ARCHIVED,
+            timeContextToEntry.get(ManagedWorldTimeContext.getLatestArchive())
+        );
+        timeContextToEntry.put(
+            ManagedWorldTimeContext.LATEST,
+            timeContextToEntry.get(ManagedWorldTimeContext.getLatest())
+        );
+
         for (Map.Entry<ManagedWorldTimeContext, Entry> entry : timeContextToEntry.entrySet()) {
             worldToTimeContext.put(entry.getValue().getName(), entry.getKey());
         }

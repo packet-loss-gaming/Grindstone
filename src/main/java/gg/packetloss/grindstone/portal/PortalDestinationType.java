@@ -10,5 +10,5 @@ public enum PortalDestinationType {
     CITY,
     RANGE,
     SKY,
-    WILDERNESS
+    TIME_MACHINE
 }

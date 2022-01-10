@@ -44,8 +44,9 @@ public class TimeContextConverter implements ArgumentConverter<ManagedWorldTimeC
     @Override
     public List<String> getSuggestions(String argument, InjectedValueAccess context) {
         return Arrays.stream(ManagedWorldTimeContext.values())
-                .map(Enum::name)
-                .filter(s -> s.contains(argument.toUpperCase()))
-                .collect(Collectors.toList());
+            .filter(e -> e.ordinal() <= ManagedWorldTimeContext.getLatestArchive().ordinal())
+            .map(Enum::name)
+            .filter(s -> s.contains(argument.toUpperCase()))
+            .collect(Collectors.toList());
     }
 }

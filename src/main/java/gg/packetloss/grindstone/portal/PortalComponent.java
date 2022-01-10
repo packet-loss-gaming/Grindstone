@@ -57,13 +57,33 @@ public class PortalComponent extends BukkitComponent implements Listener {
     private Map<Material, PortalDestinationType> portalToType = new HashMap<>();
 
     private void initWorldLookup() {
-        worldTypeLookup.put(PortalDestinationType.CITY, new SimpleWorldResolver(managedWorld, ManagedWorldGetQuery.CITY, warps));
-        worldTypeLookup.put(PortalDestinationType.RANGE, new RangeWorldResolver(managedWorld, ManagedWorldGetQuery.RANGE_OVERWORLD, warps, firstLogin, timeTravel));
-        worldTypeLookup.put(PortalDestinationType.SKY, new SkyWorldResolver(managedWorld, ManagedWorldGetQuery.SKY, warps, skyWorldCore));
+        worldTypeLookup.put(
+            PortalDestinationType.RANGE,
+            new RangeWorldResolver(managedWorld, ManagedWorldGetQuery.RANGE_OVERWORLD, warps, firstLogin)
+        );
+        worldTypeLookup.put(
+            PortalDestinationType.TIME_MACHINE,
+            new RangeWorldResolver(
+                managedWorld,
+                ManagedWorldGetQuery.RANGE_OVERWORLD,
+                warps,
+                firstLogin,
+                (player) -> timeTravel.getSelectedArchivePeriod(player)
+            )
+        );
+        worldTypeLookup.put(
+            PortalDestinationType.CITY,
+            new SimpleWorldResolver(managedWorld, ManagedWorldGetQuery.CITY, warps)
+        );
+        worldTypeLookup.put(
+            PortalDestinationType.SKY,
+            new SkyWorldResolver(managedWorld, ManagedWorldGetQuery.SKY, warps, skyWorldCore)
+        );
     }
 
     private void initTypeMapping() {
         portalToType.put(Material.COBBLESTONE, PortalDestinationType.RANGE);
+        portalToType.put(Material.IRON_BLOCK, PortalDestinationType.TIME_MACHINE);
         portalToType.put(Material.STONE_BRICKS, PortalDestinationType.CITY);
         portalToType.put(Material.EMERALD_BLOCK, PortalDestinationType.SKY);
     }
@@ -215,6 +235,13 @@ public class PortalComponent extends BukkitComponent implements Listener {
             }
 
             Location targetLocation = resolver.getDestinationFor(player);
+            if (targetLocation.getWorld() == fromWorld) {
+                event.setCancelled(true);
+                ChatUtil.sendError(player, "That portal points to this world!");
+                ChatUtil.sendError(player, "You can't go through there, you might blow up the universe!");
+                return;
+            }
+
             redirectPortalNoAgent(event, targetLocation);
 
             return;
@@ -223,7 +250,10 @@ public class PortalComponent extends BukkitComponent implements Listener {
         // Range Code
         if (managedWorld.is(ManagedWorldIsQuery.RANGE_OVERWORLD, fromWorld)) {
             redirectPortalWithAgent(event, new Location(
-                    managedWorld.get(ManagedWorldGetQuery.RANGE_NETHER, timeTravel.getTimeContextFor(player)),
+                    managedWorld.get(
+                        ManagedWorldGetQuery.RANGE_NETHER,
+                        managedWorld.getTimeContextFor(player.getWorld())
+                    ),
                     from.getX() / 8,
                     from.getBlockY(),
                     from.getZ() / 8
@@ -233,7 +263,10 @@ public class PortalComponent extends BukkitComponent implements Listener {
 
         if (managedWorld.is(ManagedWorldIsQuery.RANGE_NETHER, fromWorld)) {
             redirectPortalWithAgent(event, new Location(
-                    managedWorld.get(ManagedWorldGetQuery.RANGE_OVERWORLD, timeTravel.getTimeContextFor(player)),
+                    managedWorld.get(
+                        ManagedWorldGetQuery.RANGE_OVERWORLD,
+                        managedWorld.getTimeContextFor(player.getWorld())
+                    ),
                     from.getX() * 8,
                     from.getBlockY(),
                     from.getZ() * 8
