@@ -34,6 +34,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
 
@@ -109,8 +110,35 @@ public class PortalComponent extends BukkitComponent implements Listener {
         return Optional.ofNullable(portalToType.get(fromBlock.getType())).map(type -> worldTypeLookup.get(type));
     }
 
-    private List<Entity> getAccompanyingEntities(Player player) {
-        List<Entity> accompanying = new ArrayList<>();
+    private static class AccompanyingEntity {
+        private final LivingEntity entity;
+        private final boolean leashed;
+
+        public AccompanyingEntity(LivingEntity entity, boolean isLeashed) {
+            this.entity = entity;
+            this.leashed = isLeashed;
+        }
+
+        public void followPlayerTeleport(Player player) {
+            boolean wasTeleported = entity.teleport(player, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
+            if (leashed) {
+                if (wasTeleported) {
+                    entity.setLeashHolder(player);
+                } else {
+                    entity.getWorld().dropItem(entity.getLocation(), new ItemStack(Material.LEAD));
+                }
+            }
+        }
+
+        public void playerTeleportCanceled(Player player) {
+            if (leashed) {
+                entity.setLeashHolder(player);
+            }
+        }
+    }
+
+    private List<AccompanyingEntity> getAccompanyingEntities(Player player) {
+        List<AccompanyingEntity> accompanying = new ArrayList<>();
 
         for (LivingEntity entity: player.getLocation().getNearbyLivingEntities(16)) {
             if (entity.equals(player)) {
@@ -118,7 +146,8 @@ public class PortalComponent extends BukkitComponent implements Listener {
             }
 
             if (entity.isLeashed() && entity.getLeashHolder().equals(player)) {
-                accompanying.add(entity);
+                entity.setLeashHolder(null);
+                accompanying.add(new AccompanyingEntity(entity, true));
                 continue;
             }
 
@@ -133,7 +162,7 @@ public class PortalComponent extends BukkitComponent implements Listener {
                 }
 
                 if (tamer.getUniqueId().equals(player.getUniqueId())) {
-                    accompanying.add(entity);
+                    accompanying.add(new AccompanyingEntity(entity, false));
                 }
             }
         }
@@ -145,15 +174,17 @@ public class PortalComponent extends BukkitComponent implements Listener {
         event.setCancelled(true);
 
         Player player = event.getPlayer();
-        List<Entity> accompanying = getAccompanyingEntities(player);
+        List<AccompanyingEntity> accompanying = getAccompanyingEntities(player);
 
         player.teleportAsync(destination, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL).thenAccept((teleported) -> {
-            if (!teleported) {
-                return;
-            }
-
-            for (Entity entity : accompanying) {
-                entity.teleport(player, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL);
+            if (teleported) {
+                for (AccompanyingEntity entity : accompanying) {
+                    entity.followPlayerTeleport(player);
+                }
+            } else {
+                for (AccompanyingEntity entity : accompanying) {
+                    entity.playerTeleportCanceled(player);
+                }
             }
         });
 
