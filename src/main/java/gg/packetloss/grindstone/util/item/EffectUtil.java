@@ -52,8 +52,7 @@ public class EffectUtil {
                 }
 
                 if (e.getType() == entity.getType()) {
-                    ((LivingEntity) e).setHealth(Math.min(((LivingEntity) e).getHealth() + attackDamage,
-                            ((LivingEntity) e).getMaxHealth()));
+                    EntityUtil.heal(e, attackDamage);
                     if (e instanceof Player) {
                         ChatUtil.sendNotice(e, "You are healed by an ancient force.");
                     }

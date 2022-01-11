@@ -87,7 +87,7 @@ public class EntityUtil {
         ((LivingEntity) entity).setHealth(amtToHeal);
     }
 
-    public static void forceDamage(Entity entity, double amt) {
+    private static void forceDamageNow(Entity entity, double amt) {
         // Check for validity
         if (entity == null || !entity.isValid()) {
             return;
@@ -115,6 +115,18 @@ public class EntityUtil {
 
         // Play damage effect
         living.playEffect(EntityEffect.HURT);
+    }
+
+    public static void forceDamage(Entity entity, double amt) {
+        // Process this out of band if applying force damage to a player.
+        //
+        // This prevents double deaths if we're coming from a EntityDamageEvent and this kills the player (the
+        // original damage event would then become a secondary "kill"/death).
+        if (entity instanceof Player) {
+            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> forceDamageNow(entity, amt));
+        } else {
+            forceDamageNow(entity, amt);
+        }
     }
 
     public static void forceDamage(Player context, LivingEntity entity, double amt) {
