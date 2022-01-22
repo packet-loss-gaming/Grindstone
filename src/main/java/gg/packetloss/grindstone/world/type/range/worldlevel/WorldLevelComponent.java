@@ -237,7 +237,11 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
             return false;
         }
 
-        int yChunk = location.getBlockY() >> 4;
+        // Subtract the minimum world height, if this is 0 it has no effect, if it's lower than zero, it adds a
+        // positive number to all coordinates, which in turn results in a larger gradient of vertical chunks.
+        int worldMinY = location.getWorld().getMinHeight();
+        int yChunk = (location.getBlockY() - worldMinY) >> 4;
+
         return ChanceUtil.getChance(yChunk * config.demonicAshesPerYChunk);
     }
 
