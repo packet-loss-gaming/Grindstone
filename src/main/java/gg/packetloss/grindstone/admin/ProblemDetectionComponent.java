@@ -91,6 +91,8 @@ public class ProblemDetectionComponent extends BukkitComponent {
         public int chunkCheckIntervalTicks = 20;
         @Setting("chunk-watcher.min-activity-level")
         public int chunkActivityLevel = 3;
+        @Setting("chunk-watcher.live-diagnostics")
+        public boolean chunkThrashingLiveDiagnostics = false;
         @Setting("auto-shutdown.max-contiguos-time-chunks")
         public int maxContiguousTimeChunks = 5;
     }
@@ -186,24 +188,27 @@ public class ProblemDetectionComponent extends BukkitComponent {
             );
         }
 
-        private void registerChunkActivity(Chunk chunk) {
+        private void registerChunkActivity(Chunk chunk, boolean isLoad) {
             Map<BlockVector2, Integer> mapping = worldChunkActivityMapping.computeIfAbsent(chunk.getWorld().getName(), (ignored) -> {
                 return new HashMap<>();
             });
 
-            mapping.merge(WorldEditBridge.toBlockVec2(chunk), 1, Integer::sum);
+            int newValue = mapping.merge(WorldEditBridge.toBlockVec2(chunk), 1, Integer::sum);
+            if (isLoad && config.chunkThrashingLiveDiagnostics && newValue >= config.chunkActivityLevel) {
+                (new Exception("Chunk thrashing detected. The cause is likely in the call stack.")).printStackTrace();
+            }
         }
 
         @EventHandler
         public void onServerTick(ChunkLoadEvent event) {
             Chunk chunk = event.getChunk();
 
-            registerChunkActivity(chunk);
+            registerChunkActivity(chunk, true);
         }
 
         @EventHandler
         public void onServerTick(ChunkUnloadEvent event) {
-            registerChunkActivity(event.getChunk());
+            registerChunkActivity(event.getChunk(), false);
         }
     }
 }
