@@ -38,8 +38,11 @@ public class BossBuggedRespawnListener implements Listener {
 
         LivingEntity living = (LivingEntity) entity;
         if (shouldRespawn.test(living)) {
-            CommandBook.logger().info("Respawning " + bossName + " due to bugged despawn");
-            respawnHook.accept(living);
+            // Delay to avoid possible concurrent modification during entity processing.
+            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                CommandBook.logger().info("Respawning " + bossName + " due to bugged despawn");
+                respawnHook.accept(living);
+            });
         }
     }
 }
