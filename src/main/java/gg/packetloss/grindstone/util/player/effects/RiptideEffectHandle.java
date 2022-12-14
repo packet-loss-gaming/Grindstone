@@ -40,10 +40,10 @@ public class RiptideEffectHandle {
     }
 
     public void enable() {
-        sendEffectPacket(ENABLE_RIPTIDE);
+        // sendEffectPacket(ENABLE_RIPTIDE);
     }
 
     public void disable() {
-        sendEffectPacket(DISABLE_RIPTIDE);
+        // sendEffectPacket(DISABLE_RIPTIDE);
     }
 }
