@@ -72,7 +72,7 @@ public class InviteCommands {
                         );
                     }
                     case ALREADY_INVITED -> {
-                        ChatUtil.sendNotice(player, "Someone already invited this player.");
+                        ChatUtil.sendError(player, "Someone already invited this player.");
                     }
                 }
             },
