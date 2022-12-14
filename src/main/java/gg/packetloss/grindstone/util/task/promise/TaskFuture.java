@@ -134,11 +134,33 @@ public class TaskFuture<T> {
         return taskFuture;
     }
 
+    public <U> TaskFuture<U> thenComposeNative(Function<? super T, CompletableFuture<U>> fn) {
+        TaskFuture<U> taskFuture = new TaskFuture<>();
+        underlying.thenAccept((value) -> {
+            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                fn.apply(value).thenAccept(taskFuture::complete);
+            });
+        });
+        handleParentFailure(taskFuture);
+        return taskFuture;
+    }
+
     public <U> TaskFuture<U> thenComposeAsynchronously(Function<? super T, TaskFuture<U>> fn) {
         TaskFuture<U> taskFuture = new TaskFuture<>();
         underlying.thenAccept((value) -> {
             PluginTaskExecutor.submitAsync(() -> {
                 fn.apply(value).underlying.thenAccept(taskFuture::complete);
+            });
+        });
+        handleParentFailure(taskFuture);
+        return taskFuture;
+    }
+
+    public <U> TaskFuture<U> thenComposeNativeAsynchronously(Function<? super T, CompletableFuture<U>> fn) {
+        TaskFuture<U> taskFuture = new TaskFuture<>();
+        underlying.thenAccept((value) -> {
+            PluginTaskExecutor.submitAsync(() -> {
+                fn.apply(value).thenAccept(taskFuture::complete);
             });
         });
         handleParentFailure(taskFuture);

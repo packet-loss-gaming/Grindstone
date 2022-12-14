@@ -15,6 +15,8 @@ import gg.packetloss.grindstone.firstlogin.FirstLoginComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
+import gg.packetloss.grindstone.util.task.promise.TaskResult;
 import gg.packetloss.grindstone.warps.WarpsComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
@@ -190,29 +192,53 @@ public class PortalComponent extends BukkitComponent implements Listener {
         return accompanying;
     }
 
-    private void redirectPortalNoAgent(PlayerPortalEvent event, Location destination) {
+    private Set<UUID> activePlayerPortalRedirections = new HashSet<>();
+
+    private void redirectPortalNoAgent(PlayerPortalEvent event, TaskFuture<Location> futureDestination) {
         event.setCancelled(true);
 
         Player player = event.getPlayer();
-        List<AccompanyingEntity> accompanying = getAccompanyingEntities(player);
+        UUID playerID = player.getUniqueId();
 
-        player.teleportAsync(destination, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL).thenAccept((teleported) -> {
-            if (teleported) {
-                for (AccompanyingEntity entity : accompanying) {
-                    entity.followPlayerTeleport(player);
+        activePlayerPortalRedirections.add(playerID);
+
+        World fromWorld = player.getWorld();
+
+        futureDestination.thenApplyFailable(
+            (destination) -> {
+                if (destination.getWorld() == fromWorld) {
+                    ChatUtil.sendError(player, "That portal points to this world!");
+                    ChatUtil.sendError(player, "You can't go through there, you might blow up the universe!");
+                    return TaskResult.failed();
                 }
-            } else {
-                for (AccompanyingEntity entity : accompanying) {
-                    entity.playerTeleportCanceled(player);
-                }
+                return TaskResult.of(destination);
             }
-        });
+        ).thenComposeNative(
+            (destination) -> {
+                List<AccompanyingEntity> accompanying = getAccompanyingEntities(player);
 
+                return player.teleportAsync(destination, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL).thenAccept(
+                    (teleported) -> {
+                        if (teleported) {
+                            for (AccompanyingEntity entity : accompanying) {
+                                entity.followPlayerTeleport(player);
+                            }
+                        } else {
+                            for (AccompanyingEntity entity : accompanying) {
+                                entity.playerTeleportCanceled(player);
+                            }
+                        }
+                    }
+                );
+            },
+            (ignored) -> {}
+        ).thenFinally(() -> activePlayerPortalRedirections.remove(playerID));
     }
 
     private void redirectPortalWithAgent(PlayerPortalEvent event, Location destination) {
         event.setTo(destination);
     }
+
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
@@ -221,6 +247,10 @@ public class PortalComponent extends BukkitComponent implements Listener {
         }
 
         Player player = event.getPlayer();
+        UUID playerID = player.getUniqueId();
+        if (activePlayerPortalRedirections.contains(playerID)) {
+            return;
+        }
         Location from = getConsistentFrom(event.getFrom());
 
         World fromWorld = from.getWorld();
@@ -234,15 +264,7 @@ public class PortalComponent extends BukkitComponent implements Listener {
                 return;
             }
 
-            Location targetLocation = resolver.getDestinationFor(player);
-            if (targetLocation.getWorld() == fromWorld) {
-                event.setCancelled(true);
-                ChatUtil.sendError(player, "That portal points to this world!");
-                ChatUtil.sendError(player, "You can't go through there, you might blow up the universe!");
-                return;
-            }
-
-            redirectPortalNoAgent(event, targetLocation);
+            redirectPortalNoAgent(event, resolver.getDestinationFor(player));
 
             return;
         }

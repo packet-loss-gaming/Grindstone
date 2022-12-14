@@ -7,11 +7,13 @@
 package gg.packetloss.grindstone.portal;
 
 import gg.packetloss.grindstone.firstlogin.FirstLoginComponent;
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.warps.WarpsComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldTimeContext;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -45,12 +47,21 @@ public class RangeWorldResolver implements WorldResolver {
     }
 
     @Override
-    public final Optional<Location> getLastExitLocation(Player player) {
-        return warps.getLastPortalLocation(player, managedWorld.get(query, timeContextLookup.apply(player)));
+    public final TaskFuture<Optional<Location>> getLastExitLocation(Player player) {
+        ManagedWorldTimeContext timeContext = timeContextLookup.apply(player);
+        return TaskFuture.completed(warps.getLastPortalLocation(player, managedWorld.get(query, timeContext)));
     }
 
     @Override
-    public Location getDefaultLocationForPlayer(Player player) {
-        return firstLogin.getNewPlayerStartingLocation(player, timeContextLookup.apply(player));
+    public TaskFuture<Location> getDefaultLocationForPlayer(Player player) {
+        return firstLogin.getNewPlayerStartingLocation(player).thenApply((loc) -> {
+            // Prefer the new player starting location (i.e. "invite location") if it exists for the ranged world
+            // under consideration for the current time context. Otherwise, use the world spawn.
+            World world = managedWorld.get(ManagedWorldGetQuery.RANGE_OVERWORLD, timeContextLookup.apply(player));
+            if (world == loc.getWorld()) {
+                return loc;
+            }
+            return world.getSpawnLocation();
+        });
     }
 }

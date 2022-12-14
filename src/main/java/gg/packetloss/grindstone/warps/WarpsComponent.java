@@ -73,12 +73,28 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         warpManager = new WarpManager(warpDatabase);
     }
 
+    private Optional<Location> getRawWarp(WarpQualifiedName warpName) {
+        return warpManager.getExactWarp(warpName).map(WarpPoint::getLocation);
+    }
+
+    public Optional<Location> getWarp(WarpQualifiedName warpName) {
+        return warpManager.getExactWarp(warpName).map(WarpPoint::getSafeLocation);
+    }
+
+    public boolean setWarp(WarpQualifiedName warpName, Location location) {
+        return warpManager.setWarp(warpName, location).isPresent();
+    }
+
+    public WarpQualifiedName getHomeWarpQualifierFor(UUID player) {
+        return new WarpQualifiedName(player, "home");
+    }
+
     public Optional<Location> getRawBedLocation(Player player) {
-        return warpManager.getHomeFor(player).map(WarpPoint::getLocation);
+        return getRawWarp(getHomeWarpQualifierFor(player.getUniqueId()));
     }
 
     public Optional<Location> getBedLocation(Player player) {
-        return warpManager.getHomeFor(player).map(WarpPoint::getSafeLocation);
+        return getWarp(getHomeWarpQualifierFor(player.getUniqueId()));
     }
 
     public Optional<Location> getLastPortalLocation(Player player, World world) {
@@ -90,8 +106,17 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         return getBedLocation(player).orElse(spawnLoc);
     }
 
-    public Optional<Location> getWarp(WarpQualifiedName warpName) {
-        return warpManager.getExactWarp(warpName).map(WarpPoint::getSafeLocation);
+    public void setPlayerHomeAndNotify(Player player, Location loc) {
+        // Set this in an attempt to fix minecraft game messages about the bed not being found.
+        player.setBedSpawnLocation(loc);
+
+        boolean isUpdate = setWarp(getHomeWarpQualifierFor(player.getUniqueId()), loc);
+
+        if (isUpdate) {
+            ChatUtil.sendNotice(player, "Your bed location has been updated.");
+        } else {
+            ChatUtil.sendNotice(player, "Your bed location has been set.");
+        }
     }
 
     // FIXME: Priority set as workaround for Multiverse-Core#1977
@@ -192,7 +217,7 @@ public class WarpsComponent extends BukkitComponent implements Listener {
         }
 
         Player player = event.getPlayer();
-        warpManager.setPlayerHomeAndNotify(player, block.getLocation());
+        setPlayerHomeAndNotify(player, block.getLocation());
 
         rightClickedOnBedPlayers.removeAll(Collections.singleton(player.getUniqueId()));
     }

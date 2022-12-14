@@ -60,7 +60,7 @@ public class WarpManagementCommands {
             qualifiedWarpName = new WarpQualifiedName(player.getUniqueId(), warpName);
         }
 
-        boolean isUpdate = component.getWarpManager().setWarp(qualifiedWarpName, player.getLocation()).isPresent();
+        boolean isUpdate = component.setWarp(qualifiedWarpName, player.getLocation());
         if (isUpdate) {
             ChatUtil.sendNotice(player, "Warp '" + qualifiedWarpName.getDisplayName() + "' updated.");
         } else {

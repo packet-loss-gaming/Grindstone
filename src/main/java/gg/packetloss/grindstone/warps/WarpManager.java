@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.warps;
 
-import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -73,28 +72,6 @@ public class WarpManager {
         warpData.save();
 
         return warp;
-    }
-
-    private WarpQualifiedName getHomeNameFor(Player player) {
-        return new WarpQualifiedName(player.getUniqueId(), "home");
-    }
-
-    public Optional<WarpPoint> getHomeFor(Player player) {
-        return warpData.getWarp(getHomeNameFor(player));
-    }
-
-    public void setPlayerHomeAndNotify(Player player, Location loc) {
-        // Set this in an attempt to fix minecraft game messages about the bed not being found.
-        player.setBedSpawnLocation(loc);
-
-        boolean isUpdate = warpData.setWarp(getHomeNameFor(player), loc).isPresent();
-        warpData.save();
-
-        if (isUpdate) {
-            ChatUtil.sendNotice(player, "Your bed location has been updated.");
-        } else {
-            ChatUtil.sendNotice(player, "Your bed location has been set.");
-        }
     }
 
     private WarpQualifiedName getLastPortalLocationNameFor(Player player, World world) {

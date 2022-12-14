@@ -165,11 +165,33 @@ public class FailableTaskFuture<T, K> {
         return taskFuture;
     }
 
+    public <U> TaskFuture<U> thenComposeNative(Function<? super T, CompletableFuture<U>> fn, Consumer<K> failureHandler) {
+        TaskFuture<U> taskFuture = new TaskFuture<>();
+        underlyingSuccess.thenAccept((value) -> {
+            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                fn.apply(value).thenAccept(taskFuture::complete);
+            });
+        });
+        handleFailure(taskFuture, failureHandler);
+        return taskFuture;
+    }
+
     public <U> TaskFuture<U> thenComposeAsynchronously(Function<? super T, TaskFuture<U>> fn, Consumer<K> failureHandler) {
         TaskFuture<U> taskFuture = new TaskFuture<>();
         underlyingSuccess.thenAccept((value) -> {
             PluginTaskExecutor.submitAsync(() -> {
                 fn.apply(value).underlying.thenAccept(taskFuture::complete);
+            });
+        });
+        handleFailureAsynchronously(taskFuture, failureHandler);
+        return taskFuture;
+    }
+
+    public <U> TaskFuture<U> thenComposeNativeAsynchronously(Function<? super T, CompletableFuture<U>> fn, Consumer<K> failureHandler) {
+        TaskFuture<U> taskFuture = new TaskFuture<>();
+        underlyingSuccess.thenAccept((value) -> {
+            PluginTaskExecutor.submitAsync(() -> {
+                fn.apply(value).thenAccept(taskFuture::complete);
             });
         });
         handleFailureAsynchronously(taskFuture, failureHandler);

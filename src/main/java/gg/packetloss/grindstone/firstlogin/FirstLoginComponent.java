@@ -23,27 +23,32 @@ import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
 import gg.packetloss.grindstone.events.PortalRecordEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseOverflowEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
+import gg.packetloss.grindstone.invite.PlayerInviteComponent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.playerhistory.PlayerHistoryComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.ErrorUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.parser.HelpTextParser;
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
+import gg.packetloss.grindstone.warps.WarpsComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldTimeContext;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
+import io.papermc.paper.event.entity.EntityPortalReadyEvent;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -52,11 +57,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 @ComponentInformation(friendlyName = "First Login", desc = "Get stuff the first time you come.")
-@Depend(components = {ManagedWorldComponent.class, BuffComponent.class, PlayerHistoryComponent.class})
+@Depend(components = {ManagedWorldComponent.class, BuffComponent.class, PlayerHistoryComponent.class,
+                      PlayerInviteComponent.class, WarpsComponent.class})
 public class FirstLoginComponent extends BukkitComponent implements Listener {
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = inst.getLogger();
@@ -68,14 +75,17 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     private ManagedWorldComponent managedWorld;
     @InjectComponent
     private PlayerHistoryComponent playerHistory;
+    @InjectComponent
+    private PlayerInviteComponent playerInvite;
+    @InjectComponent
+    private WarpsComponent warps;
 
     private LocalConfiguration config;
 
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
         CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
             //  WarpPointConverter.register(commandManager, this);
@@ -108,8 +118,25 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         public int welcomeProtectionHours = 24;
     }
 
-    public Location getNewPlayerStartingLocation(Player player, ManagedWorldTimeContext timeContext) {
-        return managedWorld.get(ManagedWorldGetQuery.RANGE_OVERWORLD, timeContext).getSpawnLocation();
+    public TaskFuture<Location> getNewPlayerStartingLocation(Player player) {
+        UUID playerID = player.getUniqueId();
+
+        return playerInvite.getInvitingPlayer(playerID).thenApply(
+            (optInvitor) -> {
+                if (optInvitor.isPresent()) {
+                    UUID invitor = optInvitor.get();
+                    Optional<Location> inviteDestination = playerInvite.getInviteDestination(invitor);
+
+                    if (inviteDestination.isPresent()) {
+                        return inviteDestination.get();
+                    }
+                }
+
+                World world = managedWorld.get(ManagedWorldGetQuery.RANGE_OVERWORLD, ManagedWorldTimeContext.LATEST);
+                return world.getSpawnLocation();
+            },
+            (ignored) -> { ErrorUtil.reportUnexpectedError(player); }
+        );
     }
 
     public Location getSafeRoomLocation() {
@@ -242,13 +269,13 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
             playerInv.addItem(new ItemStack(Material.WOODEN_PICKAXE));
             playerInv.addItem(CustomItemCenter.build(CustomItems.NEWBIE_PHANTOM_POTION));
 
-            ChatUtil.sendStaggered(player, List.of(
+            ChatUtil.sendStaggered(player, Stream.of(
                 "Oh no! You died without a gem of life!",
                 "Your stuff has been sent to The Graveyard.",
                 "Since you're new around here, I've given you a phantom potion.",
                 "Drink the Phantom Potion to return to your grave.",
                 "Then simply break the cracked stone or dirt blocks."
-            ).stream().map((text) -> Text.of(ChatColor.YELLOW, "[Friendly Spirit] ", text)).collect(Collectors.toList()));
+            ).map((text) -> Text.of(ChatColor.YELLOW, "[Friendly Spirit] ", text)).toList());
         }
     }
 
@@ -297,15 +324,35 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         maybeApplyNewPlayerBuffs(player);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPlayerPortal(PlayerPortalEvent event) {
-        if (isInSafeRoom(event.getFrom())) {
-            event.setCancelled(true);
-            event.getPlayer().teleport(
-                    getNewPlayerStartingLocation(event.getPlayer(), ManagedWorldTimeContext.LATEST),
-                    PlayerTeleportEvent.TeleportCause.NETHER_PORTAL
-            );
+    private final Set<UUID> playersBeingTeleportedToFirstLoc = new HashSet<>();
+
+    private void sendToInitialLocation(Player player) {
+        UUID playerID = player.getUniqueId();
+
+        if (playersBeingTeleportedToFirstLoc.contains(playerID)) {
+            return;
         }
+
+        playersBeingTeleportedToFirstLoc.add(playerID);
+        getNewPlayerStartingLocation(player).thenComposeNative(
+            (destination) -> player.teleportAsync(destination, PlayerTeleportEvent.TeleportCause.NETHER_PORTAL)
+        ).thenFinally(() -> {
+            playersBeingTeleportedToFirstLoc.remove(playerID);
+        });
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerPortal(EntityPortalReadyEvent event) {
+        if (!(event.getEntity() instanceof Player player)) {
+            return;
+        }
+
+        if (!isInSafeRoom(player.getLocation())) {
+            return;
+        }
+
+        event.setCancelled(true);
+        sendToInitialLocation(player);
     }
 
     @EventHandler(ignoreCancelled = true)

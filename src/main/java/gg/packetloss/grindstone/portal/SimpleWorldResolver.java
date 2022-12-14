@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.portal;
 
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.warps.WarpsComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
@@ -36,12 +37,12 @@ public class SimpleWorldResolver implements WorldResolver {
     }
 
     @Override
-    public Optional<Location> getLastExitLocation(Player player) {
-        return warps.getLastPortalLocation(player, getWorld());
+    public TaskFuture<Optional<Location>> getLastExitLocation(Player player) {
+        return TaskFuture.completed(warps.getLastPortalLocation(player, getWorld()));
     }
 
     @Override
-    public Location getDefaultLocationForPlayer(Player player) {
-        return getWorld().getSpawnLocation();
+    public TaskFuture<Location> getDefaultLocationForPlayer(Player player) {
+        return TaskFuture.completed(getWorld().getSpawnLocation());
     }
 }
