@@ -17,6 +17,7 @@ public class RangeWorldList {
     protected RangeWorldList() {
         register("Halzeil", ManagedWorldTimeContext.V_1_15);
         register("Crezat", ManagedWorldTimeContext.V_1_18);
+        register("Zelkon", ManagedWorldTimeContext.V_1_18);
 
         completeRegistration();
     }

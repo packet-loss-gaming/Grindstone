@@ -10,6 +10,7 @@ public enum ManagedWorldTimeContext {
     V_1_15,
     LATEST_ARCHIVED, /* Add archive worlds above this point. */
     V_1_18,
+    V_1_19,
     LATEST; /* Add the non-archieve world above this point. */
 
     public static ManagedWorldTimeContext getLatest() {
