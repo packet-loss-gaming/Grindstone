@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.invite;
 
+import com.destroystokyo.paper.profile.PlayerProfile;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
@@ -13,16 +14,19 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
+import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.invite.db.InviteResult;
 import gg.packetloss.grindstone.invite.db.PlayerInviteDatabase;
 import gg.packetloss.grindstone.invite.db.mysql.MySQLPlayerInviteDatabase;
 import gg.packetloss.grindstone.util.task.promise.FailableTaskFuture;
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.util.task.promise.TaskResult;
 import gg.packetloss.grindstone.warps.WarpQualifiedName;
 import gg.packetloss.grindstone.warps.WarpsComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -35,8 +39,10 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 @ComponentInformation(friendlyName = "Player Invites", desc = "Player invite system.")
-@Depend(components = {ManagedWorldComponent.class, WarpsComponent.class})
+@Depend(components = {ChatBridgeComponent.class, ManagedWorldComponent.class, WarpsComponent.class})
 public class PlayerInviteComponent extends BukkitComponent implements Listener {
+    @InjectComponent
+    private ChatBridgeComponent chatBridge;
     @InjectComponent
     private ManagedWorldComponent managedWorld;
     @InjectComponent
@@ -69,7 +75,23 @@ public class PlayerInviteComponent extends BukkitComponent implements Listener {
         public String rejectionMessage = "Sorry, uninvited new players are not allowed at this time.";
     }
 
+    private void notifyAdminOfInvite(UUID currentPlayer, UUID newPlayer) {
+        TaskFuture.asyncTask(() -> {
+            PlayerProfile currentPlayerProfile = Bukkit.getServer().createProfile(currentPlayer);
+            PlayerProfile newPlayerProfile = Bukkit.getServer().createProfile(newPlayer);
+
+            currentPlayerProfile.complete(false, true);
+            newPlayerProfile.complete(false, true);
+
+            chatBridge.modBroadcast(
+                    currentPlayerProfile.getName() + " invited " + newPlayerProfile.getName() + "."
+            );
+            return null;
+        });
+    }
+
     public FailableTaskFuture<InviteResult, Void> invitePlayer(UUID currentPlayer, UUID newPlayer) {
+        notifyAdminOfInvite(currentPlayer, newPlayer);
         return FailableTaskFuture.asyncTask(() -> {
             try {
                 return TaskResult.of(inviteDatabase.addInvite(currentPlayer, newPlayer));
