@@ -6,10 +6,14 @@
 
 package gg.packetloss.grindstone.invite.db;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface PlayerInviteDatabase {
     InviteResult addInvite(UUID existingPlayer, UUID newPlayer);
     Optional<UUID> getInvitor(UUID newPlayer);
+    void markNewPlayerJoined(UUID newPlayer);
+    List<Integer> getInvitesByStatus(UUID existingPlayer, InviteStatus status);
+    void setInviteStatus(List<Integer> inviteIDs, InviteStatus newStatus);
 }
