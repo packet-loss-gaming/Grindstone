@@ -282,22 +282,24 @@ public class PlayerInviteComponent extends BukkitComponent implements Listener {
             (ignored) -> {}
         ).thenApplyFailable(
             (inviteIDs) -> {
+                if (inviteIDs.isEmpty()) {
+                    return TaskResult.of(null);
+                }
+
                 List<Integer> untocuhedInviteIDs = Lists.newArrayList(inviteIDs);
 
                 try {
-                    if (inviteIDs.size() > 0) {
-                        Player player = Bukkit.getPlayer(currentPlayer);
+                    Player player = Bukkit.getPlayer(currentPlayer);
 
-                        if (player != null && !playerState.hasTempKind(player) && !admin.isAdmin(player)) {
-                            for (Integer inviteID : inviteIDs) {
-                                GeneralPlayerUtil.giveItemToPlayer(player, pickRandomReward());
-                                ChatUtil.sendNotice(player, "Thank you for your referral!");
+                    if (player != null && !playerState.hasTempKind(player) && !admin.isAdmin(player)) {
+                        for (Integer inviteID : inviteIDs) {
+                            GeneralPlayerUtil.giveItemToPlayer(player, pickRandomReward());
+                            ChatUtil.sendNotice(player, "Thank you for your referral!");
 
-                                // The reward has been handed out, even if we error, do not reset this reward.
-                                untocuhedInviteIDs.remove(inviteID);
-                            }
-                            return TaskResult.of(null);
+                            // The reward has been handed out, even if we error, do not reset this reward.
+                            untocuhedInviteIDs.remove(inviteID);
                         }
+                        return TaskResult.of(null);
                     }
                 } catch (Throwable ex) {
                     ex.printStackTrace();
