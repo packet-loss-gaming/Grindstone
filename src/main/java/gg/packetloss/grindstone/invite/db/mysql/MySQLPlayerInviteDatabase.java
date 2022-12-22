@@ -122,6 +122,10 @@ public class MySQLPlayerInviteDatabase implements PlayerInviteDatabase {
 
     @Override
     public void setInviteStatus(List<Integer> inviteIDs, InviteStatus newStatus) {
+        if (inviteIDs.isEmpty()) {
+            return;
+        }
+
         try (Connection connection = MySQLHandle.getConnection()) {
             String insertSQL = "UPDATE `player-invites` SET `player-invites`.`status` = ? " +
                 "WHERE `player-invites`.`id` IN (" + preparePlaceHolders(inviteIDs.size()) + ")";
