@@ -20,10 +20,14 @@ public enum SpawnEgg {
     BAT(EntityType.BAT, Material.BAT_SPAWN_EGG),
     CHICKEN(EntityType.CHICKEN, Material.CHICKEN_SPAWN_EGG),
     COW(EntityType.COW, Material.COW_SPAWN_EGG),
+    DOLPHIN(EntityType.DOLPHIN, Material.DOLPHIN_SPAWN_EGG),
+    FOX(EntityType.FOX, Material.FOX_SPAWN_EGG),
+    FROG(EntityType.FROG, Material.FROG_SPAWN_EGG),
     MUSHROOM_COW(EntityType.MUSHROOM_COW, Material.MOOSHROOM_SPAWN_EGG),
     OCELOT(EntityType.OCELOT, Material.OCELOT_SPAWN_EGG),
     PIG(EntityType.PIG, Material.PIG_SPAWN_EGG),
     SHEEP(EntityType.SHEEP, Material.SHEEP_SPAWN_EGG),
+    TURTLE(EntityType.TURTLE, Material.TURTLE_SPAWN_EGG),
 
     // NEUTRAL - 1
     WOLF(EntityType.WOLF, Material.WOLF_SPAWN_EGG),

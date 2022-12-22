@@ -173,11 +173,15 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
             SpawnEgg.BAT,
             SpawnEgg.CHICKEN,
             SpawnEgg.COW,
+            SpawnEgg.DOLPHIN,
+            SpawnEgg.FOX,
+            SpawnEgg.FROG,
             SpawnEgg.MUSHROOM_COW,
             SpawnEgg.OCELOT,
-            SpawnEgg.WOLF,
+            SpawnEgg.PIG,
             SpawnEgg.SHEEP,
-            SpawnEgg.PIG
+            SpawnEgg.TURTLE,
+            SpawnEgg.WOLF
         ),
         EggType.HALLOWEEN, List.of(
             SpawnEgg.ENDERMAN,
@@ -209,12 +213,8 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
 
     public void dropEggs(EggType eggType, Location location) {
         switch (eggType) {
-            case EASTER:
-                dropEasterEggs(location);
-                break;
-            case HALLOWEEN:
-                dropHalloweenEggs(location);
-                break;
+            case EASTER ->    dropEasterEggs(location);
+            case HALLOWEEN -> dropHalloweenEggs(location);
         }
     }
 
