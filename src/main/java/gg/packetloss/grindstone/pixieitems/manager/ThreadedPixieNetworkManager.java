@@ -596,49 +596,53 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
 
     @Override
     public void handleChunkLoad(Chunk chunk) {
-        PluginTaskExecutor.submitAsync(() -> {
-            Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).orElseThrow();
+        networkLoadingWorker.addTasks((consumer) -> {
+            consumer.accept(() -> {
+                Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).orElseThrow();
 
-            networkChunkRefCountLock.lock();
-            try {
-                List<Integer> networksToLoad = new ArrayList<>();
+                networkChunkRefCountLock.lock();
+                try {
+                    List<Integer> networksToLoad = new ArrayList<>();
 
-                for (Integer networkID : networksInChunk) {
-                    if (networkChunkRefCount.increment(networkID)) {
-                        networksToLoad.add(networkID);
+                    for (Integer networkID : networksInChunk) {
+                        if (networkChunkRefCount.increment(networkID)) {
+                            networksToLoad.add(networkID);
+                        }
                     }
-                }
 
-                if (!networksToLoad.isEmpty()) {
-                    loadNetworks(networksToLoad);
+                    if (!networksToLoad.isEmpty()) {
+                        loadNetworks(networksToLoad);
+                    }
+                } finally {
+                    networkChunkRefCountLock.unlock();
                 }
-            } finally {
-                networkChunkRefCountLock.unlock();
-            }
+            });
         });
     }
 
     @Override
     public void handleChunkUnload(Chunk chunk) {
-        PluginTaskExecutor.submitAsync(() -> {
-            Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).orElseThrow();
+        networkLoadingWorker.addTasks((consumer) -> {
+            consumer.accept(() -> {
+                Collection<Integer> networksInChunk = chestDatabase.getNetworksInChunk(chunk).orElseThrow();
 
-            networkChunkRefCountLock.lock();
-            try {
-                List<Integer> networksToUnload = new ArrayList<>();
+                networkChunkRefCountLock.lock();
+                try {
+                    List<Integer> networksToUnload = new ArrayList<>();
 
-                for (Integer networkID : networksInChunk) {
-                    if (networkChunkRefCount.decrement(networkID)) {
-                        networksToUnload.add(networkID);
+                    for (Integer networkID : networksInChunk) {
+                        if (networkChunkRefCount.decrement(networkID)) {
+                            networksToUnload.add(networkID);
+                        }
                     }
-                }
 
-                if (!networksToUnload.isEmpty()) {
-                    unloadNetworks(networksToUnload);
+                    if (!networksToUnload.isEmpty()) {
+                        unloadNetworks(networksToUnload);
+                    }
+                } finally {
+                    networkChunkRefCountLock.unlock();
                 }
-            } finally {
-                networkChunkRefCountLock.unlock();
-            }
+            });
         });
     }
 }
