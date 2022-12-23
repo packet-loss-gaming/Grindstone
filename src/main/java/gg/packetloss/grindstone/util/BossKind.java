@@ -10,5 +10,6 @@ public enum BossKind {
     SHNUGGLES_PRIME,
     PATIENT_X,
     FROSTBORN,
-    FREAKY_FOUR
+    FREAKY_FOUR,
+    BESSI
 }

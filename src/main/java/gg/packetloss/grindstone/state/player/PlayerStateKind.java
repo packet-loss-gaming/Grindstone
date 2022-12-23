@@ -16,6 +16,7 @@ public enum PlayerStateKind implements PlayerStateTypeConfig {
     ADMIN(new TogglePlayerStateTypeConfigImpl()),
     LEGIT(new SwapPlayerStateTypeConfigImpl()),
     FREAKY_FOUR(new BossSafeRespawnPlayerStateTypeConfigImpl()),
+    BESSI(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     SHNUGGLES_PRIME(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     GRAVE_YARD(new BossSafeRespawnPlayerStateTypeConfigImpl()),
     PATIENT_X(new BossSafeRespawnPlayerStateTypeConfigImpl()),
