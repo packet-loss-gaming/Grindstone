@@ -1166,7 +1166,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                     i--;
                     continue;
                 }
-                chestInv.setItem(target, pickRandomItem());
+                chestInv.setItem(target, getRandomLootItem());
             }
         }
     }
@@ -1181,7 +1181,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         resetRewardChest();
     }
 
-    private ItemStack pickRandomItem() {
+    public ItemStack getRandomLootItem() {
         if (ChanceUtil.getChance(5)) {
             return CustomItemCenter.build(CustomItems.BARBARIAN_BONE, ChanceUtil.getRandom(5));
         }

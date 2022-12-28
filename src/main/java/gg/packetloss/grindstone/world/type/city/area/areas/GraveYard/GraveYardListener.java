@@ -37,6 +37,7 @@ import gg.packetloss.grindstone.util.item.inventory.PlayerInventoryIterator;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
+import io.papermc.paper.event.entity.EntityPortalReadyEvent;
 import org.apache.commons.lang.Validate;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -55,7 +56,6 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
@@ -498,22 +498,31 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     public void onPlayerJoin(PlayerJoinEvent event) {
         final Player player = event.getPlayer();
         server.getScheduler().runTaskLater(inst, () -> {
-            if (parent.isHostileTempleArea(player.getLocation()) && !parent.admin.isAdmin(player)) {
-                player.teleport(parent.getRandomHeadstoneOrSpawn());
+            if (parent.isHostileTempleArea(player.getLocation()) && parent.isParticipant(player)) {
+                player.teleport(parent.getRandomHeadstoneOrSpawn(), TeleportCause.UNKNOWN);
                 ChatUtil.sendWarning(player, "You feel dazed and confused as you wake up near a head stone.");
             }
         }, 1);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPlayerPortal(PlayerPortalEvent event) {
-        if (parent.isHostileTempleArea(event.getFrom()) && event.getCause().equals(TeleportCause.NETHER_PORTAL)) {
+    @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+    public void onPlayerPortal(EntityPortalReadyEvent event) {
+        Entity entity = event.getEntity();
+
+        if (parent.isHostileTempleArea(entity.getLocation()) && event.getPortalType() == PortalType.NETHER) {
             event.setCancelled(true);
-            event.getPlayer().teleport(parent.getRandomHeadstoneOrSpawn(), TeleportCause.UNKNOWN);
+
+            if (entity instanceof Player player) {
+                player.teleport(parent.getRandomHeadstoneOrSpawn(), TeleportCause.UNKNOWN);
+                for (int i = ChanceUtil.getRandom(5); i > 0; --i) {
+                    GeneralPlayerUtil.giveItemToPlayer(player, parent.getRandomLootItem());
+                }
+                ChatUtil.sendNotice(player, "You find some extra loot on your way through the portal!");
+            }
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
         if (parent.isHostileTempleArea(event.getTo()) && !event.getCause().equals(TeleportCause.UNKNOWN)) {
             if (parent.contains(event.getFrom())) {
