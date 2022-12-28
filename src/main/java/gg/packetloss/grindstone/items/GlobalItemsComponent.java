@@ -213,11 +213,12 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         PermissionBindingTomeImpl tomeImpl = handle(new PermissionBindingTomeImpl());
         tomeImpl.addTome(CustomItems.TOME_OF_CURSED_SMELTING, "aurora.tome.cursedsmelting");
         tomeImpl.addTome(CustomItems.TOME_OF_THE_CLEANLY, "aurora.tome.cleanly");
-        tomeImpl.addTome(CustomItems.TOME_OF_SACRIFICE, "aurora.tome.sacrifice");
         tomeImpl.addTome(CustomItems.TOME_OF_DIVINITY, "aurora.tome.divinity");
-        tomeImpl.addTome(CustomItems.TOME_OF_THE_UNDEAD, "aurora.tome.undead");
         tomeImpl.addTome(CustomItems.TOME_OF_LEGENDS, "aurora.tome.legends");
         tomeImpl.addTome(CustomItems.TOME_OF_LIFE, "aurora.tome.life");
+        tomeImpl.addTome(CustomItems.TOME_OF_POISON, "aurora.tome.poison");
+        tomeImpl.addTome(CustomItems.TOME_OF_SACRIFICE, "aurora.tome.sacrifice");
+        tomeImpl.addTome(CustomItems.TOME_OF_THE_UNDEAD, "aurora.tome.undead");
     }
 
     private void registerGuildOaths() {
@@ -245,6 +246,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         handle(new PotionOfRestitutionImpl());
         handle(new RedFeatherImpl());
         handle(new SummationScrollImpl(SUMMATION_CONDENSER));
+        handle(new TomeOfPoisonImpl());
     }
 
     private void registerMigrations() {
