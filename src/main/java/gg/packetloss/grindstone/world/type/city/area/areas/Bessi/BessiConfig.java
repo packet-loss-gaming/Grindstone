@@ -34,6 +34,8 @@ public class BessiConfig extends ConfigurationBase {
     public int bessiFireballIntervalTicks= 10;
     @Setting("bessi.fireballs-fired")
     public int bessiFireballsFired = 10;
-    @Setting("bessi.attack-chance")
-    public int bessiAttackChance = 7;
+    @Setting("bessi.attack-delay.min")
+    public int bessiAttackDelayMin = 13000;
+    @Setting("bessi.attack-delay.max")
+    public int bessiAttackDelayMax = 17000;
 }

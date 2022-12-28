@@ -35,34 +35,37 @@ public class BessiListener extends AreaListener<Bessi> {
         }
     }
 
-    private static EDBEExtractor<Player, Ravager, Arrow> extractor = new EDBEExtractor<>(
+    private static final EDBEExtractor<Player, LivingEntity, Arrow> EXTRACTOR = new EDBEExtractor<>(
         Player.class,
-        Ravager.class,
+        LivingEntity.class,
         Arrow.class
     );
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageEvent(EntityDamageByEntityEvent event) {
         // If the parent doesn't contain the target, ignore.
         if (!parent.contains(event.getEntity())) {
             return;
         }
 
-        CombatantPair<Player, Ravager, Arrow> result = extractor.extractFrom(event);
+        CombatantPair<Player, LivingEntity, Arrow> result = EXTRACTOR.extractFrom(event);
         if (result == null) {
             return;
         }
 
         Player attacker = result.getAttacker();
-        if (!parent.isParticipant(attacker)) {
-            ChatUtil.sendNotice(attacker, "Hello there friend... I see you want to harm my cows too!");
+        if (parent.isInPeanutGallery(attacker) && parent.isBessi(result.getDefender())) {
+            ChatUtil.sendNotice(attacker, "COWARD!");
             attacker.teleport(parent.boss.getLocation());
             attacker.damage(100, parent.boss);
+        }
+        if (parent.isParticipant(attacker)) {
+            parent.playersThatAngerBessi.add(attacker.getUniqueId());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onCowKilled(EntityDeathEvent event) {
+    public void onEntityDeath(EntityDeathEvent event) {
         Entity entity = event.getEntity();
         if (!parent.contains(entity)) {
             return;
@@ -91,6 +94,7 @@ public class BessiListener extends AreaListener<Bessi> {
         if (parent.isParticipant(player, true)) {
             try {
                 parent.playerState.pushState(PlayerStateKind.BESSI, player);
+                parent.playersThatAngerBessi.remove(player.getUniqueId());
                 event.getDrops().clear();
                 event.setDroppedExp(0);
             } catch (ConflictingPlayerStateException | IOException e) {

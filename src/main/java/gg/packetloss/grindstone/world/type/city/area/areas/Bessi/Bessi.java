@@ -39,9 +39,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @ComponentInformation(friendlyName = "Bessi", desc = "The defender of the bovine")
 @Depend(components = {HighScoresComponent.class, ManagedWorldComponent.class, PlayerStateComponent.class},
@@ -59,6 +57,7 @@ public class Bessi extends AreaComponent<BessiConfig> {
     protected BossBar healthBar = Bukkit.createBossBar("Bessi", BarColor.PURPLE, BarStyle.SEGMENTED_6);
 
     protected Ravager boss = null;
+    protected long lastAttack = 0;
     private int numCowsSlaughter = 0;
 
     protected MassBossDropTable dropTable = new MassBossDropTable();
@@ -150,6 +149,7 @@ public class Bessi extends AreaComponent<BessiConfig> {
         boss = null;
 
         getContained(ArmorStand.class).forEach(Entity::remove);
+        playersThatAngerBessi.clear();
     }
 
     protected void markCowKilled() {
@@ -188,10 +188,16 @@ public class Bessi extends AreaComponent<BessiConfig> {
         dropTable.registerPlayerDrop(50, () -> CustomItemCenter.build(CustomItems.DIVINE_COMBAT_POTION));
     }
 
+    protected Set<UUID> playersThatAngerBessi = new HashSet<>();
+
+    public boolean isInPeanutGallery(Player player) {
+        int xPos = player.getLocation().getBlockY();
+        return xPos - 4 > FLOOR_LEVEL;
+    }
+
     @Override
     public boolean isParticipant(Player player) {
-        int xPos = player.getLocation().getBlockY();
-        if (xPos - 4 > FLOOR_LEVEL) {
+        if (isInPeanutGallery(player) && !playersThatAngerBessi.contains(player.getUniqueId())) {
             return false;
         }
 
@@ -253,6 +259,11 @@ public class Bessi extends AreaComponent<BessiConfig> {
     }
 
     private void runAttack() {
+        int delay = ChanceUtil.getRangedRandom(config.bessiAttackDelayMin, config.bessiAttackDelayMax);
+        if (System.currentTimeMillis() - lastAttack <= delay) {
+            return;
+        }
+
         Collection<Player> players = getContainedParticipants();
         Collection<Player> audiblePlayers = getAudiblePlayers();
 
@@ -266,8 +277,10 @@ public class Bessi extends AreaComponent<BessiConfig> {
                 for (int i = ChanceUtil.getRangedRandom(config.bessiAlliesSpawnedMin, config.bessiAlliesSpawnedMax);
                      i > 0; --i) {
                     for (Player player : players) {
-                        Location playerLoc = player.getLocation();
-                        playerLoc.getWorld().spawnEntity(playerLoc, EntityType.PILLAGER);
+                        Location enemyLoc = getRandomSpawnPoint();
+                        Monster monster = (Monster) enemyLoc.getWorld().spawnEntity(enemyLoc, EntityType.PILLAGER);
+                        EntityUtil.setFollowRange(monster, 150);
+                        monster.setTarget(player);
                     }
                 }
                 break;
@@ -393,6 +406,7 @@ public class Bessi extends AreaComponent<BessiConfig> {
                 }
                 break;
         }
+        lastAttack = System.currentTimeMillis();
     }
     
     @Override
@@ -421,8 +435,6 @@ public class Bessi extends AreaComponent<BessiConfig> {
             return;
         }
 
-        if (ChanceUtil.getChance(config.bessiAttackChance)) {
-            runAttack();
-        }
+        runAttack();
     }
 }
