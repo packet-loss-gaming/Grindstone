@@ -27,8 +27,8 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.player.effects.RiptideEffectHandle;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import gg.packetloss.grindstone.util.player.effects.RiptideEffectHandle;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
 import org.bukkit.ChatColor;
@@ -329,15 +329,21 @@ public class RogueListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageEventMonitor(EntityDamageEvent event) {
         Entity e = event.getEntity();
-        if (e instanceof Player) {
-            Player player = (Player) e;
+        if (e instanceof Player player) {
             Optional<RogueState> optState = getState(player);
             if (optState.isEmpty()) {
                 return;
             }
 
+            // If the player isn't currently using impact (which is ignored because it feels bad for this to clear
+            // hits), clear hits.
             RogueState state = optState.get();
+            if (state.isUsingImpact()) {
+                return;
+            }
+
             state.clearHits();
+            tryShowBerserkerBoost(player, state);
         }
     }
 
@@ -407,10 +413,6 @@ public class RogueListener implements Listener {
                             if (backstabbed) {
                                 ChatUtil.sendNotice(attacker, "Backstabbed!");
                             }
-
-                            if (state.getSettings().shouldShowBerserkerBuffs()) {
-                                ((Player) attacker).sendActionBar(ChatColor.RED + "Berserker Boost: +" + boostDamage);
-                            }
                         });
                     }
                 }
@@ -421,6 +423,13 @@ public class RogueListener implements Listener {
     private static final List<EntityDamageEvent.DamageCause> MELEE_HIT_CAUSES = List.of(
             EntityDamageEvent.DamageCause.ENTITY_ATTACK, EntityDamageEvent.DamageCause.ENTITY_SWEEP_ATTACK
     );
+
+    private void tryShowBerserkerBoost(Player player, RogueState state) {
+        if (state.getSettings().shouldShowBerserkerBuffs()) {
+            int hits = state.getUninterruptedHits();
+            player.sendActionBar(ChatColor.RED + "Berserker Boost: +" + hits);
+        }
+    }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDamageEntityMonitor(EntityDamageByEntityEvent event) {
@@ -443,11 +452,14 @@ public class RogueListener implements Listener {
                 RogueState state = optState.get();
                 if (state.hasPower(RoguePower.BERSERKER)) {
                     LivingEntity defender = result.getDefender();
+
                     if (EntityUtil.isHostileMobOrPlayer(defender)) {
                         state.hitEntity();
                     } else {
                         state.clearHits();
                     }
+
+                    tryShowBerserkerBoost((Player) attacker, state);
                 }
             }
         }
