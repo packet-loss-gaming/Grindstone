@@ -36,9 +36,9 @@ public class ScoreTypes {
     public static final ScoreType PATIENT_X_TEAM_KILLS = new BossKillCounterScoreType(22, true, BossKind.PATIENT_X);
     public static final ScoreType FROSTBORN_SOLO_KILLS = new BossKillCounterScoreType(23, true, BossKind.FROSTBORN);
     public static final ScoreType FROSTBORN_TEAM_KILLS = new BossKillCounterScoreType(24, true, BossKind.FROSTBORN);
-    public static final ScoreType BESSI_SOLO_KILLS = new BossKillCounterScoreType(25, true, BossKind.BESSI);
-    public static final ScoreType BESSI_TEAM_KILLS = new BossKillCounterScoreType(26, true, BossKind.BESSI);
     public static final ScoreType SKRIN = new CurrencyScoreType(25);
+    public static final ScoreType BESSI_TEAM_KILLS = new BossKillCounterScoreType(26, true, BossKind.BESSI);
+    public static final ScoreType BESSI_SOLO_KILLS = new BossKillCounterScoreType(27, true, BossKind.BESSI);
 
 
     // public static final ScoreType GOBLET_XXX = new ProxyScoreType(1XX'XXX);
