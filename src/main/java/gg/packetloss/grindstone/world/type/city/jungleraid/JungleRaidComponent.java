@@ -50,6 +50,8 @@ import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
+import gg.packetloss.grindstone.items.custom.CustomItemCenter;
+import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.spectator.SpectatorComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
@@ -188,7 +190,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         List<ItemStack> gear = new ArrayList<>();
         switch (combatClass) {
-            case MELEE: {
+            case KNIGHT: {
                 ItemStack enchantedSword = new ItemStack(Material.IRON_SWORD);
                 ItemMeta meta = enchantedSword.getItemMeta();
                 meta.addEnchant(Enchantment.FIRE_ASPECT, 2, true);
@@ -251,8 +253,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 gear.add(shield);
                 break;
             }
-            case BALANCED: {
-                ItemStack standardSword = new ItemStack(Material.IRON_SWORD);
+            case BANDIT: {
+                ItemStack standardSword = CustomItemCenter.build(CustomItems.IRON_SHORT_SWORD);
                 gear.add(standardSword);
 
                 ItemStack standardBow = new ItemStack(Material.BOW);

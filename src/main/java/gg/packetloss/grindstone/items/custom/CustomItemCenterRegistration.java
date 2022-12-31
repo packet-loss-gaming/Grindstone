@@ -824,6 +824,20 @@ public class CustomItemCenterRegistration {
         CustomItem blackPartyBox = new CustomItem(BLACK_PARTY_BOX, Material.BLACK_SHULKER_BOX);
         itemConsumer.accept(blackPartyBox);
 
+        // Vanilla Sword "Short Sword" Variants
+        CustomWeapon woodenShortSword = new CustomWeapon(WOODEN_SHORT_SWORD, Material.WOODEN_SWORD, 1, 4);
+        itemConsumer.accept(woodenShortSword);
+        CustomWeapon stoneShortSword = new CustomWeapon(STONE_SHORT_SWORD, Material.STONE_SWORD, 1, 4);
+        itemConsumer.accept(stoneShortSword);
+        CustomWeapon ironShortSword = new CustomWeapon(IRON_SHORT_SWORD, Material.IRON_SWORD, 1, 4);
+        itemConsumer.accept(ironShortSword);
+        CustomWeapon goldenShortSword = new CustomWeapon(GOLDEN_SHORT_SWORD, Material.GOLDEN_SWORD, 1, 4);
+        itemConsumer.accept(goldenShortSword);
+        CustomWeapon diamondShortSword = new CustomWeapon(DIAMOND_SHORT_SWORD, Material.DIAMOND_SWORD, 1, 4);
+        itemConsumer.accept(diamondShortSword);
+        CustomWeapon netheriteShortSword = new CustomWeapon(NETHERITE_SHORT_SWORD, Material.NETHERITE_SWORD, 1, 4);
+        itemConsumer.accept(netheriteShortSword);
+
         // Miscellaneous
         CustomItem executionerAxe = new CustomItem(EXECUTIONER_AXE, Material.GOLDEN_AXE);
         executionerAxe.addSource(ItemSource.APOCALYPSE);

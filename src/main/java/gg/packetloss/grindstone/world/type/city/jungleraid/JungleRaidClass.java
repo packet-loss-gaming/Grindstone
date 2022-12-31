@@ -7,9 +7,9 @@
 package gg.packetloss.grindstone.world.type.city.jungleraid;
 
 public enum JungleRaidClass {
-    BALANCED(128),
+    BANDIT(128),
     ARCHER(128),
-    MELEE(0),
+    KNIGHT(0),
     LUMBERJACK(0, false, true, false, 0),
     SNIPER(32, false, true, true, 0),
     ENGINEER(0, true, true, true, 348);

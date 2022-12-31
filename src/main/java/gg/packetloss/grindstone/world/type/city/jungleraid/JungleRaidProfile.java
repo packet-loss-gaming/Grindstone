@@ -7,7 +7,7 @@
 package gg.packetloss.grindstone.world.type.city.jungleraid;
 
 public class JungleRaidProfile {
-    private JungleRaidClass combatClass = JungleRaidClass.BALANCED;
+    private JungleRaidClass combatClass = JungleRaidClass.BANDIT;
     private JungleRaidTeam team = null;
     private int points = 0;
 

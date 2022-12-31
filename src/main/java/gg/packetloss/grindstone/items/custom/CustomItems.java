@@ -162,6 +162,14 @@ public enum CustomItems {
     RED_PARTY_BOX(ItemFamily.PARTY_BOX, "Red"),
     BLACK_PARTY_BOX(ItemFamily.PARTY_BOX, "Black"),
 
+    // Vanilla Sword "Short Sword" Variants
+    WOODEN_SHORT_SWORD(ChatColor.WHITE, "Wooden Short Sword"),
+    STONE_SHORT_SWORD(ChatColor.WHITE, "Stone Short Sword"),
+    IRON_SHORT_SWORD(ChatColor.WHITE, "Iron Short Sword"),
+    GOLDEN_SHORT_SWORD(ChatColor.WHITE, "Golden Short Sword"),
+    DIAMOND_SHORT_SWORD(ChatColor.WHITE, "Diamond Short Sword"),
+    NETHERITE_SHORT_SWORD(ChatColor.WHITE, "Netherite Short Sword"),
+
     // Miscellaneous
     EXECUTIONER_AXE(ChatColor.GOLD, "Executioner's Axe"),
     MAD_MILK(ChatColor.DARK_AQUA, "Mad Milk"),
