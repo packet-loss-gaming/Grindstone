@@ -388,7 +388,13 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
         taskBuilder.setAction((times) -> {
-            SacrificialPitChecker checker = checkForPitAt(item.getLocation());
+            Location itemLoc = item.getLocation();
+
+            if (!LocationUtil.isChunkLoadedAt(itemLoc)) {
+                return true;
+            }
+
+            SacrificialPitChecker checker = checkForPitAt(itemLoc);
             if (checker.isValid()) {
                 return true;
             }
