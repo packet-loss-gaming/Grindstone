@@ -317,6 +317,10 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         }
     }
 
+    protected void cleanupEntitiesInRewardsRoom() {
+        getContained(rewards, Projectile.class, Item.class, ExperienceOrb.class, Zombie.class).forEach(Entity::remove);
+    }
+
     private void handleEmptyRewardsRoom() {
         if (rewardsRoomOccupiedTicks == 0) {
             return;
@@ -324,7 +328,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         rewardsRoomOccupiedTicks = 0;
 
-        getContained(rewards, Projectile.class, Item.class, ExperienceOrb.class, Zombie.class).forEach(Entity::remove);
+        cleanupEntitiesInRewardsRoom();
 
         resetPressurePlateLock();
         isPressurePlateLocked = !checkPressurePlateLock();
