@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.InputUtil;
 import com.sk89q.minecraft.util.commands.CommandException;
 import gg.packetloss.bukkittext.Text;
+import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -19,6 +20,7 @@ import org.bukkit.util.Vector;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 
 public class ChatUtil {
 
@@ -103,20 +105,30 @@ public class ChatUtil {
         sendAdminNotice(Text.of(objects));
     }
 
-    public static void sendStaggered(CommandSender sender, Iterable<Text> lines) {
-        int i = 0;
+    public static TaskFuture<Void> sendStaggered(CommandSender sender, Iterable<Text> lines) {
+        TaskFuture<Void> future = new TaskFuture<>();
 
-        for (Text line : lines) {
+        Iterator<Text> it = lines.iterator();
+        int i = 0;
+        while (it.hasNext()) {
+            Text line = it.next();
+
             if (i == 0) {
                 sender.sendMessage(line.build());
             } else {
+                boolean hasNext = it.hasNext();
                 CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     sender.sendMessage(line.build());
+                    if (!hasNext) {
+                        future.complete(null);
+                    }
                 }, i * 20 * 3);
             }
 
             ++i;
         }
+
+        return future;
     }
 
     public static void message(CommandSender sender, MessageType type, String message) {

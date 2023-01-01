@@ -389,10 +389,18 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
         player.teleport(spawnPoint, PlayerTeleportEvent.TeleportCause.UNKNOWN);
     }
 
+    private final Set<UUID> activeDialogSet = new HashSet<>();
+
     public void tryTeleportToRitualTomb(Player player) {
         ChatUtil.sendWarning(player, "You dare touch the sacred flame!");
 
         if (isRitualActive()) {
+            UUID playerID = player.getUniqueId();
+            if (activeDialogSet.contains(playerID)) {
+                return;
+            }
+
+            activeDialogSet.add(playerID);
             ChatUtil.sendStaggered(player, List.of(
                 Text.of(ChatColor.RED, "We're busy at the moment..."),
                 Text.of(ChatColor.RED, "Come back and try again later, then you'll pay!!!"),
@@ -402,7 +410,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
                 Text.of(ChatColor.RED, "Don't tell em about the cookies Carl!"),
                 Text.of(ChatColor.RED, "But we have..."),
                 Text.of(ChatColor.RED, "Don't listen to em, we have knives!!! Run!!! Hide!!!")
-            ));
+            )).thenFinally(() -> activeDialogSet.remove(playerID));
             return;
         }
 
