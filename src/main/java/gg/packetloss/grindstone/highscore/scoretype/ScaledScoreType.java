@@ -9,20 +9,20 @@ package gg.packetloss.grindstone.highscore.scoretype;
 import java.math.BigDecimal;
 
 public class ScaledScoreType extends BasicScoreType {
-    private final double scalingConstant;
+    private final BigDecimal scalingConstant;
 
     protected ScaledScoreType(int id, boolean requirements, UpdateMethod updateMethod, Order order, double scalingConstant) {
         super(id, requirements, updateMethod, order);
-        this.scalingConstant = scalingConstant;
+        this.scalingConstant = BigDecimal.valueOf(scalingConstant);
     }
 
-    public double getScalingConstant() {
+    public BigDecimal getScalingConstant() {
         return scalingConstant;
     }
 
     public String format(long score) {
         BigDecimal decimal = new BigDecimal(score);
-        decimal = decimal.multiply(new BigDecimal(scalingConstant));
+        decimal = decimal.multiply(scalingConstant);
         return format(decimal.toBigInteger());
     }
 }

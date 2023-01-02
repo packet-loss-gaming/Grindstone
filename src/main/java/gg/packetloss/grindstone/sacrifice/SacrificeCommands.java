@@ -14,6 +14,8 @@ import org.bukkit.inventory.ItemStack;
 import org.enginehub.piston.annotation.Command;
 import org.enginehub.piston.annotation.CommandContainer;
 
+import java.math.BigDecimal;
+
 @CommandContainer
 public class SacrificeCommands {
     private final SacrificeComponent component;
@@ -34,12 +36,12 @@ public class SacrificeCommands {
         }
 
         // Mask the value so it doesn't just show the market price and print it
-        int shownValue = (int) Math.round(value * ScoreTypes.SACRIFICED_VALUE.getScalingConstant());
-        int minShownValue = (int) (shownValue * component.getConfig().valueMinMultiplier);
-        int maxShownValue = (int) (shownValue * component.getConfig().valueMaxMultiplier);
+        BigDecimal shownValue = BigDecimal.valueOf(value).multiply(ScoreTypes.SACRIFICED_VALUE.getScalingConstant());
+        BigDecimal minShownValue = shownValue.multiply(new BigDecimal(component.getConfig().valueMinMultiplier));
+        BigDecimal maxShownValue = shownValue.multiply(new BigDecimal(component.getConfig().valueMaxMultiplier));
         ChatUtil.sendNotice(player, "This has a sacrificial value of: " +
-                ChatColor.WHITE + ChatUtil.WHOLE_NUMBER_FORMATTER.format(minShownValue) +
+                ChatColor.WHITE + ChatUtil.WHOLE_NUMBER_FORMATTER.format(minShownValue.toBigInteger()) +
                 ChatColor.YELLOW + " - " +
-                ChatColor.WHITE + ChatUtil.WHOLE_NUMBER_FORMATTER.format(maxShownValue));
+                ChatColor.WHITE + ChatUtil.WHOLE_NUMBER_FORMATTER.format(maxShownValue.toBigInteger()));
     }
 }
