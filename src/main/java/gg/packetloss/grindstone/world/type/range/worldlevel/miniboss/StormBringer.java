@@ -14,7 +14,6 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
-import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.range.worldlevel.*;
 import gg.packetloss.grindstone.world.type.range.worldlevel.demonicrune.DemonicRuneState;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.instruction.RangeWorldMinibossBasicDamageInstruction;
@@ -120,11 +119,7 @@ public class StormBringer implements RangeWorldMinibossSpawner {
                         // Simulate a lightning strike
                         target.getWorld().strikeLightningEffect(target);
                         for (Player p : target.getNearbyEntitiesByType(Player.class, 2, 4, 2)) {
-                            if (!GeneralPlayerUtil.hasDamageableGamemode(p)) {
-                                continue;
-                            }
-
-                            EntityUtil.forceDamage(toHit, strikeDamage);
+                            EntityUtil.forceDamage(p, strikeDamage);
                         }
                     }, (5L * (6 + i)));
                 }
