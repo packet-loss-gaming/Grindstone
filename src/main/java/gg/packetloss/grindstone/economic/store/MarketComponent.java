@@ -113,13 +113,8 @@ public class MarketComponent extends BukkitComponent {
 
         // Schedule an update task for every two hours
         server.getScheduler().runTaskTimerAsynchronously(
-          inst, (Runnable) this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
+            inst, (Runnable) this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
         );
-    }
-
-    @Override
-    public void reload() {
-        itemDatabase.load();
     }
 
     public static final String NOT_AVAILIBLE = "No item by that name is currently available!";

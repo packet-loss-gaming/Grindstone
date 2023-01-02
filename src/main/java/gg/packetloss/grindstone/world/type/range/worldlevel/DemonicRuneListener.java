@@ -16,6 +16,7 @@ import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import gg.packetloss.grindstone.world.type.range.worldlevel.demonicrune.DemonicRuneState;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -31,7 +32,6 @@ import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
@@ -40,93 +40,6 @@ class DemonicRuneListener implements Listener {
 
     public DemonicRuneListener(WorldLevelComponent parent) {
         this.parent = parent;
-    }
-
-    public static class DemonicRuneState {
-        private final int worldTier;
-        private final int monsterTier;
-        private final int combatTier;
-
-        private DemonicRuneState(int worldTier, int monsterTier, int combatTier) {
-            this.worldTier = worldTier;
-            this.monsterTier = monsterTier;
-            this.combatTier = combatTier;
-        }
-
-        private DemonicRuneState() {
-            this(-1, -1, -1);
-        }
-
-        public static DemonicRuneState fromMonsterKill(int worldTier, double monsterTypeModifier, double percentDamageDone) {
-            return new DemonicRuneState(
-                worldTier,
-                (int) (monsterTypeModifier * 100),
-                (int) (percentDamageDone * 100)
-            );
-        }
-
-        public int getWorldLevel() {
-            return worldTier;
-        }
-
-        public double getTypeModifier() {
-            return monsterTier / 100D;
-        }
-
-        public double getPercentDamageDone() {
-            return combatTier / 100D;
-        }
-    }
-
-    public static void setRuneState(ItemStack itemStack, DemonicRuneState runeState) {
-        List<Map.Entry<String, String>> worldTier = new ArrayList<>();
-        worldTier.add(new AbstractMap.SimpleEntry<>("World Tier", RomanNumeralUtil.toRoman(runeState.worldTier)));
-
-        List<Map.Entry<String, String>> monsterTier = new ArrayList<>();
-        monsterTier.add(new AbstractMap.SimpleEntry<>("Monster Tier", RomanNumeralUtil.toRoman(runeState.monsterTier)));
-
-        List<Map.Entry<String, String>> combatTier = new ArrayList<>();
-        combatTier.add(new AbstractMap.SimpleEntry<>("Combat Tier", RomanNumeralUtil.toRoman(runeState.combatTier)));
-
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.setLore(List.of(
-            ItemUtil.saveLoreKeyValues(worldTier),
-            ItemUtil.saveLoreKeyValues(monsterTier),
-            ItemUtil.saveLoreKeyValues(combatTier)
-        ));
-        itemStack.setItemMeta(itemMeta);
-    }
-
-    public static DemonicRuneState getRuneState(ItemStack itemStack) {
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        List<String> lore = itemMeta.getLore();
-        if (lore == null || lore.isEmpty()) {
-            return new DemonicRuneState();
-        }
-
-        List<Map.Entry<String, String>> worldTierValues = ItemUtil.loadLoreKeyValues(lore.get(0));
-        String worldTierStr = worldTierValues.get(0).getValue();
-        if (worldTierStr == null) {
-            return new DemonicRuneState();
-        }
-
-        List<Map.Entry<String, String>> monsterTierValues = ItemUtil.loadLoreKeyValues(lore.get(1));
-        String monsterTierStr = monsterTierValues.get(0).getValue();
-        if (monsterTierStr == null) {
-            return new DemonicRuneState();
-        }
-
-        List<Map.Entry<String, String>> combatTierValues = ItemUtil.loadLoreKeyValues(lore.get(2));
-        String combatTierStr = combatTierValues.get(0).getValue();
-        if (combatTierStr == null) {
-            return new DemonicRuneState();
-        }
-
-        int worldTier = RomanNumeralUtil.fromRoman(worldTierStr);
-        int monsterTier = RomanNumeralUtil.fromRoman(monsterTierStr);
-        int combatTier = RomanNumeralUtil.fromRoman(combatTierStr);
-
-        return new DemonicRuneState(worldTier, monsterTier, combatTier);
     }
 
     private class DemonicPortalEntry {
@@ -199,7 +112,7 @@ class DemonicRuneListener implements Listener {
 
             // Build the stack
             ItemStack demonicRuneStack = CustomItemCenter.build(CustomItems.DEMONIC_RUNE);
-            setRuneState(demonicRuneStack, demonicRune);
+            DemonicRuneState.makeItemFromRuneState(demonicRuneStack, demonicRune);
             demonicRuneStack.setAmount(numberOfRunes);
 
             // Clear the rune count so isEmpty() represents only the buffer.
@@ -334,7 +247,7 @@ class DemonicRuneListener implements Listener {
     private void giveItemsViaPortal(Player player, ItemStack demonicRuneStack) {
         DemonicPortal portal = getOrCreatePortal(player);
 
-        DemonicRuneState runeState = getRuneState(demonicRuneStack);
+        DemonicRuneState runeState = DemonicRuneState.getRuneStateFromItem(demonicRuneStack);
         portal.addEntry(new DemonicPortalEntry(player.getUniqueId(), runeState, demonicRuneStack.getAmount()));
     }
 

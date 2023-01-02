@@ -4,17 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.bosses.detail;
+package gg.packetloss.grindstone.world.type.range.worldlevel;
 
 import gg.packetloss.grindstone.util.BossBarProvider;
 import gg.packetloss.openboss.entity.EntityDetail;
 import org.bukkit.boss.BossBar;
 
-public class BossBarDetail implements EntityDetail, BossBarProvider {
-    private BossBar bossBar;
+public class RangeWorldMinibossDetail implements EntityDetail, BossBarProvider {
+    private final int level;
+    private final BossBar bossBar;
 
-    public BossBarDetail(BossBar bossBar) {
+    public RangeWorldMinibossDetail(int level, BossBar bossBar) {
+        this.level = level;
         this.bossBar = bossBar;
+    }
+
+    public int getLevel() {
+        return level;
     }
 
     @Override

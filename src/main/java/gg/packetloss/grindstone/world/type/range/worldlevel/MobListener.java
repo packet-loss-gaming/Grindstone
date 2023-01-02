@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.world.type.range.worldlevel;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
-import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
@@ -28,12 +27,12 @@ import java.util.Set;
 class MobListener implements Listener {
     private WorldLevelComponent parent;
 
-    private GenericRangedWorldMonster genericMonster;
+    private GenericRangeWorldMonster genericMonster;
 
     public MobListener(WorldLevelComponent parent) {
         this.parent = parent;
 
-        genericMonster = new GenericRangedWorldMonster(parent);
+        genericMonster = new GenericRangeWorldMonster(parent);
     }
 
     @EventHandler
@@ -147,7 +146,7 @@ class MobListener implements Listener {
             return;
         }
 
-        event.setDamage(event.getDamage() + ChanceUtil.getRandomNTimes(level, 2) - 1);
+        event.setDamage(WorldLevelComponent.scaleDamageForLevel(event.getDamage(), level));
     }
 
     private static EDBEExtractor<Player, LivingEntity, Projectile> DAMAGE_EXTRACTOR = new EDBEExtractor<>(

@@ -11,7 +11,6 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
 import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
 import gg.packetloss.grindstone.bosses.impl.BossBarRebindableBoss;
-import gg.packetloss.grindstone.bosses.instruction.HealthPrint;
 import gg.packetloss.grindstone.bosses.manager.apocalypse.instruction.ApocalypseDropTableInstruction;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -150,9 +149,6 @@ public class ZombieExecutioner {
                 return null;
             }
         });
-
-        List<DamagedInstruction<BossBarDetail>> damagedInstructions = zombieExecutioner.damagedInstructions;
-        damagedInstructions.add(new HealthPrint<>());
 
         List<PassiveInstruction<BossBarDetail>> passiveInstructions = zombieExecutioner.passiveInstructions;
         passiveInstructions.add(new PassiveInstruction<>() {

@@ -6,9 +6,8 @@
 
 package gg.packetloss.grindstone.bosses.impl;
 
-import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.bosses.BossBarControllerSync;
 import gg.packetloss.grindstone.bosses.detail.BossBarDetail;
-import gg.packetloss.grindstone.util.BossBarUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.openboss.bukkit.BukkitBossDeclaration;
 import gg.packetloss.openboss.bukkit.entity.BukkitBoss;
@@ -19,15 +18,11 @@ import gg.packetloss.openboss.instruction.InstructionDispatch;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Collection;
-
+@Deprecated(since = "this class is not abstract and not specific enough, promotes bad composition via inheritance")
 public class BossBarRebindableBoss<T extends Damageable> extends BukkitBossDeclaration<BossBarDetail> {
     private String boundName;
     private Class<T> clazz;
@@ -37,22 +32,7 @@ public class BossBarRebindableBoss<T extends Damageable> extends BukkitBossDecla
         this.clazz = clazz;
         this.boundName = boundName;
 
-        CommandBook.server().getScheduler().runTaskTimer(
-                CommandBook.inst(),
-                () -> {
-                    controlled.values().forEach(this::updateBossBarPlayers);
-                },
-                20 * 10,
-                20 * 2
-        );
-        CommandBook.server().getScheduler().runTaskTimer(
-                CommandBook.inst(),
-                () -> {
-                    controlled.values().forEach(this::updateBossBarProgress);
-                },
-                20 * 10,
-                5
-        );
+        new BossBarControllerSync<>(getControlled()).startWatching();
     }
 
     @Override
@@ -60,19 +40,6 @@ public class BossBarRebindableBoss<T extends Damageable> extends BukkitBossDecla
         super.silentUnbind(controllable);
 
         controllable.getDetail().getBossBar().removeAll();
-    }
-
-    private void updateBossBarPlayers(LocalControllable<BossBarDetail> controllable) {
-        Entity entity = BukkitUtil.getBukkitEntity(controllable.getLocalEntity());
-        BossBar bossBar = controllable.getDetail().getBossBar();
-        Collection<Player> players = entity.getLocation().getNearbyPlayers(25);
-        BossBarUtil.syncWithPlayers(bossBar, players);
-    }
-
-    private void updateBossBarProgress(LocalControllable<BossBarDetail> controllable) {
-        LivingEntity entity = (LivingEntity) BukkitUtil.getBukkitEntity(controllable.getLocalEntity());
-        BossBar bossBar = controllable.getDetail().getBossBar();
-        bossBar.setProgress(entity.getHealth() / entity.getMaxHealth());
     }
 
     private BossBarDetail createDefaultDetail() {

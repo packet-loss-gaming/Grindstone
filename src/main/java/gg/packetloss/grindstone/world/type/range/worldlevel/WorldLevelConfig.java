@@ -40,6 +40,18 @@ public class WorldLevelConfig extends ConfigurationBase {
     public int mobsSilverfishBaseChance = 250;
     @Setting("mobs.silverfish.initial-silverfish-chance")
     public int mobsSilverfishInitialSilverfishChance = 3;
+    @Setting("miniboss.promotion-cache")
+    public int minibossPromotionChance = 20;
+    @Setting("miniboss.check-frequency-ticks")
+    public int miniBossCheckFrequency = 20 * 60;
+    @Setting("miniboss.minimum-world-level")
+    public int miniBossMinimumWorldLevel = 10;
+    @Setting("miniboss.maximum-spawn-tries")
+    public int miniBossMaximumSpawnTries = 20;
+    @Setting("miniboss.bosses.storm-bringer.spawn-weight")
+    public int miniBossStormBringerSpawnWeight = 20;
+    @Setting("miniboss.bosses.storm-bringer.drop-table.type-modifier")
+    public int miniBossStormBringerDropTableTypeModifier = 10;
     @Setting("ores.per-level")
     public double oresPerLevel = 3;
     @Setting("ores.per-run-increment")

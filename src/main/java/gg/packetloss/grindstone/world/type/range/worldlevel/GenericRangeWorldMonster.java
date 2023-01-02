@@ -8,27 +8,28 @@ package gg.packetloss.grindstone.world.type.range.worldlevel;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.bosses.detail.GenericDetail;
+import gg.packetloss.grindstone.bosses.instruction.PerformanceDropTableUnbind;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
-import gg.packetloss.grindstone.util.dropttable.OSBLKillInfo;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
+import gg.packetloss.grindstone.world.type.range.worldlevel.demonicrune.DemonicRuneState;
 import gg.packetloss.openboss.bukkit.BukkitBossDeclaration;
 import gg.packetloss.openboss.bukkit.entity.BukkitBoss;
 import gg.packetloss.openboss.bukkit.util.BukkitUtil;
 import gg.packetloss.openboss.entity.LocalControllable;
 import gg.packetloss.openboss.entity.LocalEntity;
-import gg.packetloss.openboss.instruction.InstructionResult;
 import gg.packetloss.openboss.instruction.SimpleInstructionDispatch;
-import gg.packetloss.openboss.instruction.UnbindInstruction;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Mob;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import static gg.packetloss.grindstone.world.type.range.worldlevel.DemonicRuneListener.DemonicRuneState.fromMonsterKill;
+import static gg.packetloss.grindstone.world.type.range.worldlevel.demonicrune.DemonicRuneState.fromMonsterKill;
 
-public class GenericRangedWorldMonster {
+public class GenericRangeWorldMonster {
     private static class GenericMonsterHandler extends BukkitBossDeclaration<GenericDetail> {
         private final WorldLevelComponent worldLevelComponent;
 
@@ -59,7 +60,7 @@ public class GenericRangedWorldMonster {
     private final WorldLevelComponent worldLevelComponent;
     private final GenericMonsterHandler genericEntity;
 
-    public GenericRangedWorldMonster(WorldLevelComponent worldLevelComponent) {
+    public GenericRangeWorldMonster(WorldLevelComponent worldLevelComponent) {
         this.worldLevelComponent = worldLevelComponent;
         this.genericEntity = new GenericMonsterHandler(worldLevelComponent);
 
@@ -108,22 +109,14 @@ public class GenericRangedWorldMonster {
                 }
 
                 ItemStack demonicRune = CustomItemCenter.build(CustomItems.DEMONIC_RUNE);
-                DemonicRuneListener.setRuneState(demonicRune, fromMonsterKill(level, typeModifier, percentDamageDone));
+                DemonicRuneState.makeItemFromRuneState(demonicRune, fromMonsterKill(level, typeModifier, percentDamageDone));
                 consumer.accept(demonicRune);
             }
         );
     }
 
     private void setupGenericRangedWorldMob() {
-        genericEntity.unbindInstructions.add(new UnbindInstruction<GenericDetail>() {
-            @Override
-            public InstructionResult<GenericDetail, UnbindInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable) {
-                LivingEntity boss = (LivingEntity) BukkitUtil.getBukkitEntity(controllable);
-                new BoundDropSpawner(boss::getLocation).provide(dropTable, new OSBLKillInfo(controllable));
-
-                return null;
-            }
-        });
+        genericEntity.unbindInstructions.add(new PerformanceDropTableUnbind<>(dropTable));
     }
 
     public void bind(Mob entity) {

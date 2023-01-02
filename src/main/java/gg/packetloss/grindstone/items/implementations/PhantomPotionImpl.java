@@ -11,13 +11,13 @@ import gg.packetloss.grindstone.events.graveyard.PlayerDisturbGraveEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EntityTargetUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -87,7 +87,7 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
             UUID playerID = player.getUniqueId();
 
             // If the player attacks something, remove the AI protection
-            if (event.getReason().equals(EntityTargetEvent.TargetReason.TARGET_ATTACKED_OWNER)) {
+            if (EntityTargetUtil.isRetaliatoryReason(event.getReason())) {
                 affectedPlayers.remove(playerID);
                 return;
             }

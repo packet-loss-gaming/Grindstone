@@ -21,24 +21,29 @@ import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.collection.FiniteCache;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.persistence.SingleFileFilesystemStateHelper;
+import gg.packetloss.grindstone.util.probability.WeightedPicker;
 import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.type.range.worldlevel.db.PlayerWorldLevelDatabase;
 import gg.packetloss.grindstone.world.type.range.worldlevel.db.mysql.MySQLPlayerWorldLevelDatabase;
+import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.StormBringer;
 import org.apache.commons.lang.Validate;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -63,6 +68,9 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
 
     private DemonicRuneListener demonicRunes;
     private WorldLevelConfig config;
+    private BukkitTask minibossCheckTask;
+    private RangeWorldMinibossTargetWatcher minibossTargetWatcher;
+
 
     protected int sourceDamageLevel = 0;
 
@@ -95,14 +103,18 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
             0,
             20 * 5
         );
+        CommandBook.registerEvents(minibossTargetWatcher = new RangeWorldMinibossTargetWatcher(this));
+        configureMiniBosses();
     }
 
     @Override
     public void reload() {
+        super.reload();
         configure(config);
+        configureMiniBosses();
     }
 
-    protected WorldLevelConfig getConfig() {
+    public WorldLevelConfig getConfig() {
         return config;
     }
 
@@ -120,6 +132,91 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
                 showTitleForLevel(player, newLevel);
             }
         }
+    }
+
+    protected RangeWorldMinibossTargetWatcher getMinibossTargetWatcher() {
+        return minibossTargetWatcher;
+    }
+
+    private WeightedPicker<RangeWorldMinibossSpawner> minibossSpawners;
+
+    private final StormBringer stormBringer = new StormBringer(this);
+
+    private void configureMiniBosses() {
+        if (minibossCheckTask != null) {
+            minibossCheckTask.cancel();
+        }
+
+        minibossCheckTask = CommandBook.server().getScheduler().runTaskTimer(
+            CommandBook.inst(),
+            this::tryPromoteMiniBosses,
+            0,
+            config.miniBossCheckFrequency
+        );
+
+        minibossSpawners = new WeightedPicker<>();
+
+        minibossSpawners.add(stormBringer, config.miniBossStormBringerSpawnWeight);
+    }
+
+    public void tryPromoteMiniBosses() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!isRangeWorld(player.getWorld())) {
+                continue;
+            }
+
+            int currLevel = getWorldLevel(player);
+            if (currLevel < config.miniBossMinimumWorldLevel) {
+                continue;
+            }
+
+            if (!ChanceUtil.getChance(config.minibossPromotionChance)) {
+                continue;
+            }
+
+            tryCreateMinibossNear(player, currLevel);
+        }
+    }
+
+
+    private void createMinibossAt(Location targetLoc, Player target, int worldLevel) {
+        RangeWorldMinibossSpawner bossSpawner = minibossSpawners.pick();
+        bossSpawner.spawnBoss(targetLoc, target, worldLevel);
+    }
+
+    private boolean isValidMinibossSpawnLocation(Player targetPLayer, Location location) {
+        if (!LocationUtil.isChunkLoadedAt(location)) {
+            return false;
+        }
+
+        Block locBlock = location.getBlock();
+        if (locBlock.getLightLevel() >= 8) {
+            return false;
+        }
+
+        if (targetPLayer.hasLineOfSight(location)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void tryCreateMinibossNear(Player player, int worldLevel) {
+        Location targetLoc;
+        int runs = 0;
+        do {
+            targetLoc = LocationUtil.findRandomLoc(player.getLocation(), 50, true);
+            if (!isValidMinibossSpawnLocation(player, targetLoc)) {
+                targetLoc = null;
+            }
+            ++runs;
+        } while (targetLoc == null && runs <= config.miniBossMaximumSpawnTries);
+
+        if (targetLoc == null) {
+            return;
+        }
+
+        createMinibossAt(targetLoc, player, worldLevel);
     }
 
     @Override
@@ -280,5 +377,9 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
 
     protected boolean hasScaledHealth(Entity entity) {
         return EntityUtil.isHostileMob(entity) && entity.getCustomName() == null && isRangeWorld(entity.getWorld());
+    }
+
+    public static double scaleDamageForLevel(double baseDamage, int level) {
+        return baseDamage + ChanceUtil.getRandomNTimes(level, 2) - 1;
     }
 }

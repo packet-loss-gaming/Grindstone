@@ -16,6 +16,7 @@ import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static gg.packetloss.grindstone.events.EntityHealthInContextEvent.HealthKind.CURRENT;
@@ -61,9 +62,22 @@ public class EntityUtil {
         return event.getValue();
     }
 
-    public static boolean nameMatches(Entity entity, String name) {
+    public static Optional<String> getCustomName(Entity entity) {
         String customName = entity.getCustomName();
-        return customName != null && customName.equals(name);
+        if (customName != null) {
+            return Optional.of(customName);
+        }
+        return Optional.empty();
+    }
+
+    public static boolean nameMatches(Entity entity, String name) {
+        Optional<String> optName = getCustomName(entity);
+        return optName.isPresent() && optName.get().equals(name);
+    }
+
+    public static boolean nameStartsWith(Entity entity, String name) {
+        Optional<String> optName = getCustomName(entity);
+        return optName.isPresent() && optName.get().startsWith(name);
     }
 
     public static void heal(Entity entity, double amt) {

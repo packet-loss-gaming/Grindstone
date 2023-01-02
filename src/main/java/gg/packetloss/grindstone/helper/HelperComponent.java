@@ -51,6 +51,7 @@ public class HelperComponent extends BukkitComponent implements Listener {
 
     @Override
     public void reload() {
+        super.reload();
         configureResponses();
     }
 
