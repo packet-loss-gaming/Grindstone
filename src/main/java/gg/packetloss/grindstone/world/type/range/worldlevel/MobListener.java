@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.world.type.range.worldlevel;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
+import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
@@ -22,6 +23,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 class MobListener implements Listener {
@@ -125,6 +127,21 @@ class MobListener implements Listener {
 
             if (onPlayerDamaged((EntityDamageByEntityEvent) event)) {
                 return;
+            }
+        }
+
+        // Modify plugin made explosions relating to a player to have the correct damage values.
+        if (event.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION) {
+            Optional<Player> optExplosionCreator = ExplosionStateFactory.getExplosionCreator();
+            if (optExplosionCreator.isPresent()) {
+                Player player = optExplosionCreator.get();
+                int level = parent.getWorldLevel(player);
+
+                if (parent.hasScaledHealth(entity)) {
+                    parent.sourceDamageLevel = level;
+                    event.setDamage(parent.scaleHealth(event.getDamage(), level, 100));
+                    return;
+                }
             }
         }
 
