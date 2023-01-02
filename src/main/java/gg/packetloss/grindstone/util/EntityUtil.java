@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.util;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import org.apache.commons.lang.Validate;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
@@ -81,6 +82,7 @@ public class EntityUtil {
     }
 
     public static void heal(Entity entity, double amt) {
+        Validate.isTrue(!(amt < 0));
         if (entity == null || !entity.isValid() || !(entity instanceof LivingEntity)) return;
         double cur = ((LivingEntity) entity).getHealth();
         double max = ((LivingEntity) entity).getMaxHealth();
@@ -102,7 +104,8 @@ public class EntityUtil {
     }
 
     private static void forceDamageNow(Entity entity, double amt) {
-        // Check for validity
+        Validate.isTrue(!(amt < 0));
+        // Check for validity[
         if (entity == null || !entity.isValid()) {
             return;
         }
@@ -153,6 +156,29 @@ public class EntityUtil {
             return;
         }
         forceDamage(entity, amt);
+    }
+
+    public static void forceDecreaseHealthTo(LivingEntity entity, double newHealth) {
+        double removedHealth = entity.getHealth() - newHealth;
+        forceDamage(entity, removedHealth);
+    }
+
+    public static void forceDivideHealth(LivingEntity entity, int divisor) {
+        double newHealth = entity.getHealth() / divisor;
+        forceDecreaseHealthTo(entity, newHealth);
+    }
+
+    public static void forceIncreaseHealthTo(LivingEntity entity, double newHealth) {
+        double addedHealth = newHealth - entity.getHealth();
+        heal(entity, addedHealth);
+    }
+
+    public static void forceAdjustHealth(LivingEntity entity, double newHealth) {
+        if (newHealth > entity.getHealth()) {
+            forceIncreaseHealthTo(entity, newHealth);
+        } else {
+            forceDecreaseHealthTo(entity, newHealth);
+        }
     }
 
     public static boolean isHostileMob(Entity entity) {

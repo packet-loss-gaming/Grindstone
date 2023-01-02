@@ -18,6 +18,7 @@ import gg.packetloss.grindstone.state.block.BlockStateComponent;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
@@ -243,8 +244,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                             @Override
                             public boolean run(int times) {
                                 if (contains(aPlayer)) {
-                                    aPlayer.setHealth(aPlayer.getHealth() - 1);
-                                    aPlayer.playEffect(EntityEffect.HURT);
+                                    EntityUtil.forceDamage(aPlayer, 1);
                                     ChatUtil.sendWarning(aPlayer, "A fairy tears through your flesh!");
                                     return false;
                                 }

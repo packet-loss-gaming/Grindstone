@@ -327,7 +327,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                         player.teleport(getRandomDest());
                     } while (player.getLocation().distanceSquared(boss.getLocation()) <= 5 * 5);
                     if (boss.hasLineOfSight(player)) {
-                        player.setHealth(ChanceUtil.getRandom(player.getMaxHealth()));
+                        EntityUtil.forceAdjustHealth(player, ChanceUtil.getRandom(player.getMaxHealth()));
                         ChatUtil.sendWarning(player, "Don't worry, I have a medical degree...");
                         ChatUtil.sendWarning(player, "...or was that a certificate of insanity?");
                     }
@@ -337,10 +337,10 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
             case 2:
                 for (Player player : contained) {
                     final double old = player.getHealth();
-                    player.setHealth(3);
+                    EntityUtil.forceDecreaseHealthTo(player, 3);
                     server.getScheduler().runTaskLater(inst, () -> {
                         if (player.isValid() && !contains(player)) return;
-                        player.setHealth(old * .75);
+                        EntityUtil.forceAdjustHealth(player, old * .75);
                     }, 20 * 2);
                 }
                 attackDur = System.currentTimeMillis() + 3000;

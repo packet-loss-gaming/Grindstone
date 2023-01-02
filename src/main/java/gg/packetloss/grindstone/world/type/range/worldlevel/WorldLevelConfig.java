@@ -50,6 +50,8 @@ public class WorldLevelConfig extends ConfigurationBase {
     public int miniBossMaximumSpawnTries = 20;
     @Setting("miniboss.bosses.storm-bringer.spawn-weight")
     public int miniBossStormBringerSpawnWeight = 20;
+    @Setting("miniboss.bosses.storm-bringer.damage.lightning-strike")
+    public double miniBossStormBringerDamageLightningStrike = 4;
     @Setting("miniboss.bosses.storm-bringer.drop-table.type-modifier")
     public int miniBossStormBringerDropTableTypeModifier = 10;
     @Setting("ores.per-level")

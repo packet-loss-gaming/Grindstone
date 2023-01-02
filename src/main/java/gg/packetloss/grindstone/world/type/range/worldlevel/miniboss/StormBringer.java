@@ -11,6 +11,7 @@ import gg.packetloss.grindstone.bosses.instruction.PerformanceDropTableUnbind;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
@@ -113,6 +114,7 @@ public class StormBringer implements RangeWorldMinibossSpawner {
                 }
 
                 Location target = toHit.getLocation();
+                double strikeDamage = worldLevelComponent.getConfig().miniBossStormBringerDamageLightningStrike;
                 for (int i = controllable.getDetail().getLevel() * ChanceUtil.getRangedRandom(1, 10); i >= 0; --i) {
                     CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         // Simulate a lightning strike
@@ -122,7 +124,7 @@ public class StormBringer implements RangeWorldMinibossSpawner {
                                 continue;
                             }
 
-                            toHit.setHealth((toHit.getHealth() / 8));
+                            EntityUtil.forceDamage(toHit, strikeDamage);
                         }
                     }, (5L * (6 + i)));
                 }

@@ -225,7 +225,7 @@ public class MercilessZombie {
             @Override
             public InstructionResult<BossBarDetail, DamageInstruction<BossBarDetail>> process(LocalControllable<BossBarDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
-                ((LivingEntity) toHit).setHealth((int) (((LivingEntity) toHit).getHealth() / 4));
+                EntityUtil.forceDivideHealth((LivingEntity) toHit, 4);
                 return null;
             }
         });

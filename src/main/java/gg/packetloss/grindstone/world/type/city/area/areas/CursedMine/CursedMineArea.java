@@ -397,7 +397,7 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
         } else if (player.getFoodLevel() - 1 >= 0) {
             player.setFoodLevel(player.getFoodLevel() - 1);
         } else if (player.getHealth() - 1 >= 0) {
-            player.setHealth(player.getHealth() - 1);
+            EntityUtil.forceDamage(player, 1);
         }
     }
 
