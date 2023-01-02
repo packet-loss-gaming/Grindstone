@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.world.type.range.worldlevel.miniboss;
 
-import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.bosses.instruction.PerformanceDropTableUnbind;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -14,6 +13,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
+import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.range.worldlevel.*;
 import gg.packetloss.grindstone.world.type.range.worldlevel.demonicrune.DemonicRuneState;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.instruction.RangeWorldMinibossBasicDamageInstruction;
@@ -113,16 +113,29 @@ public class StormBringer implements RangeWorldMinibossSpawner {
                 }
 
                 Location target = toHit.getLocation();
-                double strikeDamage = worldLevelComponent.getConfig().miniBossStormBringerDamageLightningStrike;
-                for (int i = controllable.getDetail().getLevel() * ChanceUtil.getRangedRandom(1, 10); i >= 0; --i) {
-                    CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-                        // Simulate a lightning strike
-                        target.getWorld().strikeLightningEffect(target);
-                        for (Player p : target.getNearbyEntitiesByType(Player.class, 2, 4, 2)) {
-                            EntityUtil.forceDamage(p, strikeDamage);
-                        }
-                    }, (5L * (6 + i)));
-                }
+                WorldLevelConfig config = worldLevelComponent.getConfig();
+                double strikeDamage = config.miniBossStormBringerAttackLightningStrikeDamage;
+
+                TaskBuilder.Countdown strikeTask = TaskBuilder.countdown();
+
+                strikeTask.setDelay(config.miniBossStormBringerAttackLightningStrikeDelayTicks);
+                strikeTask.setInterval(config.miniBossStormBringerAttackLightningStrikeIntervalTicks);
+
+                strikeTask.setNumberOfRuns(ChanceUtil.getRangedRandom(
+                    config.miniBossStormBringerAttackLightningStrikeCountMin,
+                    config.miniBossStormBringerAttackLightningStrikeCountMax
+                ));
+
+                strikeTask.setAction((times) -> {
+                    target.getWorld().strikeLightningEffect(target);
+                    for (Player p : target.getNearbyEntitiesByType(Player.class, 2, 4, 2)) {
+                        EntityUtil.forceDamage(p, strikeDamage);
+                    }
+                    return true;
+                });
+
+                strikeTask.build();
+
                 return null;
             }
         });
