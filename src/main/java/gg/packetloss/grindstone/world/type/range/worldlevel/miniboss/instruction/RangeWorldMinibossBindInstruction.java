@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.instruction;
 
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.RomanNumeralUtil;
 import gg.packetloss.grindstone.world.type.range.worldlevel.RangeWorldMinibossDetail;
 import gg.packetloss.openboss.bukkit.util.BukkitUtil;
@@ -39,6 +40,8 @@ public class RangeWorldMinibossBindInstruction<T extends RangeWorldMinibossDetai
         double healthPerLevel = healthPerLevelSupplier.get();
         ((LivingEntity) anEntity).setMaxHealth(level * healthPerLevel);
         ((LivingEntity) anEntity).setHealth(level * healthPerLevel);
+
+        EntityUtil.setFollowRange((LivingEntity) anEntity, 150);
 
         return null;
     }
