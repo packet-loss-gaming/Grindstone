@@ -88,7 +88,7 @@ class SacrificialRegistry {
         if (SpawnEgg.fromMaterial(itemStack.getType()) != null) {
             return 12.5 * itemStack.getAmount();
         }
-        return lookupInstance.checkCurrentValue(itemStack).orElse(0d);
+        return lookupInstance.checkMaximumValue(itemStack).orElse(0d);
     }
 
     public double getValue(ItemStack itemStack) {
@@ -97,10 +97,16 @@ class SacrificialRegistry {
 
     private static final int MINIMUM_REMOVAL_VALUE = 9;
 
+    private int getValueChance(SacrificeInformation sacrificeInformation) {
+        int baseChance = (sacrificeInformation.hasSacrificeTome() ? 100 : 125);
+        baseChance -= sacrificeInformation.getModifierRoll();
+        return Math.max(1, baseChance);
+    }
+
     public SacrificeResult getCalculatedLoot(SacrificeInformation sacrificeInformation) {
         List<ItemStack> loot = new ArrayList<>();
 
-        int baseChance = (sacrificeInformation.hasSacrificeTome() ? 100 : 125) - sacrificeInformation.getModifierRoll();
+        int valuableChance = getValueChance(sacrificeInformation);
 
         int remainingItems = sacrificeInformation.getMaxItems();
         double remainingValue = sacrificeInformation.getValue();
@@ -110,7 +116,7 @@ class SacrificialRegistry {
         while (remainingValue > 0 && (remainingItems == -1 || remainingItems > 0)) {
             ItemStack itemStack;
 
-            if (ChanceUtil.getChance(Math.max(1, baseChance))) {
+            if (ChanceUtil.getChance(valuableChance)) {
                 itemStack = getValuableItem(sacrificeInformation);
             } else if (sacrificeInformation.hasCleanlyTome()) {
                 remainingValue -= MINIMUM_REMOVAL_VALUE;

@@ -36,14 +36,6 @@ public class MarketItemLookupInstance {
         return getItemDetails(stack).map(MarketItem::getValue).map((value) -> value * stack.getAmount());
     }
 
-    /**
-     * @param stack the item to check
-     * @return the value of the item in its current condition at an unadjusted rate
-     */
-    public Optional<Double> checkCurrentValue(ItemStack stack) {
-        return getItemDetails(stack).flatMap((item) -> item.getSellPriceForStack(stack));
-    }
-
     private Optional<MarketItem> getItemDetailsIfSellable(MarketItem marketItem) {
         if (!marketItem.isSellable()) {
             return Optional.empty();

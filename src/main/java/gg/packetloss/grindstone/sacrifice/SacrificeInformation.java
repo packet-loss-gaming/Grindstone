@@ -13,8 +13,7 @@ public class SacrificeInformation {
     private final boolean hasSacrificeTome;
     private final boolean hasCleanlyTome;
     private final int maxItems;
-    private final double baseValue;
-    private final double totalValueModifier;
+    private final double value;
 
     /**
      * This class is used to define a sacrifice based on a numerical value and quantity.
@@ -27,15 +26,7 @@ public class SacrificeInformation {
         this.hasSacrificeTome = sender.hasPermission("aurora.tome.sacrifice");
         this.hasCleanlyTome = sender.hasPermission("aurora.tome.cleanly");
         this.maxItems = maxItems;
-        this.baseValue = value;
-
-        this.totalValueModifier = calculateTotalValueModifier();
-    }
-
-    private double calculateTotalValueModifier() {
-         double randomizedBaseScale = ChanceUtil.getRangedRandom(.8, 1.2);
-         double lootBasedScale = ((int) (baseValue / 250000)) * .1;
-         return Math.max(.35, randomizedBaseScale - lootBasedScale);
+        this.value = value;
     }
 
     /**
@@ -61,7 +52,7 @@ public class SacrificeInformation {
     }
 
     public double getValue() {
-        return baseValue * totalValueModifier;
+        return value;
     }
 
     public int getCommonalityModifier() {
@@ -72,6 +63,6 @@ public class SacrificeInformation {
     }
 
     public int getModifierRoll() {
-        return ChanceUtil.getRandomNTimes((int) baseValue, 2) - 1;
+        return ChanceUtil.getRandomNTimes((int) value, 2) - 1;
     }
 }
