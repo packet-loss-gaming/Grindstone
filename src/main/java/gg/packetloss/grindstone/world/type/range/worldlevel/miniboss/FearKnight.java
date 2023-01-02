@@ -7,56 +7,43 @@
 package gg.packetloss.grindstone.world.type.range.worldlevel.miniboss;
 
 import gg.packetloss.grindstone.bosses.instruction.PerformanceDropTableUnbind;
+import gg.packetloss.grindstone.bosses.instruction.SpecialWeaponAttackInstruction;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.EntityUtil;
+import gg.packetloss.grindstone.items.implementations.FearSwordImpl;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
-import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.range.worldlevel.*;
 import gg.packetloss.grindstone.world.type.range.worldlevel.demonicrune.DemonicRuneState;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.instruction.RangeWorldMinibossBasicDamageInstruction;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.instruction.RangeWorldMinibossBindInstruction;
 import gg.packetloss.openboss.bukkit.entity.BukkitEntity;
-import gg.packetloss.openboss.bukkit.util.BukkitAttackDamage;
 import gg.packetloss.openboss.bukkit.util.BukkitUtil;
 import gg.packetloss.openboss.entity.LocalControllable;
-import gg.packetloss.openboss.entity.LocalEntity;
 import gg.packetloss.openboss.instruction.BindInstruction;
 import gg.packetloss.openboss.instruction.DamageInstruction;
 import gg.packetloss.openboss.instruction.InstructionResult;
 import gg.packetloss.openboss.instruction.UnbindInstruction;
-import gg.packetloss.openboss.util.AttackDamage;
 import org.bukkit.Location;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Skeleton;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.entity.Zombie;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 
-public class StormBringer implements RangeWorldMinibossSpawner {
+public class FearKnight implements RangeWorldMinibossSpawner {
     private final WorldLevelComponent worldLevelComponent;
 
-    private static final String BOUND_NAME = "Storm Bringer";
+    private static final String BOUND_NAME = "Fear Knight";
     private final PerformanceDropTable dropTable = new PerformanceDropTable();
-    private final RangeWorldMinibossDeclaration<Skeleton> miniBoss;
+    private final RangeWorldMinibossDeclaration<Zombie> miniBoss;
 
-    public StormBringer(WorldLevelComponent worldLevelComponent) {
+    public FearKnight(WorldLevelComponent worldLevelComponent) {
         this.worldLevelComponent = worldLevelComponent;
-        miniBoss = new RangeWorldMinibossDeclaration<>(worldLevelComponent, BOUND_NAME, Skeleton.class);
+        miniBoss = new RangeWorldMinibossDeclaration<>(worldLevelComponent, BOUND_NAME, Zombie.class);
         setupDropTable();
         setupBoss();
-    }
-
-    private EntityDamageEvent getEvent(AttackDamage damage) {
-        if (damage instanceof BukkitAttackDamage) {
-            return ((BukkitAttackDamage) damage).getBukkitEvent();
-        }
-        return null;
     }
 
     private WorldLevelConfig getConfig() {
@@ -81,7 +68,7 @@ public class StormBringer implements RangeWorldMinibossSpawner {
                     demonicRune,
                     DemonicRuneState.fromMonsterKill(
                         worldLevel,
-                        getConfig().miniBossStormBringerDropTableTypeModifier,
+                        getConfig().miniBossFearKnightDropTableTypeModifier,
                         percentDamageDone
                     )
                 );
@@ -93,58 +80,44 @@ public class StormBringer implements RangeWorldMinibossSpawner {
     private void setupBoss() {
         List<BindInstruction<RangeWorldMinibossDetail>> bindInstructions = miniBoss.bindInstructions;
         bindInstructions.add(new RangeWorldMinibossBindInstruction<>(BOUND_NAME, () -> 20D * 30));
+        bindInstructions.add(new BindInstruction<>() {
+            @Override
+            public InstructionResult<RangeWorldMinibossDetail, BindInstruction<RangeWorldMinibossDetail>> process(LocalControllable<RangeWorldMinibossDetail> controllable) {
+                Zombie anEntity = (Zombie) BukkitUtil.getBukkitEntity(controllable);
+
+                EntityEquipment equipment = anEntity.getEquipment();
+                equipment.setHelmet(CustomItemCenter.build(CustomItems.GOD_HELMET));
+                equipment.setHelmetDropChance(.25F);
+                equipment.setChestplate(CustomItemCenter.build(CustomItems.GOD_CHESTPLATE));
+                equipment.setChestplateDropChance(.25F);
+                equipment.setLeggings(CustomItemCenter.build(CustomItems.GOD_LEGGINGS));
+                equipment.setLeggingsDropChance(.25F);
+                equipment.setBoots(CustomItemCenter.build(CustomItems.GOD_BOOTS));
+                equipment.setBootsDropChance(.25F);
+
+                equipment.setItemInMainHand(CustomItemCenter.build(CustomItems.FEAR_SWORD));
+                equipment.setItemInMainHandDropChance(.001F);
+
+                return null;
+            }
+        });
 
         List<UnbindInstruction<RangeWorldMinibossDetail>> unbindInstructions = miniBoss.unbindInstructions;
         unbindInstructions.add(new PerformanceDropTableUnbind<>(dropTable));
 
         List<DamageInstruction<RangeWorldMinibossDetail>> damageInstructions = miniBoss.damageInstructions;
         damageInstructions.add(new RangeWorldMinibossBasicDamageInstruction<>());
-        damageInstructions.add(new DamageInstruction<>() {
-            @Override
-            public InstructionResult<RangeWorldMinibossDetail, DamageInstruction<RangeWorldMinibossDetail>> process(LocalControllable<RangeWorldMinibossDetail> controllable, LocalEntity entity, AttackDamage attackDamage) {
-                Entity eToHit = BukkitUtil.getBukkitEntity(entity);
-                if (!(eToHit instanceof LivingEntity toHit)) {
-                    return null;
-                }
-
-                EntityDamageEvent event = getEvent(attackDamage);
-                if (event.getCause() != EntityDamageEvent.DamageCause.PROJECTILE) {
-                    return null;
-                }
-
-                Location target = toHit.getLocation();
-                WorldLevelConfig config = worldLevelComponent.getConfig();
-                double strikeDamage = config.miniBossStormBringerAttackLightningStrikeDamage;
-
-                TaskBuilder.Countdown strikeTask = TaskBuilder.countdown();
-
-                strikeTask.setDelay(config.miniBossStormBringerAttackLightningStrikeDelayTicks);
-                strikeTask.setInterval(config.miniBossStormBringerAttackLightningStrikeIntervalTicks);
-
-                strikeTask.setNumberOfRuns(ChanceUtil.getRangedRandom(
-                    config.miniBossStormBringerAttackLightningStrikeCountMin,
-                    config.miniBossStormBringerAttackLightningStrikeCountMax
-                ));
-
-                strikeTask.setAction((times) -> {
-                    target.getWorld().strikeLightningEffect(target);
-                    for (Player p : target.getNearbyEntitiesByType(Player.class, 2, 4, 2)) {
-                        EntityUtil.forceDamage(p, strikeDamage);
-                    }
-                    return true;
-                });
-
-                strikeTask.build();
-
-                return null;
-            }
-        });
+        damageInstructions.add(new SpecialWeaponAttackInstruction<>(
+            new FearSwordImpl(),
+            CustomItemCenter.build(CustomItems.FEAR_SWORD)
+        ));
     }
 
     @Override
     public void spawnBoss(Location spawnLoc, Player target, int worldLevel) {
-        Skeleton entity = spawnLoc.getWorld().spawn(spawnLoc, Skeleton.class);
+        Zombie entity = spawnLoc.getWorld().spawn(spawnLoc, Zombie.class);
         miniBoss.bind(entity, worldLevel);
         entity.setTarget(target);
     }
 }
+

@@ -48,6 +48,14 @@ public class WorldLevelConfig extends ConfigurationBase {
     public int miniBossMinimumWorldLevel = 10;
     @Setting("miniboss.maximum-spawn-tries")
     public int miniBossMaximumSpawnTries = 20;
+    @Setting("miniboss.bosses.fangz.spawn-weight")
+    public int miniBossFangzSpawnWeight = 20;
+    @Setting("miniboss.bosses.fangz.drop-table.type-modifier")
+    public int miniBossFangzDropTableTypeModifier = 10;
+    @Setting("miniboss.bosses.fear-knight.spawn-weight")
+    public int miniBossFearKnightSpawnWeight = 20;
+    @Setting("miniboss.bosses.fear-knight.drop-table.type-modifier")
+    public int miniBossFearKnightDropTableTypeModifier = 10;
     @Setting("miniboss.bosses.storm-bringer.spawn-weight")
     public int miniBossStormBringerSpawnWeight = 20;
     @Setting("miniboss.bosses.storm-bringer.attack.lightning-strike.damage")

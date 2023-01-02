@@ -9,17 +9,14 @@ package gg.packetloss.grindstone.world.type.range.worldlevel.miniboss;
 import gg.packetloss.grindstone.bosses.instruction.PerformanceDropTableUnbind;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
-import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.dropttable.PerformanceDropTable;
 import gg.packetloss.grindstone.util.dropttable.PerformanceKillInfo;
-import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.range.worldlevel.*;
 import gg.packetloss.grindstone.world.type.range.worldlevel.demonicrune.DemonicRuneState;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.instruction.RangeWorldMinibossBasicDamageInstruction;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.instruction.RangeWorldMinibossBindInstruction;
 import gg.packetloss.openboss.bukkit.entity.BukkitEntity;
-import gg.packetloss.openboss.bukkit.util.BukkitAttackDamage;
 import gg.packetloss.openboss.bukkit.util.BukkitUtil;
 import gg.packetloss.openboss.entity.LocalControllable;
 import gg.packetloss.openboss.entity.LocalEntity;
@@ -32,31 +29,25 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Skeleton;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.entity.Spider;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
 
-public class StormBringer implements RangeWorldMinibossSpawner {
+public class Fangz implements RangeWorldMinibossSpawner {
     private final WorldLevelComponent worldLevelComponent;
 
-    private static final String BOUND_NAME = "Storm Bringer";
+    private static final String BOUND_NAME = "Fangz";
     private final PerformanceDropTable dropTable = new PerformanceDropTable();
-    private final RangeWorldMinibossDeclaration<Skeleton> miniBoss;
+    private final RangeWorldMinibossDeclaration<Spider> miniBoss;
 
-    public StormBringer(WorldLevelComponent worldLevelComponent) {
+    public Fangz(WorldLevelComponent worldLevelComponent) {
         this.worldLevelComponent = worldLevelComponent;
-        miniBoss = new RangeWorldMinibossDeclaration<>(worldLevelComponent, BOUND_NAME, Skeleton.class);
+        miniBoss = new RangeWorldMinibossDeclaration<>(worldLevelComponent, BOUND_NAME, Spider.class);
         setupDropTable();
         setupBoss();
-    }
-
-    private EntityDamageEvent getEvent(AttackDamage damage) {
-        if (damage instanceof BukkitAttackDamage) {
-            return ((BukkitAttackDamage) damage).getBukkitEvent();
-        }
-        return null;
     }
 
     private WorldLevelConfig getConfig() {
@@ -81,7 +72,7 @@ public class StormBringer implements RangeWorldMinibossSpawner {
                     demonicRune,
                     DemonicRuneState.fromMonsterKill(
                         worldLevel,
-                        getConfig().miniBossStormBringerDropTableTypeModifier,
+                        getConfig().miniBossFangzDropTableTypeModifier,
                         percentDamageDone
                     )
                 );
@@ -92,50 +83,34 @@ public class StormBringer implements RangeWorldMinibossSpawner {
 
     private void setupBoss() {
         List<BindInstruction<RangeWorldMinibossDetail>> bindInstructions = miniBoss.bindInstructions;
-        bindInstructions.add(new RangeWorldMinibossBindInstruction<>(BOUND_NAME, () -> 20D * 30));
+        bindInstructions.add(new RangeWorldMinibossBindInstruction<>(BOUND_NAME, () -> 20D * 50));
 
         List<UnbindInstruction<RangeWorldMinibossDetail>> unbindInstructions = miniBoss.unbindInstructions;
         unbindInstructions.add(new PerformanceDropTableUnbind<>(dropTable));
+        unbindInstructions.add(new UnbindInstruction<>() {
+            @Override
+            public InstructionResult<RangeWorldMinibossDetail, UnbindInstruction<RangeWorldMinibossDetail>> process(LocalControllable<RangeWorldMinibossDetail> controllable) {
+                Entity boss = BukkitUtil.getBukkitEntity(controllable);
+                for (Entity aEntity : boss.getNearbyEntities(7, 4, 7)) {
+                    if (!(aEntity instanceof LivingEntity)) continue;
+                    ((LivingEntity) aEntity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 30, 1));
+                    ((LivingEntity) aEntity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 30, 1));
+                }
+                return null;
+            }
+        });
 
         List<DamageInstruction<RangeWorldMinibossDetail>> damageInstructions = miniBoss.damageInstructions;
         damageInstructions.add(new RangeWorldMinibossBasicDamageInstruction<>());
         damageInstructions.add(new DamageInstruction<>() {
             @Override
             public InstructionResult<RangeWorldMinibossDetail, DamageInstruction<RangeWorldMinibossDetail>> process(LocalControllable<RangeWorldMinibossDetail> controllable, LocalEntity entity, AttackDamage attackDamage) {
-                Entity eToHit = BukkitUtil.getBukkitEntity(entity);
-                if (!(eToHit instanceof LivingEntity toHit)) {
-                    return null;
-                }
+                LivingEntity boss = (LivingEntity) BukkitUtil.getBukkitEntity(controllable);
+                EntityUtil.heal(boss, attackDamage.getDamage());
 
-                EntityDamageEvent event = getEvent(attackDamage);
-                if (event.getCause() != EntityDamageEvent.DamageCause.PROJECTILE) {
-                    return null;
-                }
-
-                Location target = toHit.getLocation();
-                WorldLevelConfig config = worldLevelComponent.getConfig();
-                double strikeDamage = config.miniBossStormBringerAttackLightningStrikeDamage;
-
-                TaskBuilder.Countdown strikeTask = TaskBuilder.countdown();
-
-                strikeTask.setDelay(config.miniBossStormBringerAttackLightningStrikeDelayTicks);
-                strikeTask.setInterval(config.miniBossStormBringerAttackLightningStrikeIntervalTicks);
-
-                strikeTask.setNumberOfRuns(ChanceUtil.getRangedRandom(
-                    config.miniBossStormBringerAttackLightningStrikeCountMin,
-                    config.miniBossStormBringerAttackLightningStrikeCountMax
-                ));
-
-                strikeTask.setAction((times) -> {
-                    target.getWorld().strikeLightningEffect(target);
-                    for (Player p : target.getNearbyEntitiesByType(Player.class, 2, 4, 2)) {
-                        EntityUtil.forceDamage(p, strikeDamage);
-                    }
-                    return true;
-                });
-
-                strikeTask.build();
-
+                LivingEntity attacked = (LivingEntity) BukkitUtil.getBukkitEntity(entity);
+                attacked.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 15, 0));
+                attacked.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 15, 0));
                 return null;
             }
         });
@@ -143,8 +118,9 @@ public class StormBringer implements RangeWorldMinibossSpawner {
 
     @Override
     public void spawnBoss(Location spawnLoc, Player target, int worldLevel) {
-        Skeleton entity = spawnLoc.getWorld().spawn(spawnLoc, Skeleton.class);
+        Spider entity = spawnLoc.getWorld().spawn(spawnLoc, Spider.class);
         miniBoss.bind(entity, worldLevel);
         entity.setTarget(target);
     }
 }
+

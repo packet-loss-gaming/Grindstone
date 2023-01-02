@@ -33,6 +33,8 @@ import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.type.range.worldlevel.db.PlayerWorldLevelDatabase;
 import gg.packetloss.grindstone.world.type.range.worldlevel.db.mysql.MySQLPlayerWorldLevelDatabase;
+import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.Fangz;
+import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.FearKnight;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.StormBringer;
 import org.apache.commons.lang.Validate;
 import org.bukkit.*;
@@ -140,7 +142,9 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
 
     private WeightedPicker<RangeWorldMinibossSpawner> minibossSpawners;
 
+    private final Fangz fangz = new Fangz(this);
     private final StormBringer stormBringer = new StormBringer(this);
+    private final FearKnight fearKnight = new FearKnight(this);
 
     private void configureMiniBosses() {
         if (minibossCheckTask != null) {
@@ -156,6 +160,8 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
 
         minibossSpawners = new WeightedPicker<>();
 
+        minibossSpawners.add(fangz, config.miniBossFangzSpawnWeight);
+        minibossSpawners.add(fearKnight, config.miniBossFearKnightSpawnWeight);
         minibossSpawners.add(stormBringer, config.miniBossStormBringerSpawnWeight);
     }
 
