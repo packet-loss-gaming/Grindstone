@@ -53,6 +53,7 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -612,7 +613,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             player.getInventory().setArmorContents(NO_ARMOR);
             player.getInventory().clear();
 
-            highScores.update(player, scoreType, 1);
+            highScores.update(player, scoreType, BigInteger.ONE);
         }
 
         // Clear items on the ground, and any lingering snowballs and bats

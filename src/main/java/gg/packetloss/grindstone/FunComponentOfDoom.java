@@ -35,6 +35,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -109,7 +110,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
                 Player killer = player.getKiller();
                 if (killer != null) {
-                    highScoresComponent.update(killer, ScoreTypes.COW_KILLS, 1);
+                    highScoresComponent.update(killer, ScoreTypes.COW_KILLS, BigInteger.ONE);
                 }
             }
         }
@@ -124,7 +125,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
         Player killer = ((Cow) entity).getKiller();
         if (killer != null) {
-            highScoresComponent.update(killer, ScoreTypes.COW_KILLS, 1);
+            highScoresComponent.update(killer, ScoreTypes.COW_KILLS, BigInteger.ONE);
         }
     }
 

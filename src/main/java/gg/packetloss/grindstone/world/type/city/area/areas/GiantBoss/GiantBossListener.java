@@ -58,6 +58,7 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -399,7 +400,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         ? ScoreTypes.SHNUGGLES_PRIME_SOLO_KILLS
                         : ScoreTypes.SHNUGGLES_PRIME_TEAM_KILLS;
                 for (Player aPlayer : players) {
-                    parent.highScores.update(aPlayer, scoreType, 1);
+                    parent.highScores.update(aPlayer, scoreType, BigInteger.ONE);
                 }
 
                 int requiredBoneCount = ChanceUtil.getRandom(13) + 3;

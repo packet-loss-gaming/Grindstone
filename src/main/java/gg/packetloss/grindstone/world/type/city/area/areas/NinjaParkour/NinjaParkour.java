@@ -33,6 +33,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
+import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -302,8 +303,8 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
             }
         });
 
-        highScores.update(player, ScoreTypes.NINJA_PARKOUR_CROSSINGS, 1);
-        highScores.update(player, ScoreTypes.NINJA_PARKOUR_FASTEST_RUN, elapsedTime);
+        highScores.update(player, ScoreTypes.NINJA_PARKOUR_CROSSINGS, BigInteger.ONE);
+        highScores.update(player, ScoreTypes.NINJA_PARKOUR_FASTEST_RUN, BigInteger.valueOf(elapsedTime));
 
         reset(player);
     }

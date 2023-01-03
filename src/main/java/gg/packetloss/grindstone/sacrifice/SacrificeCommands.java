@@ -29,14 +29,14 @@ public class SacrificeCommands {
         ItemStack questioned = player.getInventory().getItemInHand();
 
         // Check value & validity
-        double value = component.getValue(questioned);
-        if (value == 0) {
+        BigDecimal value = component.getValue(questioned);
+        if (value.compareTo(BigDecimal.ZERO) <= 0) {
             ChatUtil.sendError(player, "You can't sacrifice that!");
             return;
         }
 
         // Mask the value so it doesn't just show the market price and print it
-        BigDecimal shownValue = BigDecimal.valueOf(value).multiply(ScoreTypes.SACRIFICED_VALUE.getScalingConstant());
+        BigDecimal shownValue = value.multiply(ScoreTypes.SACRIFICED_VALUE.getScalingConstant());
         BigDecimal minShownValue = shownValue.multiply(new BigDecimal(component.getConfig().valueMinMultiplier));
         BigDecimal maxShownValue = shownValue.multiply(new BigDecimal(component.getConfig().valueMaxMultiplier));
         ChatUtil.sendNotice(player, "This has a sacrificial value of: " +

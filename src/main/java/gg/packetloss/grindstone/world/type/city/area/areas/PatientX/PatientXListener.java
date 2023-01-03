@@ -59,6 +59,7 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Collection;
@@ -426,7 +427,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                     }
                     player.setVelocity(v);
 
-                    parent.highScores.update(player, scoreType, 1);
+                    parent.highScores.update(player, scoreType, BigInteger.ONE);
                 }
                 CuboidRegion rg = new CuboidRegion(parent.drops.getMinimumPoint(), parent.drops.getMaximumPoint());
                 DropPartyTask task = new DropPartyTask(

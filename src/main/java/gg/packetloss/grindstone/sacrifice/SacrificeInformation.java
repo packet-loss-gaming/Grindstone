@@ -9,11 +9,13 @@ package gg.packetloss.grindstone.sacrifice;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import org.bukkit.command.CommandSender;
 
+import java.math.BigDecimal;
+
 public class SacrificeInformation {
     private final boolean hasSacrificeTome;
     private final boolean hasCleanlyTome;
     private final int maxItems;
-    private final double value;
+    private final BigDecimal value;
 
     /**
      * This class is used to define a sacrifice based on a numerical value and quantity.
@@ -22,7 +24,7 @@ public class SacrificeInformation {
      * @param maxItems - The maximum amount of items to return
      * @param value    - The value put towards the items returned
      */
-    public SacrificeInformation(CommandSender sender, int maxItems, double value) {
+    public SacrificeInformation(CommandSender sender, int maxItems, BigDecimal value) {
         this.hasSacrificeTome = sender.hasPermission("aurora.tome.sacrifice");
         this.hasCleanlyTome = sender.hasPermission("aurora.tome.cleanly");
         this.maxItems = maxItems;
@@ -35,7 +37,7 @@ public class SacrificeInformation {
      * @param sender   - The triggering sender
      * @param value    - The value put towards the items returned
      */
-    public SacrificeInformation(CommandSender sender, double value) {
+    public SacrificeInformation(CommandSender sender, BigDecimal value) {
         this(sender, -1, value);
     }
 
@@ -51,7 +53,7 @@ public class SacrificeInformation {
         return maxItems;
     }
 
-    public double getValue() {
+    public BigDecimal getValue() {
         return value;
     }
 
@@ -63,6 +65,6 @@ public class SacrificeInformation {
     }
 
     public int getModifierRoll() {
-        return ChanceUtil.getRandomNTimes((int) value, 2) - 1;
+        return ChanceUtil.getRandomNTimes(value.min(BigDecimal.valueOf(Integer.MAX_VALUE)).intValue(), 2) - 1;
     }
 }

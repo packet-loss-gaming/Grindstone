@@ -31,6 +31,7 @@ import org.bukkit.entity.Player;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.locks.Lock;
@@ -195,7 +196,7 @@ public class HighScoresComponent extends BukkitComponent {
         return scoreType.isGobletEquivalent(gobletScoreType);
     }
 
-    private void update(UUID playerID, ScoreType scoreType, long value) {
+    private void update(UUID playerID, ScoreType scoreType, BigInteger value) {
         highScoreLock.lock();
         try {
             highScoreUpdates.add(new HighScoreUpdate(playerID, scoreType, value));
@@ -207,7 +208,7 @@ public class HighScoresComponent extends BukkitComponent {
         }
     }
 
-    public void update(OfflinePlayer player, ScoreType scoreType, long value) {
+    public void update(OfflinePlayer player, ScoreType scoreType, BigInteger value) {
         // FIXME: Ideally this wouldn't be necessary, need to make sure the PluginTaskExecutor
         // isn't shutdown before the high scores, or any dependent component.
         try {

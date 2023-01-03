@@ -51,6 +51,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.math.BigInteger;
 import java.util.EnumMap;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -595,7 +596,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             }
         }
 
-        highScores.update(player, ScoreTypes.FREAKY_FOUR_KILLS, 1);
+        highScores.update(player, ScoreTypes.FREAKY_FOUR_KILLS, BigInteger.ONE);
     }
 
     private ItemStack pickRandomItem() {

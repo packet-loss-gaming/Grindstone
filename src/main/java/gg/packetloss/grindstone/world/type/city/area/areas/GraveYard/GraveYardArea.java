@@ -55,6 +55,7 @@ import org.bukkit.material.Lever;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -313,7 +314,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         setRewardsDoor(Material.IRON_BARS);
 
         for (Player player : playersInRewardsRoom) {
-            highScores.update(player, ScoreTypes.GRAVE_YARD_LOOTINGS, 1);
+            highScores.update(player, ScoreTypes.GRAVE_YARD_LOOTINGS, BigInteger.ONE);
         }
     }
 

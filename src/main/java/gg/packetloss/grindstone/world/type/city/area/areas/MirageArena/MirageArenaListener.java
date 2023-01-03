@@ -43,6 +43,7 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -324,7 +325,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
             if (killer != null) {
                 killer.setHealth(killer.getMaxHealth());
 
-                parent.highScores.update(killer, ScoreTypes.MIRAGE_ARENA_KILLS, 1);
+                parent.highScores.update(killer, ScoreTypes.MIRAGE_ARENA_KILLS, BigInteger.ONE);
             }
 
             try {

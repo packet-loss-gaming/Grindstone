@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.highscore.scoretype.GobletScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import org.apache.commons.lang.Validate;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -52,7 +53,7 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
             for (HighScoreUpdate update : updates) {
                 statement.setString(1, update.getPlayerId().toString());
                 statement.setInt(2, update.getScoreType().getId());
-                statement.setLong(3, update.getValue());
+                statement.setBigDecimal(3, new BigDecimal(update.getValue()));
 
                 statement.addBatch();
             }

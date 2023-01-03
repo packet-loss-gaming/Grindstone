@@ -50,6 +50,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -147,7 +148,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
                 parent.blockState.pushBlock(BlockStateKind.CURSED_MINE, player, block.getState());
                 parent.restorationUtil.blockAndLogEvent(event);
 
-                parent.highScores.update(player, ScoreTypes.CURSED_ORES_MINED, 1);
+                parent.highScores.update(player, ScoreTypes.CURSED_ORES_MINED, BigInteger.ONE);
                 return;
             } catch (UnstorableBlockStateException e) {
                 e.printStackTrace();
@@ -293,7 +294,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
 
         boolean containsPlayer = parent.contains(player);
         if (containsPlayer || parent.isOnHitList(player)) {
-            parent.highScores.update(player, ScoreTypes.CURSED_MINE_DEATHS, 1);
+            parent.highScores.update(player, ScoreTypes.CURSED_MINE_DEATHS, BigInteger.ONE);
 
             if (parent.isOnHitList(player) && ChanceUtil.getChance(50)) {
                 ChatUtil.sendNotice(player, "You feel as though a spirit is trying to tell you something...");

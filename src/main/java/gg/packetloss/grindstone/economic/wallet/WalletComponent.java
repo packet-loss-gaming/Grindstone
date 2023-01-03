@@ -129,6 +129,6 @@ public class WalletComponent extends BukkitComponent implements WalletProvider, 
 
     @EventHandler
     public void onWalletUpdate(PlayerWalletUpdate event) {
-        highScores.update(event.getPlayer(), ScoreTypes.SKRIN, event.getNewBalance().toBigInteger().longValue());
+        highScores.update(event.getPlayer(), ScoreTypes.SKRIN, event.getNewBalance().toBigInteger());
     }
 }

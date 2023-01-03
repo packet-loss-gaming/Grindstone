@@ -39,6 +39,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.math.BigInteger;
 import java.util.*;
 
 @ComponentInformation(friendlyName = "Bessi", desc = "The defender of the bovine")
@@ -226,7 +227,7 @@ public class Bessi extends AreaComponent<BessiConfig> {
 
         // Update high scores
         for (Player player : players) {
-            highScores.update(player, scoreType, 1);
+            highScores.update(player, scoreType, BigInteger.ONE);
         }
 
         // Drop the loot

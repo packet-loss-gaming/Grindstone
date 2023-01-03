@@ -15,6 +15,7 @@ import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import org.apache.commons.lang.Validate;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -83,19 +84,20 @@ class SacrificialRegistry {
         return lookupInstance;
     }
 
-    protected double getValue(MarketItemLookupInstance lookupInstance, ItemStack itemStack) {
+    protected BigDecimal getValue(MarketItemLookupInstance lookupInstance, ItemStack itemStack) {
         // FIXME: These can be added back to the market now
         if (SpawnEgg.fromMaterial(itemStack.getType()) != null) {
-            return 12.5 * itemStack.getAmount();
+            return BigDecimal.valueOf(12.5).multiply(BigDecimal.valueOf(itemStack.getAmount()));
         }
-        return lookupInstance.checkMaximumValue(itemStack).orElse(0d);
+        return BigDecimal.valueOf(lookupInstance.checkMaximumValue(itemStack).orElse(0d));
     }
 
-    public double getValue(ItemStack itemStack) {
-        return getValue(MarketComponent.getLookupInstanceFromStacksImmediately(List.of(itemStack)), itemStack);
+    public BigDecimal getValue(ItemStack itemStack) {
+        MarketItemLookupInstance instance = MarketComponent.getLookupInstanceFromStacksImmediately(List.of(itemStack));
+        return getValue(instance, itemStack);
     }
 
-    private static final int MINIMUM_REMOVAL_VALUE = 9;
+    private static final BigDecimal MINIMUM_REMOVAL_VALUE = BigDecimal.valueOf(9);
 
     private int getValueChance(SacrificeInformation sacrificeInformation) {
         int baseChance = (sacrificeInformation.hasSacrificeTome() ? 100 : 125);
@@ -109,24 +111,25 @@ class SacrificialRegistry {
         int valuableChance = getValueChance(sacrificeInformation);
 
         int remainingItems = sacrificeInformation.getMaxItems();
-        double remainingValue = sacrificeInformation.getValue();
+        BigDecimal remainingValue = sacrificeInformation.getValue();
 
         MarketItemLookupInstance lookupInstance = getLookupInstance();
 
-        while (remainingValue > 0 && (remainingItems == -1 || remainingItems > 0)) {
+        while (remainingValue.compareTo(BigDecimal.ZERO) > 0 && (remainingItems == -1 || remainingItems > 0)) {
             ItemStack itemStack;
 
             if (ChanceUtil.getChance(valuableChance)) {
                 itemStack = getValuableItem(sacrificeInformation);
             } else if (sacrificeInformation.hasCleanlyTome()) {
-                remainingValue -= MINIMUM_REMOVAL_VALUE;
+                remainingValue = remainingValue.subtract(MINIMUM_REMOVAL_VALUE);
                 continue;
             } else {
                 itemStack = getJunkStack();
             }
 
             if (itemStack != null) {
-                remainingValue -= Math.max(MINIMUM_REMOVAL_VALUE, getValue(lookupInstance, itemStack));
+                BigDecimal valueToRemove = MINIMUM_REMOVAL_VALUE.max(getValue(lookupInstance, itemStack));
+                remainingValue = remainingValue.subtract(valueToRemove);
                 loot.add(itemStack);
             }
 

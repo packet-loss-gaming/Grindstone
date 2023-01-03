@@ -11,18 +11,20 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerEvent;
 
+import java.math.BigDecimal;
+
 public class PlayerSacrificeRewardEvent extends PlayerEvent implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled = false;
 
-    private double value;
+    private final BigDecimal value;
 
-    public PlayerSacrificeRewardEvent(Player player, double value) {
+    public PlayerSacrificeRewardEvent(Player player, BigDecimal value) {
         super(player);
         this.value = value;
     }
 
-    public double getValue() {
+    public BigDecimal getValue() {
         return value;
     }
 

@@ -8,14 +8,15 @@ package gg.packetloss.grindstone.highscore;
 
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 
+import java.math.BigInteger;
 import java.util.UUID;
 
 public class HighScoreUpdate {
     private final UUID playerId;
     private final ScoreType scoreType;
-    private final long value;
+    private final BigInteger value;
 
-    public HighScoreUpdate(UUID playerId, ScoreType scoreType, long value) {
+    public HighScoreUpdate(UUID playerId, ScoreType scoreType, BigInteger value) {
         this.playerId = playerId;
         this.scoreType = scoreType;
         this.value = value;
@@ -29,7 +30,7 @@ public class HighScoreUpdate {
         return scoreType;
     }
 
-    public long getValue() {
+    public BigInteger getValue() {
         return value;
     }
 }

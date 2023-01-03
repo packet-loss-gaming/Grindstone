@@ -50,6 +50,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -229,7 +230,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
     }
 
     private void update(Player player, InternalGuildState state) {
-        highScores.update(player, getScoreType(state), (int) state.getExperience());
+        highScores.update(player, getScoreType(state), BigInteger.valueOf((long) state.getExperience()));
         database.updateActive(player.getUniqueId(), state);
     }
 

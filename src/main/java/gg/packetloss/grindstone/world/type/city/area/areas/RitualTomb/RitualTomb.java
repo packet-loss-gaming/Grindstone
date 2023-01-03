@@ -53,6 +53,8 @@ import org.bukkit.entity.Vex;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 
 @ComponentInformation(friendlyName = "Ritual Tomb", desc = "The demons of Hallow")
@@ -81,8 +83,8 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     private int demonsCurrent;
     private boolean demonsCanKill;
 
-    private double ritualValue = 0;
-    private Map<UUID, Double> individualRitualValue = new HashMap<>();
+    private BigDecimal ritualValue = BigDecimal.ZERO;
+    private Map<UUID, BigDecimal> individualRitualValue = new HashMap<>();
     private Map<UUID, Integer> individualDemonKills = new HashMap<>();
 
     @Override
@@ -133,14 +135,14 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
             Player player = info.getPlayer();
 
             // Sacrificed Loot
-            double individualValue = individualRitualValue.getOrDefault(player.getUniqueId(), 0d);
-            if (individualValue > 0) {
+            BigDecimal individualValue = individualRitualValue.getOrDefault(player.getUniqueId(), BigDecimal.ZERO);
+            if (individualValue.compareTo(BigDecimal.ZERO) > 0) {
                 // Roll two multiplied sacrifices with limited quantity
                 SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
-                    player, 5, individualValue * 50
+                    player, 5, individualValue.multiply(BigDecimal.valueOf(50))
                 )).forEach(consumer);
                 SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
-                    player, 5, individualValue * 10
+                    player, 5, individualValue.multiply(BigDecimal.valueOf(10))
                 )).forEach(consumer);
 
                 SacrificeResult finalPersonal = SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
@@ -154,12 +156,19 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
 
             int numPlayers = info.getKillInfo().getPlayers().size();
             SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
-                server.getConsoleSender(), 10, ritualValue / numPlayers
+                server.getConsoleSender(),
+                10,
+                ritualValue.divide(BigDecimal.valueOf(numPlayers), RoundingMode.HALF_UP)
             )).forEach(consumer);
 
             // Diamond Loot
             int individualKills = individualDemonKills.getOrDefault(player.getUniqueId(), 0);
-            diamondLoot.streamValue((int) ((individualKills + individualValue) / 30), consumer);
+            diamondLoot.streamValue(
+                // (int) ((individualKills + individualValue) / 30)
+                BigDecimal.valueOf(individualKills).add(individualValue).divide(
+                    BigDecimal.valueOf(30), RoundingMode.HALF_UP
+                ).intValue(),
+                consumer);
         });
 
         // Chance modified drops
@@ -208,7 +217,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     }
 
     private void setDefaults() {
-        ritualValue = 0;
+        ritualValue = BigDecimal.ZERO;
         individualRitualValue.clear();
         individualDemonKills.clear();
         demonsTotal = demonsCurrent = config.ritualDemonsStartingAmount;
@@ -222,7 +231,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     }
 
     public boolean isRitualActive() {
-        return ritualValue > 0;
+        return ritualValue.compareTo(BigDecimal.ZERO) > 0;
     }
 
     public boolean areDemonsLethal() {
@@ -230,7 +239,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
     }
 
     public int getRitualLevel() {
-        return (int) (ritualValue / config.ritualLevelInterval) + 1;
+        return ritualValue.divide(BigDecimal.valueOf(config.ritualLevelInterval), RoundingMode.FLOOR).intValue() + 1;
     }
 
     private void updateBossBar() {
@@ -311,10 +320,10 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
         updateDemonsInternal();
     }
 
-    public void increaseRitualValue(Player player, double amount) {
+    public void increaseRitualValue(Player player, BigDecimal amount) {
         int oldLevel = getRitualLevel();
-        ritualValue += amount;
-        individualRitualValue.merge(player.getUniqueId(), amount, Double::sum);
+        ritualValue = ritualValue.add(amount);
+        individualRitualValue.merge(player.getUniqueId(), amount, BigDecimal::add);
         int newLevel = getRitualLevel();
 
         if (newLevel == oldLevel) {

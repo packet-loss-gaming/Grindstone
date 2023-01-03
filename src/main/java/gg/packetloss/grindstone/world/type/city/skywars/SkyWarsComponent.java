@@ -83,6 +83,7 @@ import org.bukkit.util.Vector;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -426,7 +427,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     private void handleWin(Player player) {
-        highScores.update(player, ScoreTypes.SKY_WARS_WINS, 1);
+        highScores.update(player, ScoreTypes.SKY_WARS_WINS, BigInteger.ONE);
 
         // Give some final points for victory
         adjustPoints(player, SkyWarsPointEvent.GAME_WON);

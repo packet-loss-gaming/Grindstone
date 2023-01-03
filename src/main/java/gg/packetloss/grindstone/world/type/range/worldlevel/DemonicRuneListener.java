@@ -33,6 +33,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 class DemonicRuneListener implements Listener {
@@ -82,7 +83,9 @@ class DemonicRuneListener implements Listener {
             SacrificeInformation sacrificeInfo = new SacrificeInformation(
                 CommandBook.server().getConsoleSender(),
                 getDropCountModifier(),
-                getDropValueModifier() * parent.getConfig().mobsDropTableSacrificeValue
+                BigDecimal.valueOf(getDropValueModifier()).multiply(
+                    BigDecimal.valueOf(parent.getConfig().mobsDropTableSacrificeValue)
+                )
             );
 
             // Populate the loot buffer

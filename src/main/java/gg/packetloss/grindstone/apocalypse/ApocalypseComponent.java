@@ -65,6 +65,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -402,7 +403,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     EntityUtil.heal(killer, level);
                 });
 
-                highScoresComponent.update(killer, ScoreTypes.APOCALYPSE_MOBS_SLAIN, 1);
+                highScoresComponent.update(killer, ScoreTypes.APOCALYPSE_MOBS_SLAIN, BigInteger.ONE);
             }
 
             if (ChanceUtil.getChance(5)) {

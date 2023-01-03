@@ -54,6 +54,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -233,7 +235,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         registry.registerItem(() -> CustomItemCenter.build(CustomItems.PHANTOM_CLOCK), UBER_RARE);
     }
 
-    public double getValue(ItemStack itemStack) {
+    public BigDecimal getValue(ItemStack itemStack) {
         return registry.getValue(itemStack);
     }
 
@@ -252,7 +254,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
      */
     @Deprecated
     public static List<ItemStack> getCalculatedLoot(CommandSender sender, int max, double value) {
-        return getCalculatedLoot(new SacrificeInformation(sender, max, value)).getItemStacks();
+        return getCalculatedLoot(new SacrificeInformation(sender, max, BigDecimal.valueOf(value))).getItemStacks();
     }
 
     public static SacrificeResult getCalculatedLoot(SacrificeInformation sacrificeInformation) {
@@ -476,25 +478,26 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
     }
 
     private void sacrifice(Player player, List<ItemStack> items) {
-        double totalValue = 0;
+        BigDecimal totalValue = BigDecimal.ZERO;
 
         MarketItemLookupInstance lookupInst = MarketComponent.getLookupInstanceFromStacksImmediately(items);
         for (ItemStack itemStack : items) {
-            double value = registry.getValue(lookupInst, itemStack);
-            if (value <= 0) {
+            BigDecimal value = registry.getValue(lookupInst, itemStack);
+            if (value.compareTo(BigDecimal.ZERO) <= 0) {
                 GeneralPlayerUtil.giveItemToPlayer(player, itemStack);
                 continue;
             }
 
-            totalValue += value;
+            totalValue = totalValue.add(value);
         }
 
-        if (totalValue <= 0) {
+        if (totalValue.compareTo(BigDecimal.ZERO) <= 0) {
             ChatUtil.sendError(player, "The gods reject your offer.");
             return;
         }
 
-        totalValue *= ChanceUtil.getRangedRandom(config.valueMinMultiplier, config.valueMaxMultiplier);
+        double valueMultiplier = ChanceUtil.getRangedRandom(config.valueMinMultiplier, config.valueMaxMultiplier);
+        totalValue = totalValue.multiply(BigDecimal.valueOf(valueMultiplier));
 
         PlayerSacrificeRewardEvent event = new PlayerSacrificeRewardEvent(player, totalValue);
         CommandBook.callEvent(event);
@@ -502,7 +505,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             return;
         }
 
-        highScores.update(player, ScoreTypes.SACRIFICED_VALUE, Math.round(totalValue));
+        highScores.update(player, ScoreTypes.SACRIFICED_VALUE, totalValue.round(MathContext.UNLIMITED).toBigInteger());
 
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
         session.addItems(getCalculatedLoot(new SacrificeInformation(player, totalValue)));
@@ -519,7 +522,8 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         }));
 
         Set<Prayers> givenPrayers = new HashSet<>();
-        for (double i = totalValue; i > 0; i -= config.costPerPrayer) {
+        BigDecimal costPerPrayer = BigDecimal.valueOf(config.costPerPrayer);
+        for (BigDecimal i = totalValue; i.compareTo(BigDecimal.ZERO) > 0; i = i.subtract(costPerPrayer)) {
             if (!ChanceUtil.getChance(5)) {
                 continue;
             }

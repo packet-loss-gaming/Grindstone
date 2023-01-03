@@ -106,6 +106,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -942,7 +943,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     private void handleWin(Player player) {
-        highScoresComponent.update(player, ScoreTypes.JUNGLE_RAID_WINS, 1);
+        highScoresComponent.update(player, ScoreTypes.JUNGLE_RAID_WINS, BigInteger.ONE);
 
         // Give some final points for victory
         adjustPoints(player, JungleRaidPointEvent.GAME_WON);

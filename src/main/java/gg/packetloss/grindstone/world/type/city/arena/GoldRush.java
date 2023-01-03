@@ -51,6 +51,7 @@ import org.bukkit.material.Lever;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -641,8 +642,8 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
                     playerStateComponent.popState(PlayerStateKind.GOLD_RUSH, event.getPlayer());
 
-                    highScoresComponent.update(event.getPlayer(), ScoreTypes.GOLD_RUSH_ROBBERIES, 1);
-                    long duration = System.currentTimeMillis() - startTime;
+                    highScoresComponent.update(event.getPlayer(), ScoreTypes.GOLD_RUSH_ROBBERIES, BigInteger.ONE);
+                    BigInteger duration = BigInteger.valueOf(System.currentTimeMillis() - startTime);
                     highScoresComponent.update(event.getPlayer(), ScoreTypes.FASTEST_GOLD_RUSH, duration);
 
                     ChatUtil.sendNotice(event.getPlayer(), "You have successfully robbed the bank!\n");
