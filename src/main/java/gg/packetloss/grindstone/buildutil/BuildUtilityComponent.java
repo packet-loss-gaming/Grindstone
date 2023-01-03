@@ -44,7 +44,7 @@ public class BuildUtilityComponent extends BukkitComponent implements Listener {
             return true;
         }
 
-        if (currentlyHeldItem.getType() !=  targetMaterial) {
+        if (currentlyHeldItem.getType() != targetMaterial) {
             return true;
         }
 

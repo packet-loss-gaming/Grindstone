@@ -343,7 +343,11 @@ public class ItemUtil {
     }
 
     public static boolean isHoldingItem(Player player, CustomItems type) {
-        return player.isValid() && isItem(player.getItemInHand(), type);
+        return player.isValid() && isItem(player.getInventory().getItemInMainHand(), type);
+    }
+
+    public static boolean isHoldingItemInOffhand(Player player, CustomItems type) {
+        return player.isValid() && isItem(player.getInventory().getItemInOffHand(), type);
     }
 
     // FIXME: This sucks

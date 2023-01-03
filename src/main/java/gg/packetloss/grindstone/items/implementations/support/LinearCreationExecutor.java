@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.items.implementations.support;
 
-import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -16,6 +15,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -23,56 +23,27 @@ import org.bukkit.block.BlockState;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 import static com.zachsthings.libcomponents.bukkit.BasePlugin.callEvent;
-import static com.zachsthings.libcomponents.bukkit.BasePlugin.server;
 
 public class LinearCreationExecutor {
-    private CustomItems itemType;
-    private Set<UUID> reentrantDelay = new HashSet<>();
+    private final CustomItems itemType;
 
     public LinearCreationExecutor(CustomItems itemType) {
         this.itemType = itemType;
     }
 
-    public void process(PlayerInteractEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND) {
-            return;
-        }
+    public boolean isHoldingRelevantToolInOffhand(Player player) {
+        return ItemUtil.isHoldingItemInOffhand(player, itemType);
+    }
 
-        Player player = event.getPlayer();
-        if (!ItemUtil.isHoldingItem(player, itemType)) {
-            return;
-        }
-
-        event.setCancelled(true);
-
-        if (reentrantDelay.contains(player.getUniqueId())) {
-            return;
-        }
-
-        reentrantDelay.add(player.getUniqueId());
-        server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
-            reentrantDelay.remove(player.getUniqueId());
-        }, 2);
-
-        switch (event.getAction()) {
-            case RIGHT_CLICK_BLOCK:
-                handleRightClick(player, event);
-                break;
-            case LEFT_CLICK_BLOCK:
-                handleLeftClick(player);
-                break;
-        }
+    public boolean isHoldingRelevantToolInAnyHand(Player player) {
+        return ItemUtil.isHoldingItem(player, itemType) || ItemUtil.isHoldingItemInOffhand(player, itemType);
     }
 
     private int getDist(ItemStack item) {
@@ -83,70 +54,8 @@ public class LinearCreationExecutor {
         return Integer.parseInt(ItemUtil.getItemTags(item).get(ChatColor.RED + "Max Distance"));
     }
 
-    private void handleRightClick(Player player, PlayerInteractEvent event) {
-        BlockFace clickedFace = event.getBlockFace();
-        Block curTarget = event.getClickedBlock().getRelative(clickedFace);
-
-        BuildToolUseEvent useEvent = new BuildToolUseEvent(player, curTarget.getLocation(), itemType);
-        callEvent(useEvent);
-        if (useEvent.isCancelled()) {
-            return;
-        }
-
-        ItemStack heldItem = player.getInventory().getItemInOffHand();
-        if (heldItem.getType() == Material.AIR || !heldItem.getType().isBlock()) {
-            ChatUtil.sendError(player, "Put the block you'd like to place in your off-hand.");
-            return;
-        }
-
-        // callEvent(new RapidBlockBreakEvent(player));
-
-        ItemStack item = player.getInventory().getItemInMainHand();
-        short degradation = 0;
-        int unbreakingLevel = item.getEnchantmentLevel(Enchantment.DURABILITY);
-        short curDur = item.getDurability();
-        short maxDur = item.getType().getMaxDurability();
-        short blocksPlaced = 0;
-        for (int dist = getDist(item); dist > 0; ++blocksPlaced) {
-            if (curTarget.getType() != Material.AIR) {
-                break;
-            }
-
-            if (blocksPlaced >= heldItem.getAmount()) {
-                break;
-            }
-
-            if (curDur + degradation > maxDur) {
-                break;
-            }
-
-            if (placeBlock(curTarget, player, clickedFace.getOppositeFace(), heldItem)) {
-                if (ChanceUtil.getChance(unbreakingLevel + 1)) {
-                    ++degradation;
-                }
-                --dist;
-            } else {
-                break;
-            }
-
-            curTarget = curTarget.getRelative(clickedFace);
-        }
-
-        if (curDur + degradation >= maxDur) {
-            player.setItemInHand(null);
-        } else {
-            item.setDurability((short) (curDur + degradation));
-        }
-
-        if (heldItem.getAmount() <= blocksPlaced) {
-            player.getInventory().setItemInOffHand(null);
-        } else {
-            heldItem.setAmount(heldItem.getAmount() - blocksPlaced);
-        }
-    }
-
-    private void handleLeftClick(Player player) {
-        ItemStack item = player.getInventory().getItemInMainHand();
+    public void adjustTool(Player player) {
+        ItemStack item = player.getInventory().getItemInOffHand();
 
         final int dist = getDist(item);
         final int maxDist = getMaxDist(item);
@@ -174,31 +83,104 @@ public class LinearCreationExecutor {
             meta.addEnchant(entry.getKey(), entry.getValue(), true);
         }
         result.setItemMeta(meta);
-        player.setItemInHand(result);
+        player.getInventory().setItemInOffHand(result);
     }
 
-    private boolean placeBlock(Block b, Player p, BlockFace oppositeFace, ItemStack i) {
+    public boolean canItemStackBePlaced(ItemStack itemStack) {
+        return itemStack.getType() != Material.AIR && itemStack.getType().isBlock();
+    }
+
+    public void placeBlocksFrom(Player player, Block curTarget, BlockFace clickedFace) {
+        BlockState blockSnapshot = curTarget.getState();
+
+        BuildToolUseEvent useEvent = new BuildToolUseEvent(player, curTarget.getLocation(), itemType);
+        callEvent(useEvent);
+        if (useEvent.isCancelled()) {
+            return;
+        }
+
+        // Update the target to be the next block, since one has already been placed.
+        curTarget = curTarget.getRelative(clickedFace);
+
+        ItemStack heldItem = player.getInventory().getItemInMainHand();
+        if (!canItemStackBePlaced(heldItem) || heldItem.getType() != blockSnapshot.getType()) {
+            throw new RuntimeException("This should not happen, possible cheater? Player: " + player.getName());
+        }
+
+        ItemStack item = player.getInventory().getItemInOffHand();
+        short degradation = 0;
+        int unbreakingLevel = item.getEnchantmentLevel(Enchantment.DURABILITY);
+        short curDur = item.getDurability();
+        short maxDur = item.getType().getMaxDurability();
+        short blocksPlaced = 1; // One block is already placed "by the player"
+        for (int dist = getDist(item); dist > 0; ++blocksPlaced) {
+            if (curTarget.getType() != Material.AIR) {
+                break;
+            }
+
+            if (blocksPlaced >= heldItem.getAmount() && player.getGameMode() != GameMode.CREATIVE) {
+                break;
+            }
+
+            if (curDur + degradation > maxDur) {
+                break;
+            }
+
+            if (placeBlock(curTarget, player, clickedFace.getOppositeFace(), heldItem, blockSnapshot)) {
+                if (ChanceUtil.getChance(unbreakingLevel + 1)) {
+                    ++degradation;
+                }
+                --dist;
+            } else {
+                break;
+            }
+
+            curTarget = curTarget.getRelative(clickedFace);
+        }
+
+        if (player.getGameMode() == GameMode.CREATIVE) {
+            return;
+        }
+
+        if (curDur + degradation >= maxDur) {
+            player.setItemInHand(null);
+        } else {
+            item.setDurability((short) (curDur + degradation));
+        }
+
+        if (heldItem.getAmount() <= blocksPlaced) {
+            player.getInventory().setItemInMainHand(null);
+        } else {
+            heldItem.setAmount(heldItem.getAmount() - blocksPlaced);
+        }
+    }
+
+    private boolean placeBlock(Block b, Player player, BlockFace oppositeFace, ItemStack item, BlockState blockState) {
         BlockState oldState = b.getState();
 
-        b.setType(i.getType(), true);
+        BlockState newState = b.getState();
+        newState.setType(blockState.getType());
+        newState.setBlockData(blockState.getBlockData());
 
         BlockPlaceEvent event = new BlockPlaceEvent(
                 b,
                 oldState,
                 b.getRelative(oppositeFace),
-                i,
-                p,
+                item.clone(),
+                player,
                 true,
-                EquipmentSlot.OFF_HAND
+                EquipmentSlot.HAND
         );
 
         callEvent(event);
 
         if (event.isCancelled()) {
-            oldState.update(true, false);
             return false;
         }
 
+        if (!newState.update(true)) {
+            return false;
+        }
         return true;
     }
 }
