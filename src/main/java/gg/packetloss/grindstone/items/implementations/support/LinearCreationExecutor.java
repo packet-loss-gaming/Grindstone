@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations.support;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.custom.item.BuildToolUseEvent;
 import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
@@ -13,6 +14,7 @@ import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.Tag;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -22,6 +24,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -115,7 +118,19 @@ public class LinearCreationExecutor {
         short blocksPlaced = 1; // One block is already placed "by the player"
         for (int dist = getDist(item); dist > 0; ++blocksPlaced) {
             if (curTarget.getType() != Material.AIR) {
-                break;
+                if (!EnvironmentUtil.isShrubBlock(curTarget)) {
+                    break;
+                }
+
+                BlockBreakEvent event = new BlockBreakEvent(
+                    curTarget,
+                    player
+                );
+
+                CommandBook.callEvent(event);
+                if (event.isCancelled()) {
+                    break;
+                }
             }
 
             if (blocksPlaced >= heldItem.getAmount() && player.getGameMode() != GameMode.CREATIVE) {
