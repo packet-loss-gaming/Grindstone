@@ -89,7 +89,7 @@ class SacrificialRegistry {
         if (SpawnEgg.fromMaterial(itemStack.getType()) != null) {
             return BigDecimal.valueOf(12.5).multiply(BigDecimal.valueOf(itemStack.getAmount()));
         }
-        return BigDecimal.valueOf(lookupInstance.checkMaximumValue(itemStack).orElse(0d));
+        return BigDecimal.valueOf(lookupInstance.checkCurrentValue(itemStack).orElse(0d));
     }
 
     public BigDecimal getValue(ItemStack itemStack) {
