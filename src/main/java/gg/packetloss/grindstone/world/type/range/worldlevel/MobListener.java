@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.world.type.range.worldlevel;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
+import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
@@ -145,15 +146,22 @@ class MobListener implements Listener {
             }
         }
 
-        // Make Skeletons & Zombies burn faster
-        if (entity instanceof Zombie || entity instanceof Skeleton) {
-            if (event.getCause().equals(EntityDamageEvent.DamageCause.FIRE_TICK)
-                && location.getBlock().getLightFromSky() == 15) {
+        // Correct several environmental effects for various monsters.
+        if (EntityUtil.isHostileMob(entity) && parent.hasScaledHealth(entity)) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK) {
+                if (EntityUtil.willBurnInSunlight(entity) && location.getBlock().getLightFromSky() == 15) {
+                    event.setDamage(parent.scaleHealth(event.getDamage(), 1, 100));
+                    return;
+                }
+            } else if (event.getCause() == EntityDamageEvent.DamageCause.SUFFOCATION ||
+                       event.getCause() == EntityDamageEvent.DamageCause.CONTACT ||
+                       event.getCause() == EntityDamageEvent.DamageCause.LAVA) {
                 event.setDamage(parent.scaleHealth(event.getDamage(), 1, 100));
                 return;
             }
         }
 
+        // Handle damage to players (scaling all but some predetermined damage reasons).
         if (!(entity instanceof Player player) || IGNORED_DAMAGE.contains(event.getCause())) {
             return;
         }

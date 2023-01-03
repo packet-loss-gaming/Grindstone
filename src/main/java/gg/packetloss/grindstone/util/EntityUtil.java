@@ -213,6 +213,14 @@ public class EntityUtil {
         return isHostileMob(entity) || entity instanceof Player;
     }
 
+    public static boolean willBurnInSunlight(Entity entity) {
+        if (entity instanceof Zombie || entity instanceof Skeleton) {
+            return true;
+        }
+
+        return false;
+    }
+
     public static boolean willFollowOwner(Entity entity) {
         if (entity instanceof Wolf) {
             return true;
