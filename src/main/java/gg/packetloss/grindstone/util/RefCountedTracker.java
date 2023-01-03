@@ -6,6 +6,8 @@
 
 package gg.packetloss.grindstone.util;
 
+import org.apache.commons.lang.Validate;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +36,7 @@ public class RefCountedTracker<T> {
      * @return true if removed
      */
     public boolean decrement(T key) {
+        Validate.isTrue(contains(key));
         int count = counter.get(key) - 1;
         if (count == 0) {
             counter.remove(key);
