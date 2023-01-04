@@ -182,27 +182,12 @@ public class EntityUtil {
     }
 
     public static boolean isHostileMob(Entity entity) {
-        if (entity instanceof Monster) {
+        if (entity instanceof Enemy) {
             return true;
         }
 
-        // Slime (and descendants) are not considered monsters
-        if (entity instanceof Slime) {
-            return true;
-        }
-
-        // Flying (Phantom, Ghasts) are not considered monsters
-        if (entity instanceof Flying) {
-            return true;
-        }
-
-        // Skeleton Horses are not considered monsters
+        // Skeleton Horses are not considered enemies
         if (entity instanceof SkeletonHorse) {
-            return true;
-        }
-
-        // Hoglin are not considered monsters
-        if (entity instanceof Hoglin) {
             return true;
         }
 
