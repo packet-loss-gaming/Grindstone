@@ -71,29 +71,18 @@ public class LinearBlockPlacer extends AbstractItemFeatureImpl {
         lastClickedFaces.remove(event.getPlayer().getUniqueId());
     }
 
-    private boolean alreadyActive = false;
-
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerPlaceBlock(BlockPlaceEvent event) {
-        if (alreadyActive) {
-            return;
-        }
-
         Player player = event.getPlayer();
         if (!executor.isHoldingRelevantToolInOffhand(player)) {
             return;
         }
 
-        BlockFace lastClickedFace = lastClickedFaces.get(player.getUniqueId());
+        BlockFace lastClickedFace = lastClickedFaces.remove(player.getUniqueId());
         if (lastClickedFace == null) {
             return;
         }
 
-        try {
-            alreadyActive = true;
-            executor.placeBlocksFrom(player, event.getBlock(), lastClickedFace);
-        } finally {
-            alreadyActive = false;
-        }
+        executor.placeBlocksFrom(player, event.getBlock(), lastClickedFace);
     }
 }

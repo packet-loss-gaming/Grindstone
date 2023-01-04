@@ -15,8 +15,10 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.util.ActionSimulationUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.event.KnownEventSet;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -30,6 +32,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -149,44 +153,95 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
         return mirrorPositions;
     }
 
-    private void mirrorBlockPlace(Player player, Block sourceBlock) {
+    private final KnownEventSet<BlockPlaceEvent> createdPlaceEvents = new KnownEventSet<>();
+
+    private void mirrorBlockPlace(Player player, Block sourceBlock, Vector placedAgainstBlockVector,
+                                  ItemStack itemUsed, EquipmentSlot handUsed) {
         BlockState sourceState = sourceBlock.getState();
 
         List<Vector> positions = getMirrorPositions(player, sourceBlock.getLocation().toVector());
         for (Vector pos : positions) {
             Block block = sourceBlock.getWorld().getBlockAt(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ());
-            BlockState state = block.getState();
-            state.setType(sourceState.getType());
-            state.setData(sourceState.getData());
-            state.update(true);
+
+            BlockState oldState = block.getState();
+            BlockState newState = block.getState();
+            newState.setType(sourceState.getType());
+            newState.setBlockData(sourceState.getBlockData());
+
+            Block placedAgainst = block.getLocation().subtract(placedAgainstBlockVector).getBlock();
+            ActionSimulationUtil.placeBlock(
+                player,
+                block,
+                oldState,
+                newState,
+                placedAgainst,
+                itemUsed,
+                handUsed,
+                true,
+                createdPlaceEvents::callEvent
+            );
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
+        if (createdPlaceEvents.isCalledBySelf(event)) {
+            return;
+        }
+
         Player player = event.getPlayer();
         if (!isBuildingWithSymmetricBuilding(player)) {
             return;
         }
 
-        mirrorBlockPlace(player, event.getBlock());
+        Block placedBlock = event.getBlock();
+        Block againstBlock = event.getBlockAgainst();
+        Vector placedAgainstBlockVector = placedBlock.getLocation().subtract(againstBlock.getLocation()).toVector();
+
+        // Processing of mirroring needs delayed so that it doesn't interfere with other "block multiplication"
+        // systems like the linear block placer.
+        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            mirrorBlockPlace(player, placedBlock, placedAgainstBlockVector, event.getItemInHand(), event.getHand());
+        });
     }
 
-    private void mirrorBlockBreak(Player player, Block block) {
-        List<Vector> positions = getMirrorPositions(player, block.getLocation().toVector());
+    private final KnownEventSet<BlockBreakEvent> createdBreakEvents = new KnownEventSet<>();
+
+    private void mirrorBlockBreak(Player player, Block sourceBlock) {
+        List<Vector> positions = getMirrorPositions(player, sourceBlock.getLocation().toVector());
         for (Vector pos : positions) {
-            block.getWorld().getBlockAt(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ()).setType(Material.AIR);
+            Block block = sourceBlock.getWorld().getBlockAt(pos.getBlockX(), pos.getBlockY(), pos.getBlockZ());
+
+            BlockBreakEvent event = new BlockBreakEvent(
+                block,
+                player
+            );
+
+            createdBreakEvents.callEvent(event);
+            if (event.isCancelled()) {
+                continue;
+            }
+
+            block.setType(Material.AIR);
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
+        if (createdBreakEvents.isCalledBySelf(event)) {
+            return;
+        }
+
         Player player = event.getPlayer();
         if (!isBuildingWithSymmetricBuilding(player)) {
             return;
         }
 
-        mirrorBlockBreak(player, event.getBlock());
+        // Processing of mirroring needs delayed so that it doesn't interfere with other "block multiplication"
+        // systems like the linear block placer.
+        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            mirrorBlockBreak(player, event.getBlock());
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

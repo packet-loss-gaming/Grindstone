@@ -12,6 +12,7 @@ import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.custom.Tag;
+import gg.packetloss.grindstone.util.ActionSimulationUtil;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
@@ -24,7 +25,6 @@ import org.bukkit.block.BlockState;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -115,6 +115,7 @@ public class LinearCreationExecutor {
         short curDur = item.getDurability();
         short maxDur = item.getType().getMaxDurability();
         short blocksPlaced = 1; // One block is already placed "by the player"
+        BlockFace oppositeFace = clickedFace.getOppositeFace();
         for (int dist = getDist(item); dist > 0; ++blocksPlaced) {
             if (!EnvironmentUtil.isAirBlock(curTarget)) {
                 if (!EnvironmentUtil.isShrubBlock(curTarget)) {
@@ -140,7 +141,7 @@ public class LinearCreationExecutor {
                 break;
             }
 
-            if (placeBlock(curTarget, player, clickedFace.getOppositeFace(), heldItem, blockSnapshot)) {
+            if (placeBlock(curTarget, player, oppositeFace, heldItem, blockSnapshot)) {
                 if (ChanceUtil.getChance(unbreakingLevel + 1)) {
                     ++degradation;
                 }
@@ -171,30 +172,20 @@ public class LinearCreationExecutor {
 
     private boolean placeBlock(Block b, Player player, BlockFace oppositeFace, ItemStack item, BlockState blockState) {
         BlockState oldState = b.getState();
-
         BlockState newState = b.getState();
         newState.setType(blockState.getType());
         newState.setBlockData(blockState.getBlockData());
 
-        BlockPlaceEvent event = new BlockPlaceEvent(
-                b,
-                oldState,
-                b.getRelative(oppositeFace),
-                item.clone(),
-                player,
-                true,
-                EquipmentSlot.HAND
+        return ActionSimulationUtil.placeBlock(
+            player,
+            b,
+            oldState,
+            newState,
+            b.getRelative(oppositeFace),
+            item,
+            EquipmentSlot.HAND,
+            true,
+            CommandBook::callEvent
         );
-
-        callEvent(event);
-
-        if (event.isCancelled()) {
-            return false;
-        }
-
-        if (!newState.update(true)) {
-            return false;
-        }
-        return true;
     }
 }
