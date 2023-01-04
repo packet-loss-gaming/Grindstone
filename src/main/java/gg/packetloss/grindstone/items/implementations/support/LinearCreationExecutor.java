@@ -114,9 +114,11 @@ public class LinearCreationExecutor {
         int unbreakingLevel = item.getEnchantmentLevel(Enchantment.DURABILITY);
         short curDur = item.getDurability();
         short maxDur = item.getType().getMaxDurability();
-        short blocksPlaced = 1; // One block is already placed "by the player"
         BlockFace oppositeFace = clickedFace.getOppositeFace();
-        for (int dist = getDist(item); dist > 0; ++blocksPlaced) {
+
+        // One block is already placed "by the player"
+        int blocksPlaced, dist;
+        for (blocksPlaced = 1, dist = getDist(item); blocksPlaced < dist; ++blocksPlaced) {
             if (!EnvironmentUtil.isAirBlock(curTarget)) {
                 if (!EnvironmentUtil.isShrubBlock(curTarget)) {
                     break;
