@@ -425,14 +425,14 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             () -> {
                 for (CaveSpider caveSpider : getContained(charlotteRegion, CaveSpider.class)) {
                     Block block = caveSpider.getLocation().getBlock();
-                    while (block.getType() != Material.AIR) {
+                    while (!EnvironmentUtil.isAirBlock(block)) {
                         if (block.getType() != Material.COBWEB) {
                             break;
                         }
 
                         block = block.getRelative(BlockFace.UP);
                     }
-                    if (block.getType() == Material.AIR) {
+                    if (EnvironmentUtil.isAirBlock(block)) {
                         block.setType(Material.COBWEB);
                     }
                 }
@@ -468,13 +468,14 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     }
 
     private void runFrimus() {
-        createWall(bossRegions.get(FreakyFourBoss.FRIMUS),
-                input -> input.getType() == Material.AIR,
-                EnvironmentUtil::isLava,
-                Material.AIR,
-                Material.LAVA,
-                config.frimusWallDensity,
-                -1
+        createWall(
+            bossRegions.get(FreakyFourBoss.FRIMUS),
+            EnvironmentUtil::isAirBlock,
+            EnvironmentUtil::isLava,
+            Material.AIR,
+            Material.LAVA,
+            config.frimusWallDensity,
+            -1
         );
     }
 

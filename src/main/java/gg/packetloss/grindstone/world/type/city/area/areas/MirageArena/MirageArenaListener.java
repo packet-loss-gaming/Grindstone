@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
@@ -135,7 +136,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
             return;
         }
 
-        if (block.getType() == Material.AIR) {
+        if (EnvironmentUtil.isAirBlock(block)) {
             return;
         }
 

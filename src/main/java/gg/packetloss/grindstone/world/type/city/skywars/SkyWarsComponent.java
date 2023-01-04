@@ -416,7 +416,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             return;
         }
 
-        if (gameStartLocation.getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.AIR)) {
+        if (EnvironmentUtil.isAirBlock(gameStartLocation.getBlock().getRelative(BlockFace.DOWN))) {
             editStartingPad(BlockTypes.BLACK_STAINED_GLASS);
         }
 

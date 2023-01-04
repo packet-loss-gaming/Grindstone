@@ -29,6 +29,7 @@ import gg.packetloss.grindstone.util.database.IOUtil;
 import gg.packetloss.grindstone.util.dropttable.BoundDropSpawner;
 import gg.packetloss.grindstone.util.dropttable.MassBossDropTable;
 import gg.packetloss.grindstone.util.dropttable.MassBossKillInfo;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.itemstack.ProtectedSerializedItemStack;
 import gg.packetloss.grindstone.util.item.itemstack.SerializableItemStack;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
@@ -213,7 +214,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         List<ItemStack> stacks = new ArrayList<>();
         stacks.addAll(Arrays.asList(player.getInventory().getArmorContents()));
         stacks.addAll(Arrays.asList(player.getInventory().getContents()));
-        stacks.removeIf(i -> i == null || i.getType() == Material.AIR);
+        stacks.removeIf(ItemUtil::isNullItemStack);
 
         long timeOfAddition = System.currentTimeMillis();
         stacks.stream().map(SerializableItemStack::new).map(item -> {
@@ -243,7 +244,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     public void preventRestoreDrowning() {
         Location bossLoc = boss.getLocation();
-        while (bossLoc.getBlock().getType() != Material.AIR) {
+        while (!EnvironmentUtil.isAirBlock(bossLoc.getBlock())) {
             bossLoc.add(0, 1, 0);
         }
         boss.teleport(bossLoc);
@@ -259,7 +260,9 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
 
     private boolean isValidFountainBlock(Block block) {
         Material material = block.getType();
-        return material == Material.SNOW_BLOCK || material == Material.GLOWSTONE || material == Material.AIR;
+        return material == Material.SNOW_BLOCK ||
+               material == Material.GLOWSTONE ||
+               EnvironmentUtil.isAirBlock(material);
     }
 
     private Collection<Location> getRandomFountainOriginLocations() {

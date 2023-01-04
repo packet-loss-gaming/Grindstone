@@ -7,15 +7,17 @@
 package gg.packetloss.grindstone.util.player;
 
 import com.sk89q.commandbook.CommandBook;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.RefCountedTracker;
-import org.bukkit.Material;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
 public class FallDamageDeathBlocker {
     private static boolean isLaunched(Player player) {
-        return player.getLocation().add(0, -1, 0).getBlock().getType() == Material.AIR && player.getVelocity().getY() > 0;
+        Location belowLoc = player.getLocation().add(0, -1, 0);
+        return EnvironmentUtil.isAirBlock(belowLoc.getBlock()) && player.getVelocity().getY() > 0;
     }
 
     public static void protectPlayer(Player player, RefCountedTracker<UUID> tracker) {

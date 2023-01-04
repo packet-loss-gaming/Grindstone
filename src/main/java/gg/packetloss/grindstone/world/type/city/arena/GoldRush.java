@@ -259,7 +259,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                         leverBlocks.put(block.getLocation(), !ChanceUtil.getChance(3));
                         for (int i = y; i < maxY; i++) {
                             block = getWorld().getBlockAt(x, i, z).getState();
-                            if (block.getType() == Material.AIR) {
+                            if (EnvironmentUtil.isAirBlock(block.getType())) {
                                 floodBlocks.add(block.getLocation());
                                 break;
                             }
@@ -372,7 +372,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     for (int z = minZ; z <= maxZ; z++) {
                         for (int y = minY; y <= maxY; y++) {
                             Block block = getWorld().getBlockAt(x, y, z);
-                            if (block.getType() == Material.AIR) {
+                            if (EnvironmentUtil.isAirBlock(block)) {
                                 block.setType(floodBlockType, false);
                                 break;
                             }
@@ -435,7 +435,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                                 getWorld(), roomOne.getMinimumPoint().getBlockY() + 1,
                                 roomOne.getMinimumPoint(), roomOne.getMaximumPoint()
                         );
-                    } while (location.getBlock().getType() != Material.AIR);
+                    } while (!EnvironmentUtil.isAirBlock(location.getBlock()));
                     aPlayer.teleport(location, PlayerTeleportEvent.TeleportCause.UNKNOWN);
 
                     // Reset vitals
@@ -617,7 +617,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                             getWorld(), lobby.getMinimumPoint().getBlockY() + 1,
                             lobby.getMinimumPoint(), lobby.getMaximumPoint()
                     );
-                } while (location.getBlock().getType() != Material.AIR);
+                } while (!EnvironmentUtil.isAirBlock(location.getBlock()));
                 event.getPlayer().teleport(location);
                 ChatUtil.sendNotice(event.getPlayer(), "[Partner] Ey there kid, just press that button over there to start.");
             }

@@ -1031,7 +1031,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
                     Location testLoc = LocationUtil.pickLocation(world, bvMax.getY(), bvMin, bvMax);
 
-                    if (testLoc.getBlock().getType() != Material.AIR) continue;
+                    if (!EnvironmentUtil.isAirBlock(testLoc.getBlock())) {
+                        continue;
+                    }
 
                     if (isFlagEnabled(JungleRaidFlag.END_OF_DAYS) || suddenD) {
                         TNTPrimed e = world.spawn(testLoc, TNTPrimed.class);

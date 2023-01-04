@@ -83,6 +83,14 @@ public class ItemUtil {
         }
         return returnStack;
     }
+
+    public static boolean isNullItemStack(ItemStack stack) {
+        return stack == null || stack.getType() == Material.AIR;
+    }
+
+    public static ItemStack newNullItemstack() {
+        return new ItemStack(Material.AIR);
+    }
     
     public static int countFilledSlots(Player player) {
 
@@ -94,7 +102,7 @@ public class ItemUtil {
 
         int count = 0;
         for (ItemStack aItemStack : inventory) {
-            if (aItemStack != null && aItemStack.getType() != Material.AIR) count++;
+            if (!ItemUtil.isNullItemStack(aItemStack)) count++;
         }
         return count;
     }

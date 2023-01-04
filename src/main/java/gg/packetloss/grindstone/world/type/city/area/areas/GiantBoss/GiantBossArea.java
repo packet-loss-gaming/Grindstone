@@ -559,12 +559,12 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                             Location playerLoc = player.getLocation();
 
                             Block block = playerLoc.getBlock();
-                            if (block.getType() != Material.AIR) {
+                            if (!EnvironmentUtil.isAirBlock(block)) {
                                 continue;
                             }
 
                             // Move down so if they jump the floor still ignites
-                            while (block.getRelative(BlockFace.DOWN).getType() == Material.AIR) {
+                            while (EnvironmentUtil.isAirBlock(block.getRelative(BlockFace.DOWN))) {
                                 block = block.getRelative(BlockFace.DOWN);
                             }
 
@@ -595,7 +595,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                                     Block block = trace.next().getBlock();
 
                                     // This really shouldn't happen often (ever) but let's be careful
-                                    if (block.getType() != Material.AIR && block.getType() != Material.FIRE) {
+                                    if (!EnvironmentUtil.isAirBlock(block) && block.getType() != Material.FIRE) {
                                         break;
                                     }
 

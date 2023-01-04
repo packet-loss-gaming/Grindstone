@@ -480,7 +480,7 @@ public class LocationUtil {
 
         Block searchBlock = loc.add(0, -1, 0).getBlock();
         if (predicate.test(searchBlock.getType())) return true;
-        if (searchBlock.getType() != Material.AIR) return false;
+        if (!EnvironmentUtil.isAirBlock(searchBlock)) return false;
 
         for (BlockFace blockFace : EnvironmentUtil.getSurroundingBlockFaces()) {
             if (predicate.test(searchBlock.getRelative(blockFace).getType())) return true;

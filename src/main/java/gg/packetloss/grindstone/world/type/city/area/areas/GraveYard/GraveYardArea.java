@@ -1273,7 +1273,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         Block block = location.getBlock();
 
         Material blockType = block.getType();
-        if (blockType == Material.AIR) return;
+        if (EnvironmentUtil.isAirBlock(blockType)) {
+            return;
+        }
 
         BlockFace[] targets;
         if (blockType.equals(Material.CRACKED_STONE_BRICKS)) {

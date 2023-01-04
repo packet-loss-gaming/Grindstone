@@ -48,6 +48,13 @@ public class EnvironmentUtil {
         return world.hasStorm() && world.isThundering();
     }
 
+    public static boolean isAirBlock(Material type) {
+        return type.isAir();
+    }
+    public static boolean isAirBlock(Block block) {
+        return isAirBlock(block.getType());
+    }
+
     private static final Set<Material> cropBlocks = Set.of(
             Material.WHEAT, Material.MELON_STEM, Material.CARROT, Material.POTATO, Material.PUMPKIN_STEM
     );

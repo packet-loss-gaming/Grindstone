@@ -90,12 +90,12 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
 
     private boolean isValidTarget(BlockVector2 target) {
         Block airBlock = world.getBlockAt(target.getBlockX(), FLOOR_LEVEL, target.getBlockZ());
-        if (airBlock.getType() != Material.AIR) {
+        if (!EnvironmentUtil.isAirBlock(airBlock)) {
             return false;
         }
 
         Block lavaBlock = world.getBlockAt(target.getBlockX(), LAVA_END, target.getBlockZ());
-        if (lavaBlock.getType() != Material.LAVA) {
+        if (!EnvironmentUtil.isLava(lavaBlock)) {
             return false;
         }
 
@@ -194,7 +194,7 @@ public class NinjaParkour extends AreaComponent<NinjaParkourConfig> {
         while (block.getType() == Material.BASALT) {
             Block next = block.getRelative(BlockFace.UP);
 
-            if (next.getType() == Material.AIR) {
+            if (EnvironmentUtil.isAirBlock(next)) {
                 if (block.getY() <= LAVA_END) {
                     block.setType(Material.LAVA);
                     return true;

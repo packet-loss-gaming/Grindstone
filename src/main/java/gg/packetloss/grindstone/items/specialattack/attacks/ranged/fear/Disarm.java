@@ -9,7 +9,7 @@ package gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import gg.packetloss.grindstone.util.ChanceUtil;
-import org.bukkit.Material;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
@@ -62,14 +62,12 @@ public class Disarm extends EntityAttack implements RangedSpecial {
 
         ItemStack held;
         if (target instanceof Player) {
-            held = ((Player) target).getItemInHand();
-            if (held != null) held = held.clone();
+            held = ((Player) target).getItemInHand().clone();
         } else if (target instanceof Skeleton) {
             held = null;
         } else {
-            held = target.getEquipment().getItemInHand();
-            if (held != null) held = held.clone();
+            held = target.getEquipment().getItemInHand().clone();
         }
-        return held == null || held.getType() == Material.AIR ? null : held;
+        return ItemUtil.isNullItemStack(held) ? null : held;
     }
 }

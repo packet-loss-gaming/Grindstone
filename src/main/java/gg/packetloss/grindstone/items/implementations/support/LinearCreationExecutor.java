@@ -18,7 +18,6 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
@@ -90,7 +89,7 @@ public class LinearCreationExecutor {
     }
 
     public boolean canItemStackBePlaced(ItemStack itemStack) {
-        return itemStack.getType() != Material.AIR && itemStack.getType().isBlock();
+        return !ItemUtil.isNullItemStack(itemStack) && itemStack.getType().isBlock();
     }
 
     public void placeBlocksFrom(Player player, Block curTarget, BlockFace clickedFace) {
@@ -117,7 +116,7 @@ public class LinearCreationExecutor {
         short maxDur = item.getType().getMaxDurability();
         short blocksPlaced = 1; // One block is already placed "by the player"
         for (int dist = getDist(item); dist > 0; ++blocksPlaced) {
-            if (curTarget.getType() != Material.AIR) {
+            if (!EnvironmentUtil.isAirBlock(curTarget)) {
                 if (!EnvironmentUtil.isShrubBlock(curTarget)) {
                     break;
                 }

@@ -13,6 +13,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
@@ -84,8 +85,8 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
 
                     if (!(y + 1 > getWorld().getMaxHeight())
                             && !(y + 1 > maxY)
-                            && block.getType() != Material.AIR
-                            && topBlock.getType() == Material.AIR
+                            && !EnvironmentUtil.isAirBlock(block)
+                            && EnvironmentUtil.isAirBlock(topBlock)
                             && !LocationUtil.isCloseToPlayer(block, 4)) {
                         if (ChanceUtil.getChance(config.increaseRate)) {
                             topBlock.setType(Material.SAND, false);
@@ -140,7 +141,7 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
 
         do {
             v = LocationUtil.pickLocation(min.getX(), max.getX(), min.getY(), max.getY(), min.getZ(), max.getZ());
-        } while (getRegion().contains(v) || !isRespawnBlock(v) || getBlock(v).getType() != Material.AIR);
+        } while (getRegion().contains(v) || !isRespawnBlock(v) || !EnvironmentUtil.isAirBlock(getBlock(v)));
         return new Location(world, v.getX(), v.getY(), v.getZ());
     }
 

@@ -134,7 +134,7 @@ public class LavaSupply {
                 for (int z = minZ; z <= maxZ; ++z) {
                     if (added < amount) {
                         Block block = world.getBlockAt(x, y, z);
-                        if (block.getType() != Material.AIR) {
+                        if (!EnvironmentUtil.isAirBlock(block)) {
                             continue;
                         }
 

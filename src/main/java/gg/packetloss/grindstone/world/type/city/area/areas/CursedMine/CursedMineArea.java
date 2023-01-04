@@ -344,7 +344,7 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
             for (int i = 0; i < ChanceUtil.getRangedRandom(2, 5); i++) {
                 Location spawnLoc = LocationUtil.findRandomLoc(playerLoc, 5, true, false);
 
-                if (spawnLoc.getBlock().getType() != Material.AIR) {
+                if (!EnvironmentUtil.isAirBlock(spawnLoc.getBlock())) {
                     spawnLoc = playerLoc;
                 }
 

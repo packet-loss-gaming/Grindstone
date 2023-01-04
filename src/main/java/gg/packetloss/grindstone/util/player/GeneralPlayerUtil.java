@@ -14,23 +14,23 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GeneralPlayerUtil {
-    public static void giveItemToPlayer(Player player, ItemStack... items) {
+    public static List<Item> giveItemToPlayer(Player player, ItemStack... items) {
+        List<Item> itemEntities = new ArrayList<>();
         for (ItemStack item : items) {
             ItemStack remainder = player.getInventory().addItem(item).get(0);
             if (remainder != null) {
-                EntityUtil.spawnProtectedItem(remainder, player);
+                itemEntities.add(EntityUtil.spawnProtectedItem(remainder, player));
             }
         }
+        return itemEntities;
     }
 
     public static boolean isFlyingGamemode(GameMode gameMode) {

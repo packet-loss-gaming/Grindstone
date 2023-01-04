@@ -6,8 +6,8 @@
 
 package gg.packetloss.grindstone.events;
 
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
@@ -35,7 +35,7 @@ public class PlayerSacrificeItemEvent extends PlayerEvent implements Cancellable
 
     public void setItemStack(ItemStack itemStack) {
         if (itemStack == null) {
-            itemStack = new ItemStack(Material.AIR);
+            itemStack = ItemUtil.newNullItemstack();
         }
 
         this.itemStack = itemStack;

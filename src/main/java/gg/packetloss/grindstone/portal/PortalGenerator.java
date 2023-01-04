@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.portal;
 
 import com.sk89q.worldedit.math.BlockVector3;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import org.bukkit.Axis;
 import org.bukkit.Material;
@@ -57,7 +58,7 @@ public class PortalGenerator {
 
     private boolean isAirOrFire(Block block) {
         Material blockType = block.getType();
-        return blockType == Material.AIR || blockType == Material.FIRE;
+        return EnvironmentUtil.isAirBlock(blockType) || blockType == Material.FIRE;
     }
 
     class PortalFiller {

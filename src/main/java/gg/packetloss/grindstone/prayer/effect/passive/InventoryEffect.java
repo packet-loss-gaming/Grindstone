@@ -8,10 +8,14 @@ package gg.packetloss.grindstone.prayer.effect.passive;
 
 import gg.packetloss.grindstone.prayer.PassivePrayerEffect;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import gg.packetloss.grindstone.util.item.ItemUtil;
+import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
 
 public class InventoryEffect implements PassivePrayerEffect {
     private final Material type;
@@ -31,9 +35,11 @@ public class InventoryEffect implements PassivePrayerEffect {
         ItemStack held = player.getItemInHand().clone();
         ItemStack stack = new ItemStack(type, ChanceUtil.getRandom(amount));
 
-        if (held.getType() != Material.AIR && !held.isSimilar(stack)) {
-            Item item = player.getWorld().dropItem(player.getLocation(), held);
-            item.setPickupDelay(20 * 5);
+        if (!ItemUtil.isNullItemStack(held) && !held.isSimilar(stack)) {
+            List<Item> items = GeneralPlayerUtil.giveItemToPlayer(player, held);
+            for (Item item : items) {
+                item.setPickupDelay(20 * 5);
+            }
         }
 
         player.setItemInHand(stack);

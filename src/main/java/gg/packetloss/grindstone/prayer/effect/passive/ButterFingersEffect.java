@@ -9,8 +9,8 @@ package gg.packetloss.grindstone.prayer.effect.passive;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.prayer.PassivePrayerEffect;
+import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -30,7 +30,7 @@ public class ButterFingersEffect implements PassivePrayerEffect {
 
         for (int i = 0; i < stacks.length; ++i) {
             ItemStack stack = stacks[i];
-            if (stack == null || stack.getType() == Material.AIR) {
+            if (ItemUtil.isNullItemStack(stack)) {
                 continue;
             }
 

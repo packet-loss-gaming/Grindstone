@@ -9,6 +9,7 @@ package gg.packetloss.grindstone;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
+import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.ChatColor;
@@ -80,7 +81,7 @@ public class DonationStoreComponent extends BukkitComponent implements Listener,
             Block block = loc.getBlock();
             BlockData blockData = block.getBlockData();
 
-            if (block.getType() != Material.AIR) continue;
+            if (EnvironmentUtil.isAirBlock(block)) continue;
 
             for (Player aPlayer : players) {
                 aPlayer.sendBlockChange(loc, Material.FIRE, (byte) 0);

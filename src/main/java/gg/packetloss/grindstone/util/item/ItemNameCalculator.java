@@ -108,7 +108,7 @@ public class ItemNameCalculator {
     }
 
     public static Optional<String> computeItemName(ItemStack stack) {
-        if (stack == null || stack.getType() == Material.AIR) {
+        if (ItemUtil.isNullItemStack(stack)) {
             return Optional.empty();
         }
 

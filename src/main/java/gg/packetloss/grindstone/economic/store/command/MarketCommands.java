@@ -27,7 +27,6 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.inventory.*;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -403,7 +402,7 @@ public class MarketCommands {
     @Command(name = "pricecheck", desc = "Price check your held")
     public void lookup(Player player, @Switch(name = 'e', desc = "extra") boolean extra) {
         ItemStack held = player.getInventory().getItemInMainHand();
-        if (held.getType() == Material.AIR) {
+        if (ItemUtil.isNullItemStack(held)) {
             ChatUtil.sendError(player, "Hold an item to price check.");
             return;
         }

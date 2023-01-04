@@ -354,7 +354,7 @@ public class NinjaListener implements Listener {
         Location bombLocation = targetLoc.clone();
 
         // Offset by 1 so that the bomb is not messed up by blocks
-        if (bombLocation.getBlock().getType() != Material.AIR) {
+        if (!EnvironmentUtil.isAirBlock(bombLocation.getBlock())) {
             bombLocation.add(0, 1, 0);
         }
 
@@ -511,9 +511,9 @@ public class NinjaListener implements Listener {
             case RIGHT_CLICK_BLOCK: {
                 if (!state.canGrapple()) break;
 
-                boolean isClimbableItem = stack.getType() == Material.AIR
-                        || ItemUtil.isSword(stack)
-                        || ItemUtil.isTool(stack);
+                boolean isClimbableItem = ItemUtil.isNullItemStack(stack)
+                                       || ItemUtil.isSword(stack)
+                                       || ItemUtil.isTool(stack);
 
                 if (!isClimbableItem) break;
 

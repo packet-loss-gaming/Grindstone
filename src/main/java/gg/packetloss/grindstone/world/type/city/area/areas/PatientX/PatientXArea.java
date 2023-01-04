@@ -513,7 +513,8 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
     private boolean canFreezeOrThawBlock(int x, int y, int z) {
         Block block = world.getBlockAt(x, y, z);
-        return block.getRelative(BlockFace.UP).getType() == Material.AIR && EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN));
+        return EnvironmentUtil.isAirBlock(block.getRelative(BlockFace.UP)) &&
+               EnvironmentUtil.isWater(block.getRelative(BlockFace.DOWN));
     }
 
     private void thawBlock(int x, int y, int z, boolean throwExplosives) {
