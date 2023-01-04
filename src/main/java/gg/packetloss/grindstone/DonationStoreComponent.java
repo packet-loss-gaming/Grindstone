@@ -81,7 +81,7 @@ public class DonationStoreComponent extends BukkitComponent implements Listener,
             Block block = loc.getBlock();
             BlockData blockData = block.getBlockData();
 
-            if (EnvironmentUtil.isAirBlock(block)) continue;
+            if (!EnvironmentUtil.isAirBlock(block)) continue;
 
             for (Player aPlayer : players) {
                 aPlayer.sendBlockChange(loc, Material.FIRE, (byte) 0);
