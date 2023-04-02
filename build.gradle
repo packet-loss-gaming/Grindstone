@@ -35,7 +35,7 @@ repositories {
     }
     maven {
         name 'Vault Repository'
-        url 'https://nexus.theyeticave.net/content/repositories/pub_releases'
+        url 'https://jitpack.io'
     }
     maven {
         name 'Protocol Lib Repository'
@@ -53,10 +53,10 @@ dependencies {
     compileOnly group: 'gg.packetloss', name: 'mc-mail-box', version: '1.16.5.1'
 
     implementation group: 'gg.packetloss', name: 'open-boss', version: '1.3.1'
-    implementation group: 'gg.packetloss', name: 'hackbook', version: '1.19.3.0'
-    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.19.3.0'
+    implementation group: 'gg.packetloss', name: 'hackbook', version: '1.19.4.0'
+    implementation group: 'gg.packetloss', name: 'bukkit-text', version: '1.19.4.0'
 
-    compileOnly group: 'io.papermc.paper', name: 'paper-api', version: '1.19.3-R0.1-SNAPSHOT'
+    compileOnly group: 'io.papermc.paper', name: 'paper-api', version: '1.19.4-R0.1-SNAPSHOT'
 
     compileOnly group: 'com.sk89q.worldedit', name: 'worldedit-bukkit', version: '7.2.0-SNAPSHOT'
     compileOnly group: 'com.sk89q.worldguard', name: 'worldguard-legacy', version: '7.0.0-SNAPSHOT'
@@ -72,7 +72,7 @@ dependencies {
 
     compileOnly group: "com.comphenix.protocol", name: "ProtocolLib", version: "5.0.0-SNAPSHOT"
 
-    compileOnly group: 'net.milkbowl.vault', name: 'Vault', version: '1.5.6'
+    compileOnly group: 'net.milkbowl.vault', name: 'VaultAPI', version: '1.7'
     compileOnly group: 'fr.neatmonster', name: 'nocheatplus', version: '3.13.7-RC'
     compileOnly(group: 'de.diddiz', name: 'logblock', version: '1.15.1.1-SNAPSHOT') {
         exclude group: 'com.sk89q', module: 'worldedit'
