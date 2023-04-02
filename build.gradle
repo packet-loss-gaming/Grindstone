@@ -48,7 +48,6 @@ repositories {
 }
 
 dependencies {
-    compileOnly group: 'com.garbagemule', name: 'mobarena', version: '0.104.3-SNAPSHOT'
     compileOnly group: 'gg.packetloss', name: 'pitfall', version: '2.1.2'
     compileOnly group: 'gg.packetloss', name: 'mc-mail-box', version: '1.16.5.1'
 
