@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.data;
 
 import com.zaxxer.hikari.HikariDataSource;
+import org.mariadb.jdbc.MariaDbDataSource;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,10 +39,15 @@ public class MySQLHandle {
 
     private static HikariDataSource createNewPool() {
         HikariDataSource newPool = new HikariDataSource();
-
-        newPool.setJdbcUrl(database);
-        newPool.setUsername(username);
-        newPool.setPassword(password);
+        MariaDbDataSource dataSource = new MariaDbDataSource();
+        try {
+            dataSource.setUrl(database);
+            dataSource.setUser(username);
+            dataSource.setPassword(password);
+            newPool.setDataSource(dataSource);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
         newPool.setMinimumIdle(4);
         newPool.setMaximumPoolSize(8);
