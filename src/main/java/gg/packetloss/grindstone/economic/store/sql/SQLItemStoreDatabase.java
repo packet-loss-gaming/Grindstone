@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.economic.store.sql;
 
+import com.google.common.collect.Lists;
 import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.economic.store.ItemStoreDatabase;
 import gg.packetloss.grindstone.economic.store.MarketItemInfo;
@@ -19,7 +20,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
 import static gg.packetloss.grindstone.economic.store.sql.MarketDatabaseHelper.MARKET_INFO_COLUMNS;
@@ -225,23 +225,6 @@ public class SQLItemStoreDatabase implements ItemStoreDatabase {
         adjustStocksCommon(transactionLines, false);
     }
 
-    public static int getItemID(String name) throws SQLException {
-        try (Connection connection = SQLHandle.getConnection()) {
-            String sql = """
-                SELECT id FROM minecraft.market_items WHERE name = ?
-            """;
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, name.toUpperCase());
-                try (ResultSet results = statement.executeQuery()) {
-                    if (results.next()) {
-                        return results.getInt(1);
-                    }
-                }
-            }
-        }
-        return -1;
-    }
-
     @Override
     public MarketItemInfo getItem(String name) {
         try (Connection connection  = SQLHandle.getConnection()) {
@@ -282,8 +265,7 @@ public class SQLItemStoreDatabase implements ItemStoreDatabase {
             );
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                List<String> uppercaseNames = names.stream().map(String::toUpperCase).collect(Collectors.toList());
-                setStringValues(statement, uppercaseNames);
+                setStringValues(statement, Lists.newArrayList(names));
 
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {

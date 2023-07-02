@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 import static gg.packetloss.grindstone.util.DBUtil.preparePlaceHolders;
 import static gg.packetloss.grindstone.util.DBUtil.setStringValues;
 
-public class MySQLFactoryJobDatabase implements FactoryJobDatabase {
+public class SQLFactoryJobDatabase implements FactoryJobDatabase {
     @Override
     public Optional<FactoryJob> getJob(UUID playerID, String itemName) {
         try (Connection connection = SQLHandle.getConnection()) {

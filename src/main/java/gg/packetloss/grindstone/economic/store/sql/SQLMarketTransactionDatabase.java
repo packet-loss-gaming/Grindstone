@@ -63,13 +63,24 @@ public class SQLMarketTransactionDatabase implements MarketTransactionDatabase {
 
     private String getFilterLogic(@Nullable String itemName, @Nullable UUID playerID) {
         if (itemName != null && playerID != null) {
-            return " WHERE items.name = ? AND players.uuid = ?";
+            return " WHERE market_items.name = ? AND players.uuid = ?";
         } else if (itemName != null) {
-            return " WHERE items.name = ?";
+            return " WHERE market_items.name = ?";
         } else if (playerID != null) {
             return " WHERE players.uuid = ?";
         }
         return "";
+    }
+
+    private void populateFilterQuery(PreparedStatement statement, @Nullable String itemName, @Nullable UUID playerID) throws SQLException {
+        if (itemName != null && playerID != null) {
+            statement.setString(1, itemName);
+            statement.setString(2, playerID.toString());
+        } else if (itemName != null) {
+            statement.setString(1, itemName);
+        } else if (playerID != null) {
+            statement.setString(1, playerID.toString());
+        }
     }
 
     private Map<Integer, MarketItemInfo> getAffectedItems(Connection connection, @Nullable String itemName,
@@ -77,13 +88,14 @@ public class SQLMarketTransactionDatabase implements MarketTransactionDatabase {
         Map<Integer, MarketItemInfo> itemMap = new HashMap<>();
 
         String sql = """
-            SELECT DISTINCT items.id, MARKET_INFO_COLUMNS FROM minecraft.market_transactions AS transactions
-                JOIN minecraft.players AS players ON players.id = transactions.player_id
-                JOIN minecraft.market_items AS items ON items.id = transactions.item
+            SELECT DISTINCT market_items.id, MARKET_INFO_COLUMNS FROM minecraft.market_transactions AS transactions
+            JOIN minecraft.players AS players ON players.id = transactions.player_id
+            JOIN minecraft.market_items ON market_items.id = transactions.item
         """.replace("MARKET_INFO_COLUMNS", MARKET_INFO_COLUMNS);
         sql += getFilterLogic(itemName, playerID);
 
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            populateFilterQuery(statement, itemName, playerID);
             try (ResultSet results = statement.executeQuery()) {
                 while (results.next()) {
                     itemMap.put(results.getInt(1), getMarketItem(results, 2));
@@ -101,14 +113,16 @@ public class SQLMarketTransactionDatabase implements MarketTransactionDatabase {
             Map<Integer, MarketItemInfo> lookupMap = getAffectedItems(connection, itemName, playerID);
 
             String sql = """
-                SELECT players.name, items.id, transactions.amount FROM minecraft.market_transactions AS transactions
-                    JOIN minecraft.players AS players ON players.id = transactions.player_id
-                    JOIN minecraft.market_items AS items ON items.id = transactions.item
+                SELECT players.name, market_items.id, transactions.amount
+                FROM minecraft.market_transactions AS transactions
+                JOIN minecraft.players AS players ON players.id = transactions.player_id
+                JOIN minecraft.market_items ON market_items.id = transactions.item
             """;
             sql += getFilterLogic(itemName, playerID);
-            sql += " ORDER BY `market-transactions`.`date` DESC";
+            sql += " ORDER BY transactions.date DESC";
 
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                populateFilterQuery(statement, itemName, playerID);
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
                         transactions.add(new ItemTransaction(

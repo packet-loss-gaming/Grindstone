@@ -115,7 +115,7 @@ public class SQLPixieContainerDatabase implements PixieContainerDatabase {
 
     private void appendBlockPlaceHolders(StringBuilder builder, Location... locations) {
         for (int i = 0; i < locations.length; ++i) {
-            builder.append("(x = ? AND y = ? AND z = ?)");
+            builder.append("(world = ? AND x = ? AND y = ? AND z = ?)");
             if (i != locations.length - 1) {
                 builder.append(" OR ");
             }
@@ -134,9 +134,10 @@ public class SQLPixieContainerDatabase implements PixieContainerDatabase {
         for (int i = 0; i < locations.length; ++i) {
             int rowOffset = i * 3;
 
-            statement.setInt(rowOffset + startingOffset + 1, locations[i].getBlockX());
-            statement.setInt(rowOffset + startingOffset + 2, locations[i].getBlockY());
-            statement.setInt(rowOffset + startingOffset + 3, locations[i].getBlockZ());
+            statement.setString(rowOffset + startingOffset + 1, locations[i].getWorld().getName());
+            statement.setInt(rowOffset + startingOffset + 2, locations[i].getBlockX());
+            statement.setInt(rowOffset + startingOffset + 3, locations[i].getBlockY());
+            statement.setInt(rowOffset + startingOffset + 4, locations[i].getBlockZ());
         }
     }
 
@@ -189,11 +190,20 @@ public class SQLPixieContainerDatabase implements PixieContainerDatabase {
     public Optional<Collection<Integer>> getNetworksInChunk(Chunk chunk) {
         try (Connection connection = SQLHandle.getConnection()) {
             String sql = """
-                SELECT DISTINCT network_id FROM minecraft.pixie_chests WHERE cx = ? AND cz = ? AND item_names IS NULL
+                SELECT DISTINCT network_id FROM minecraft.pixie_chests
+                    WHERE
+                        world = ?
+                    AND
+                        cx = ?
+                    AND
+                        cz = ?
+                    AND
+                        item_names IS NULL
             """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setInt(1, chunk.getX());
-                statement.setInt(2, chunk.getZ());
+                statement.setString(1, chunk.getWorld().getName());
+                statement.setInt(2, chunk.getX());
+                statement.setInt(3, chunk.getZ());
 
                 try (ResultSet results = statement.executeQuery()) {
                     List<Integer> networkIds = new ArrayList<>();

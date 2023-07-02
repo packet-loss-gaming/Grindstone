@@ -47,7 +47,8 @@ public class SQLLotteryWinnerDatabase implements LotteryWinnerDatabase {
         try (Connection connection = SQLHandle.getConnection()) {
             String sql = """
                 SELECT players.uuid, lottery.amount FROM minecraft.lottery_winners AS lottery
-                JOIN minecraft.players AS players ON players.id = lottery.player_id;
+                JOIN minecraft.players AS players ON players.id = lottery.player_id
+                ORDER BY lottery.date DESC LIMIT ?;
             """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setInt(1, limit);

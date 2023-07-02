@@ -23,7 +23,7 @@ import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
 import gg.packetloss.grindstone.world.type.city.area.areas.Factory.component.LavaSupply;
 import gg.packetloss.grindstone.world.type.city.area.areas.Factory.db.FactoryJobDatabase;
-import gg.packetloss.grindstone.world.type.city.area.areas.Factory.db.MySQLFactoryJobDatabase;
+import gg.packetloss.grindstone.world.type.city.area.areas.Factory.db.SQLFactoryJobDatabase;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -41,7 +41,7 @@ import static gg.packetloss.grindstone.util.ChatUtil.WHOLE_NUMBER_FORMATTER;
 @Depend(plugins = {"WorldGuard"}, components = {DatabaseComponent.class})
 public class FactoryArea extends AreaComponent<FactoryConfig> {
 
-    private FactoryJobDatabase jobDatabase = new MySQLFactoryJobDatabase();
+    private FactoryJobDatabase jobDatabase = new SQLFactoryJobDatabase();
 
     // Smelter
     protected LavaSupply lavaSupply;
