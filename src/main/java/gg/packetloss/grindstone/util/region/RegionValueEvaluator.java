@@ -19,6 +19,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -82,16 +83,22 @@ public class RegionValueEvaluator {
         PluginTaskExecutor.submitAsync(() -> {
             MarketItemLookupInstance nameItemMapping = MarketComponent.getLookupInstance(reportSource.allNames);
 
-            double blockPrice = 0;
+            BigDecimal blockPrice = BigDecimal.ZERO;
             for (Map.Entry<String, Integer> entry : reportSource.blockCounts.entrySet()) {
-                blockPrice += nameItemMapping.checkSellPrice(entry.getKey()).orElse(0d) * entry.getValue();
+                BigDecimal singleBlockPrice = nameItemMapping.checkSellPrice(entry.getKey()).orElse(BigDecimal.ZERO);
+                BigDecimal blockCount = BigDecimal.valueOf(entry.getValue());
+
+                blockPrice = blockPrice.add(singleBlockPrice.multiply(blockCount));
             }
 
-            double itemPrice = 0;
-            double maximumItemValue = 0;
+            BigDecimal itemPrice = BigDecimal.ZERO;
+            BigDecimal maximumItemValue = BigDecimal.ZERO;
             for (ItemStack entry : reportSource.items) {
-                itemPrice += nameItemMapping.checkSellPrice(entry).orElse(0d);
-                maximumItemValue += nameItemMapping.checkMaximumValue(entry).orElse(0d);
+                BigDecimal currItemPrice = nameItemMapping.checkSellPrice(entry).orElse(BigDecimal.ZERO);
+                itemPrice = itemPrice.add(currItemPrice);
+
+                BigDecimal possItemPrice = nameItemMapping.checkMaximumValue(entry).orElse(BigDecimal.ZERO);
+                maximumItemValue = maximumItemValue.add(possItemPrice);
             }
 
             future.complete(new RegionValueReport(blockPrice, itemPrice, maximumItemValue));

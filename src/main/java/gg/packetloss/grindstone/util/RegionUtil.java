@@ -22,6 +22,7 @@ import gg.packetloss.grindstone.util.region.RegionValueReport;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -145,11 +146,11 @@ public class RegionUtil {
         return Optional.empty();
     }
 
-    public static double calcChunkPrice(double chunkCount) {
-        return Math.pow(chunkCount, 4) * (chunkCount / 2);
+    public static BigDecimal calcChunkPrice(double chunkCount) {
+        return BigDecimal.valueOf(Math.pow(chunkCount, 4) * (chunkCount / 2));
     }
 
-    public static CompletableFuture<Double> calcBlockPrice(Region region, World world) {
+    public static CompletableFuture<BigDecimal> calcBlockPrice(Region region, World world) {
         try {
             return new RegionValueEvaluator(false)
                     .walkRegion(region, world)
@@ -159,7 +160,7 @@ public class RegionUtil {
         }
     }
 
-    public static CompletableFuture<Optional<Double>> calcBlockPrice(ProtectedRegion region, World world) {
+    public static CompletableFuture<Optional<BigDecimal>> calcBlockPrice(ProtectedRegion region, World world) {
         Optional<Region> convertedRegion = convert(region);
         if (convertedRegion.isPresent()) {
             return calcBlockPrice(convertedRegion.get(), world).thenApply(Optional::of);
@@ -168,8 +169,8 @@ public class RegionUtil {
         return CompletableFuture.completedFuture(Optional.empty());
     }
 
-    public static CompletableFuture<Optional<Double>> getPrice(Region region, World world, boolean commission) {
-        CompletableFuture<Optional<Double>> future = new CompletableFuture<>();
+    public static CompletableFuture<Optional<BigDecimal>> getPrice(Region region, World world, boolean commission) {
+        CompletableFuture<Optional<BigDecimal>> future = new CompletableFuture<>();
 
         Optional<Integer> size = countChunks(region);
         if (size.isEmpty()) {
@@ -177,12 +178,12 @@ public class RegionUtil {
             return future;
         }
 
-        CompletableFuture<Double> blockPriceFuture = calcBlockPrice(region, world);
+        CompletableFuture<BigDecimal> blockPriceFuture = calcBlockPrice(region, world);
         blockPriceFuture.thenAccept((blockPrice) -> {
-            double chunkPrice = calcChunkPrice(size.get());
-            double total = chunkPrice + blockPrice;
+            BigDecimal chunkPrice = calcChunkPrice(size.get());
+            BigDecimal total = chunkPrice.add(blockPrice);
             if (commission) {
-                total *= 1.1;
+                total = total.multiply(BigDecimal.valueOf(1.1));
             }
             future.complete(Optional.of(total));
         });

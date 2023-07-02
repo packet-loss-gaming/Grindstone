@@ -11,22 +11,30 @@ import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
 
 public class MarketItemInfo implements Comparable<MarketItemInfo> {
     private String name;
-    private double value, price;
+    private BigDecimal value;
+    private BigDecimal price;
     private int stock;
-    private boolean disableBuy, disableSell;
+    private boolean infinite;
+    private boolean disableBuy;
+    private boolean disableSell;
 
-    public MarketItemInfo(String name, double value, double price, int stock, boolean disableBuy, boolean disableSell) {
+    public MarketItemInfo(String name, BigDecimal value, BigDecimal price, int stock, boolean infinite,
+                          boolean disableBuy, boolean disableSell) {
         this.name = name;
         this.value = value;
         this.price = price;
         this.stock = stock;
+        this.infinite = infinite;
         this.disableBuy = disableBuy;
         this.disableSell = disableSell;
     }
@@ -51,26 +59,41 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return getUnqualifiedName().toUpperCase();
     }
 
-    public void setValue(double value) {
+    public void setValue(BigDecimal value) {
         this.value = value;
     }
 
-    public double getValue() {
+    public BigDecimal getValue() {
         return value;
     }
 
-    private double rounded(double input) {
-        double scale = Math.pow(10, 2);
-        return Math.round(input * scale) / scale;
+    private static BigDecimal doRounding(BigDecimal input) {
+        return input.setScale(2, RoundingMode.HALF_UP);
     }
 
-    public double getPrice() {
-        return rounded(price);
+    public BigDecimal getPrice() {
+        return doRounding(price);
     }
 
-    public double getSellPrice() {
-        double sellPrice = price >= LOWER_MARKET_LOSS_THRESHOLD ? price * .92 : price * .80;
-        return rounded(sellPrice);
+    /*
+    The tax applied when an item equals or exceeds LOWER_MARKET_LOSS_THRESHOLD.
+     */
+    private static final BigDecimal EXPENSIVE_ITEM_TAX = BigDecimal.valueOf(.92);
+    /*
+    The tax applied when an item is below the LOWER_MARKET_LOSS_THRESHOLD.
+     */
+    private static final BigDecimal CHEAP_ITEM_TAX = BigDecimal.valueOf(.80);
+
+    private BigDecimal getSellPriceNoRounding() {
+        if (price.compareTo(LOWER_MARKET_LOSS_THRESHOLD) >= 0) {
+            return price.multiply(EXPENSIVE_ITEM_TAX);
+        } else {
+            return price.multiply(CHEAP_ITEM_TAX);
+        }
+    }
+
+    public BigDecimal getSellPrice() {
+        return doRounding(getSellPriceNoRounding());
     }
 
     private Optional<Double> computePercentageSale(ItemStack stack) {
@@ -87,38 +110,40 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
         return Optional.of(percentageSale);
     }
 
-    public Optional<Double> getValueForStack(ItemStack stack) {
+    public Optional<BigDecimal> getValueForStack(ItemStack stack) {
         Optional<Double> optPercentageSale = computePercentageSale(stack);
         if (optPercentageSale.isEmpty()) {
             return Optional.empty();
         }
 
-        return Optional.of(optPercentageSale.get() * getValue() * stack.getAmount());
+        BigDecimal value = getValue();
+        BigDecimal percentSale = BigDecimal.valueOf(optPercentageSale.get());
+        BigDecimal amount = BigDecimal.valueOf(stack.getAmount());
+        return Optional.of(value.multiply(percentSale).multiply(amount));
     }
 
-    public Optional<Double> getSellUnitPriceForStack(ItemStack stack) {
+    public Optional<BigDecimal> getSellUnitPriceForStack(ItemStack stack) {
         Optional<Double> optPercentageSale = computePercentageSale(stack);
         if (optPercentageSale.isEmpty()) {
             return Optional.empty();
         }
 
-        return Optional.of(optPercentageSale.get() * getSellPrice());
+        BigDecimal salePrice = getSellPrice();
+        BigDecimal percentSale = BigDecimal.valueOf(optPercentageSale.get());
+        return Optional.of(salePrice.multiply(percentSale));
     }
 
-    public Optional<Double> getSellPriceForStack(ItemStack stack) {
-        return getSellUnitPriceForStack(stack).map((value) -> value * stack.getAmount());
-    }
-
-    public boolean hasStock() {
-        return stock != -1;
+    public Optional<BigDecimal> getSellPriceForStack(ItemStack stack) {
+        BigDecimal amount = BigDecimal.valueOf(stack.getAmount());
+        return getSellUnitPriceForStack(stack).map((value) -> value.multiply(amount));
     }
 
     public boolean hasInfiniteStock() {
-        return !hasStock();
+        return infinite;
     }
 
     public Optional<Integer> getStock() {
-        return hasStock() ? Optional.of(stock) : Optional.empty();
+        return hasInfiniteStock() ? Optional.empty() : Optional.of(stock);
     }
 
     public boolean isEnabled() {
@@ -146,12 +171,13 @@ public class MarketItemInfo implements Comparable<MarketItemInfo> {
     }
 
     @Override
-    public int compareTo(MarketItemInfo record) {
-        if (record == null) return -1;
-        if (this.getPrice() == record.getPrice()) {
-            int c = this.getUnqualifiedName().compareTo(record.getUnqualifiedName());
-            return c == 0 ? 1 : c;
+    public int compareTo(@NotNull MarketItemInfo record) {
+        /* Sort by price, then fallback to name. */
+        int priceComparison = this.getPrice().compareTo(record.getPrice());
+        if (priceComparison != 0) {
+            return priceComparison;
+        } else {
+            return this.getUnqualifiedName().compareTo(record.getUnqualifiedName());
         }
-        return this.getPrice() > record.getPrice() ? 1 : -1;
     }
 }

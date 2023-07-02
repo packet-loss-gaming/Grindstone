@@ -27,6 +27,7 @@ import org.enginehub.piston.annotation.param.Arg;
 import org.enginehub.piston.annotation.param.ArgFlag;
 import org.enginehub.piston.annotation.param.Switch;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -128,7 +129,14 @@ public class MarketAdminCommands {
         String itemName = getItemChecked(Joiner.on(' ').join(itemNameParts));
 
         // Database operations
-        component.addItem(itemName, price, infinite, disableBuy, disableSell).thenAcceptAsynchronously((oldItem) -> {
+        BigDecimal finalPrice = new BigDecimal(price);
+        component.addItem(
+            itemName,
+            finalPrice,
+            infinite,
+            disableBuy,
+            disableSell
+        ).thenAcceptAsynchronously((oldItem) -> {
             String noticeString = oldItem == null ? " added with a price of " : " is now ";
             ChatUtil.sendNotice(sender, ChatColor.BLUE, itemName.toUpperCase(), ChatColor.YELLOW, noticeString, wallet.format(price), "!");
             if (disableBuy) {

@@ -12,8 +12,8 @@ import gg.packetloss.grindstone.pixieitems.BrokerTransaction;
 import gg.packetloss.grindstone.pixieitems.PixieSinkCreationMode;
 import gg.packetloss.grindstone.pixieitems.TransactionBroker;
 import gg.packetloss.grindstone.pixieitems.db.*;
-import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieContainerDatabase;
-import gg.packetloss.grindstone.pixieitems.db.mysql.MySQLPixieNetworkDatabase;
+import gg.packetloss.grindstone.pixieitems.db.sql.SQLPixieContainerDatabase;
+import gg.packetloss.grindstone.pixieitems.db.sql.SQLPixieNetworkDatabase;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.RefCountedTracker;
@@ -47,8 +47,8 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
     private Map<Location, Integer> sourceToNetworkMapping = new HashMap<>();
     private ReentrantReadWriteLock networkLock = new ReentrantReadWriteLock();
 
-    private PixieNetworkDatabase networkDatabase = new MySQLPixieNetworkDatabase();
-    private PixieContainerDatabase chestDatabase = new MySQLPixieContainerDatabase();
+    private PixieNetworkDatabase networkDatabase = new SQLPixieNetworkDatabase();
+    private PixieContainerDatabase chestDatabase = new SQLPixieContainerDatabase();
 
     private NetworkLoadingWorker networkLoadingWorker;
 

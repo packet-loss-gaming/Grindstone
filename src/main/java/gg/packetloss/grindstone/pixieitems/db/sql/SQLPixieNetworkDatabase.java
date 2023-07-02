@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.pixieitems.db.mysql;
+package gg.packetloss.grindstone.pixieitems.db.sql;
 
 import com.sk89q.worldedit.math.BlockVector3;
-import gg.packetloss.grindstone.data.MySQLHandle;
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDatabase;
 import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
@@ -19,11 +19,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class MySQLPixieNetworkDatabase implements PixieNetworkDatabase {
+public class SQLPixieNetworkDatabase implements PixieNetworkDatabase {
     @Override
     public Optional<PixieNetworkDetail> createNetwork(UUID namespace, String name, Location origin) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "INSERT INTO `pixie-networks` (namespace, name, world, x, y, z) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                INSERT INTO minecraft.pixie_networks (namespace, name, world, x, y, z)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 statement.setString(1, namespace.toString());
                 statement.setString(2, name);
@@ -54,8 +57,10 @@ public class MySQLPixieNetworkDatabase implements PixieNetworkDatabase {
 
     @Override
     public Optional<PixieNetworkDetail> selectNetwork(UUID namespace, String name) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT id, world, x, y, z FROM `pixie-networks` WHERE namespace = ? AND name = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT id, world, x, y, z FROM minecraft.pixie_networks WHERE namespace = ? AND name = ?
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, namespace.toString());
                 statement.setString(2, name);
@@ -85,8 +90,10 @@ public class MySQLPixieNetworkDatabase implements PixieNetworkDatabase {
 
     @Override
     public Optional<PixieNetworkDetail> selectNetwork(int networkID) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT namespace, name, world, x, y, z FROM `pixie-networks` WHERE id = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT namespace, name, world, x, y, z FROM minecraft.pixie_networks WHERE id = ?
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setInt(1, networkID);
 
@@ -115,8 +122,10 @@ public class MySQLPixieNetworkDatabase implements PixieNetworkDatabase {
 
     @Override
     public List<PixieNetworkDetail> selectNetworks(UUID namespace) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT id, name, world, x, y, z FROM `pixie-networks` WHERE namespace = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT id, name, world, x, y, z FROM minecraft.pixie_networks WHERE namespace = ?
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, namespace.toString());
 

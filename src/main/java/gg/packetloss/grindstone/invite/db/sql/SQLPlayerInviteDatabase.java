@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.invite.db.mysql;
+package gg.packetloss.grindstone.invite.db.sql;
 
-import gg.packetloss.grindstone.data.MySQLHandle;
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.invite.db.InviteResult;
 import gg.packetloss.grindstone.invite.db.InviteStatus;
 import gg.packetloss.grindstone.invite.db.PlayerInviteDatabase;
@@ -22,11 +22,13 @@ import java.util.UUID;
 
 import static gg.packetloss.grindstone.util.DBUtil.preparePlaceHolders;
 
-public class MySQLPlayerInviteDatabase implements PlayerInviteDatabase {
+public class SQLPlayerInviteDatabase implements PlayerInviteDatabase {
     @Override
     public InviteResult addInvite(UUID existingPlayer, UUID newPlayer) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String checkSQL = "SELECT `invitee` FROM `player-invites` WHERE `player-invites`.`invitee` = ? LIMIT 1";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String checkSQL = """
+                SELECT invitee FROM minecraft.player_invites WHERE invitee = ? LIMIT 1
+            """;
             try (PreparedStatement statement = connection.prepareStatement(checkSQL)) {
                 statement.setString(1, newPlayer.toString());
 
@@ -37,9 +39,10 @@ public class MySQLPlayerInviteDatabase implements PlayerInviteDatabase {
                 }
             }
 
-            String insertSQL = "INSERT INTO `player-invites` (`invitor`, `invitee`) " +
-                              "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?)";
-
+            String insertSQL = """
+                INSERT INTO minecraft.player_invites (invitor, invitee)
+                VALUES ((SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1), ?)
+            """;
             try (PreparedStatement statement = connection.prepareStatement(insertSQL)) {
                 statement.setString(1, existingPlayer.toString());
                 statement.setString(2, newPlayer.toString());
@@ -55,9 +58,12 @@ public class MySQLPlayerInviteDatabase implements PlayerInviteDatabase {
 
     @Override
     public Optional<UUID> getInvitor(UUID newPlayer) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `l-p`.`UUID` FROM `player-invites` JOIN `lb-players` `l-p` ON " +
-                         "`l-p`.playerid = `player-invites`.invitor WHERE `player-invites`.`invitee` = ? LIMIT 1";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT players.uuid FROM minecraft.player_invites
+                JOIN minecraft.players ON players.id = player_invites.invitor
+                WHERE invitee = ? LIMIT 1
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, newPlayer.toString());
 
@@ -78,9 +84,10 @@ public class MySQLPlayerInviteDatabase implements PlayerInviteDatabase {
 
     @Override
     public void markNewPlayerJoined(UUID newPlayer) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String insertSQL = "UPDATE `player-invites` SET `player-invites`.`status` = ? " +
-                "WHERE `player-invites`.`invitee` = ? AND `player-invites`.`status` = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String insertSQL = """
+                UPDATE minecraft.player_invites SET status = ? WHERE invitee = ? AND status = ?
+            """;
 
             try (PreparedStatement statement = connection.prepareStatement(insertSQL)) {
                 statement.setInt(1, InviteStatus.JOINED.ordinal());
@@ -97,10 +104,14 @@ public class MySQLPlayerInviteDatabase implements PlayerInviteDatabase {
 
     @Override
     public List<Integer> getInvitesByStatus(UUID existingPlayer, InviteStatus status) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `player-invites`.`id` FROM `player-invites` WHERE `player-invites`.`invitor` = " +
-                "(SELECT `lb-players`.`playerid` FROM `lb-players` WHERE `lb-players`.`UUID` = ?) AND " +
-                "`player-invites`.`status` = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT id FROM minecraft.player_invites
+                    WHERE
+                        invitor = (SELECT id FROM minecraft.players WHERE uuid = ?)
+                    AND
+                        status = ?
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, existingPlayer.toString());
                 statement.setInt(2, status.ordinal());
@@ -126,9 +137,12 @@ public class MySQLPlayerInviteDatabase implements PlayerInviteDatabase {
             return;
         }
 
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String insertSQL = "UPDATE `player-invites` SET `player-invites`.`status` = ? " +
-                "WHERE `player-invites`.`id` IN (" + preparePlaceHolders(inviteIDs.size()) + ")";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String insertSQL = """
+                UPDATE minecraft.player_invites SET status = ?
+                WHERE id IN (
+            """;
+            insertSQL += preparePlaceHolders(inviteIDs.size()) + ')';
 
             try (PreparedStatement statement = connection.prepareStatement(insertSQL)) {
                 statement.setInt(1, newStatus.ordinal());

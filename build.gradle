@@ -78,7 +78,7 @@ dependencies {
     }
 
     implementation group: 'net.sf.opencsv', name: 'opencsv', version: '2.0'
-    implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '3.1.4'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.6.0'
     implementation group: 'com.zaxxer', name: 'HikariCP', version: '5.0.1'
 
     compileOnly 'com.sk89q.worldedit.worldedit-libs:ap:7.2.0-SNAPSHOT'
@@ -118,8 +118,8 @@ shadowJar {
         relocate ("gg.packetloss.openboss", "gg.packetloss.grindstone.shaded.openboss") {
             include(dependency("gg.packetloss:open-boss"))
         }
-        relocate ("org.mariadb.jdbc", "gg.packetloss.grindstone.shaded.mariadb-java-client") {
-            include(dependency("org.mariadb.jdbc:mariadb-java-client"))
+        relocate ("org.postgresql", "gg.packetloss.grindstone.shaded.postgres-java-client") {
+            include(dependency("org.postgresql:postgresql"))
         }
         relocate ("com.zaxxer.hikari", "gg.packetloss.grindstone.shaded.hikari") {
             include(dependency("com.zaxxer:HikariCP"))

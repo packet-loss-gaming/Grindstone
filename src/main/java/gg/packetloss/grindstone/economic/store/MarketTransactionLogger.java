@@ -6,7 +6,6 @@
 
 package gg.packetloss.grindstone.economic.store;
 
-import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
 import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
 import gg.packetloss.grindstone.events.economy.MarketSellEvent;
 import gg.packetloss.grindstone.util.PluginTaskExecutor;
@@ -16,7 +15,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 public class MarketTransactionLogger implements Listener {
-    private MarketTransactionDatabase transactionDatabase;
+    private final MarketTransactionDatabase transactionDatabase;
 
     public MarketTransactionLogger(MarketTransactionDatabase transactionDatabase) {
         this.transactionDatabase = transactionDatabase;
@@ -26,10 +25,7 @@ public class MarketTransactionLogger implements Listener {
     public void onMarketPurchase(MarketPurchaseEvent event) {
         Player player = event.getPlayer();
         PluginTaskExecutor.submitAsync(() -> {
-            for (MarketTransactionLine transactionLine : event.getTransactionLines()) {
-                transactionDatabase.logPurchaseTransaction(player, transactionLine);
-            }
-            transactionDatabase.save();
+            transactionDatabase.logPurchaseTransactions(player.getUniqueId(), event.getTransactionLines());
         });
     }
 
@@ -37,10 +33,7 @@ public class MarketTransactionLogger implements Listener {
     public void onMarketSale(MarketSellEvent event) {
         Player player = event.getPlayer();
         PluginTaskExecutor.submitAsync(() -> {
-            for (MarketTransactionLine transactionLine : event.getTransactionLines()) {
-                transactionDatabase.logSaleTransaction(player, transactionLine);
-            }
-            transactionDatabase.save();
+            transactionDatabase.logSaleTransactions(player.getUniqueId(), event.getTransactionLines());
         });
     }
 }

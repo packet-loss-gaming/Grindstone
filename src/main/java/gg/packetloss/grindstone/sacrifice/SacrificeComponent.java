@@ -55,7 +55,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -505,7 +505,11 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
             return;
         }
 
-        highScores.update(player, ScoreTypes.SACRIFICED_VALUE, totalValue.round(MathContext.UNLIMITED).toBigInteger());
+        highScores.update(
+            player,
+            ScoreTypes.SACRIFICED_VALUE,
+            totalValue.setScale(0, RoundingMode.HALF_UP).toBigInteger()
+        );
 
         SacrificeSession session = sessions.getSession(SacrificeSession.class, player);
         session.addItems(getCalculatedLoot(new SacrificeInformation(player, totalValue)));

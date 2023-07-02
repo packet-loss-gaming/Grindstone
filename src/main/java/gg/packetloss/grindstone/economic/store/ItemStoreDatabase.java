@@ -8,33 +8,22 @@ package gg.packetloss.grindstone.economic.store;
 
 import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public interface ItemStoreDatabase {
-
     /**
-     * Load the item database.
-     *
-     * @return whether the operation was fully successful
+     * Mass market operations.
      */
-    boolean load();
-
-    /**
-     * Save the database.
-     *
-     * @return whether the operation was fully successful
-     */
-    boolean save();
-
     void updatePrices(int restockingRounds);
+    void scaleMarket(double factor);
 
     /**
      * Add/Set an item
      */
-    void addItem(String itemName, double price, boolean infinite, boolean disableBuy, boolean disableSell);
-
+    void addItem(String itemName, BigDecimal price, boolean infinite, boolean disableBuy, boolean disableSell);
     void removeItem(String itemName);
 
     /**

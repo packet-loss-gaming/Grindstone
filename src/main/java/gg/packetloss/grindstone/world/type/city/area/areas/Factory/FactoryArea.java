@@ -13,7 +13,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import gg.packetloss.bukkittext.Text;
-import gg.packetloss.grindstone.data.DataBaseComponent;
+import gg.packetloss.grindstone.data.DatabaseComponent;
 import gg.packetloss.grindstone.modifiers.ModifierComponent;
 import gg.packetloss.grindstone.modifiers.ModifierType;
 import gg.packetloss.grindstone.util.*;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 import static gg.packetloss.grindstone.util.ChatUtil.WHOLE_NUMBER_FORMATTER;
 
 @ComponentInformation(friendlyName = "Factory", desc = "Mass production, now for the masses")
-@Depend(plugins = {"WorldGuard"}, components = {DataBaseComponent.class})
+@Depend(plugins = {"WorldGuard"}, components = {DatabaseComponent.class})
 public class FactoryArea extends AreaComponent<FactoryConfig> {
 
     private FactoryJobDatabase jobDatabase = new MySQLFactoryJobDatabase();

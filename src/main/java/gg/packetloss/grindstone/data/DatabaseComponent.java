@@ -6,20 +6,22 @@
 
 package gg.packetloss.grindstone.data;
 
+import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 
 @ComponentInformation(friendlyName = "Database", desc = "MySQL database handler.")
-public class DataBaseComponent extends BukkitComponent {
-
+public class DatabaseComponent extends BukkitComponent {
+    private final PlayerDatabase playerDatabase = new PlayerDatabase();
     private LocalConfiguration config;
 
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
         updateHandle();
+        CommandBook.registerEvents(new PlayerDatabaseListener(playerDatabase));
     }
 
     @Override
@@ -39,8 +41,8 @@ public class DataBaseComponent extends BukkitComponent {
     }
 
     public void updateHandle() {
-        MySQLHandle.setDatabase(config.database);
-        MySQLHandle.setUsername(config.username);
-        MySQLHandle.setPassword(config.password);
+        SQLHandle.setDatabase(config.database);
+        SQLHandle.setUsername(config.username);
+        SQLHandle.setPassword(config.password);
     }
 }

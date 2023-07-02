@@ -11,12 +11,6 @@ import java.util.UUID;
 
 
 public interface LotteryTicketDatabase {
-    static final UUID CPU_ID = UUID.fromString("c0321170-74eb-4f24-b559-b3cb8dc1ddc1");
-
-    boolean load();
-
-    boolean save();
-
     void addTickets(UUID playerID, int count);
     void addCPUTickets(int count);
 

@@ -7,29 +7,15 @@
 package gg.packetloss.grindstone.economic.store;
 
 import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
-import org.bukkit.entity.Player;
 
+import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
 public interface MarketTransactionDatabase {
-    /**
-     * Load the database.
-     *
-     * @return whether the operation was fully successful
-     */
-    boolean load();
+    void logPurchaseTransactions(UUID playerID, Collection<MarketTransactionLine> transactionLines);
+    void logSaleTransactions(UUID playerID, Collection<MarketTransactionLine> transactionLines);
 
-    /**
-     * Save the database.
-     *
-     * @return whether the operation was fully successful
-     */
-    boolean save();
-
-    void logPurchaseTransaction(Player player, MarketTransactionLine transactionLine);
-    void logSaleTransaction(Player player, MarketTransactionLine transactionLine);
-
-    List<ItemTransaction> getTransactions();
-    List<ItemTransaction> getTransactions(String itemName, UUID playerID);
+    List<ItemTransaction> getTransactions(@Nullable String itemName, @Nullable UUID playerID);
 }

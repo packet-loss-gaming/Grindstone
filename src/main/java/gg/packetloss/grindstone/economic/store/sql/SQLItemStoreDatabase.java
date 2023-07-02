@@ -4,15 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.economic.store.mysql;
+package gg.packetloss.grindstone.economic.store.sql;
 
-import gg.packetloss.grindstone.data.MySQLHandle;
-import gg.packetloss.grindstone.data.MySQLPreparedStatement;
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.economic.store.ItemStoreDatabase;
 import gg.packetloss.grindstone.economic.store.MarketItemInfo;
 import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
 import gg.packetloss.grindstone.util.ChanceUtil;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,64 +22,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.LOWER_MARKET_LOSS_THRESHOLD;
-import static gg.packetloss.grindstone.economic.store.mysql.MarketDatabaseHelper.MARKET_INFO_COLUMNS;
-import static gg.packetloss.grindstone.economic.store.mysql.MarketDatabaseHelper.getMarketItem;
+import static gg.packetloss.grindstone.economic.store.sql.MarketDatabaseHelper.MARKET_INFO_COLUMNS;
+import static gg.packetloss.grindstone.economic.store.sql.MarketDatabaseHelper.getMarketItem;
 import static gg.packetloss.grindstone.util.DBUtil.preparePlaceHolders;
 import static gg.packetloss.grindstone.util.DBUtil.setStringValues;
 
-public class MySQLItemStoreDatabase implements ItemStoreDatabase {
-    private final Queue<MySQLPreparedStatement> queue = new LinkedList<>();
+public class SQLItemStoreDatabase implements ItemStoreDatabase {
+    private static final BigDecimal X_DIVISOR = BigDecimal.valueOf(50);
 
-    @Override
-    public boolean load() {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String mainSQL = "CREATE TABLE IF NOT EXISTS `market-items` (" +
-                    "`id` INT NOT NULL AUTO_INCREMENT," +
-                    "`name` VARCHAR(50) NOT NULL," +
-                    "`price` DOUBLE NOT NULL," +
-                    "`current-price` DOUBLE NOT NULL," +
-                    "`stock` INT NOT NULL DEFAULT 0," +
-                    "`buyable` TINYINT(1) NOT NULL," +
-                    "`sellable` TINYINT(1) NOT NULL," +
-                    "PRIMARY KEY (`id`)," +
-                    "UNIQUE INDEX `name` (`name`)" +
-                    ") ENGINE=MyISAM;";
-            try (PreparedStatement statement = connection.prepareStatement(mainSQL)) {
-                statement.executeUpdate();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
+    private int getMaxAutoStock(BigDecimal baseValue) {
+        baseValue = baseValue.add(X_DIVISOR).setScale(0, RoundingMode.HALF_UP);
+        baseValue = baseValue.divide(X_DIVISOR, RoundingMode.HALF_UP);
+        return (BigDecimal.valueOf(10000).divide(baseValue, RoundingMode.HALF_UP)).intValueExact();
     }
 
-    @Override
-    public boolean save() {
-        if (queue.isEmpty()) return true;
-        try (Connection connection = MySQLHandle.getConnection()) {
-            connection.setAutoCommit(false);
-            while (!queue.isEmpty()) {
-                MySQLPreparedStatement row = queue.poll();
-                row.setConnection(connection);
-                row.executeStatements();
-            }
-            connection.commit();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    private static final int X_DIVISOR = 50;
-
-    private int getMaxAutoStock(double baseValue) {
-        baseValue = Math.round(baseValue + X_DIVISOR);
-        return (int) (10000 / (baseValue / X_DIVISOR));
-    }
-
-    private int getNewStock(double baseValue, int existingStock) {
+    private int getNewStock(BigDecimal baseValue, int existingStock) {
         int maxAutoStock = getMaxAutoStock(baseValue);
         int restockAmount = ChanceUtil.getRangedRandom(0, Math.max(1, maxAutoStock / 10));
         int restockedStock = Math.min(maxAutoStock, existingStock + restockAmount);
@@ -86,7 +44,7 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         return Math.max(existingStock, restockedStock);
     }
 
-    private int applyStockNoise(double baseValue, int newStock) {
+    private int applyStockNoise(BigDecimal baseValue, int newStock) {
         int maxAutoStock = getMaxAutoStock(baseValue);
 
         // Inject:
@@ -102,9 +60,9 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         return newStock;
     }
 
-    private int getNewStock(double baseValue, int existingStock, int restockingRounds) {
+    private int getNewStock(BigDecimal baseValue, int existingStock, int restockingRounds) {
         // If we have something in the lower market loss threshold, it's self managed.
-        if (baseValue >= LOWER_MARKET_LOSS_THRESHOLD) {
+        if (baseValue.compareTo(LOWER_MARKET_LOSS_THRESHOLD) >= 0) {
             return existingStock;
         }
 
@@ -116,42 +74,46 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         return existingStock;
     }
 
-    private double getNewValue(double baseValue, int newStock) {
+    private BigDecimal getNewValue(BigDecimal baseValue, int newStock) {
         int targetStock = Math.max(10, getMaxAutoStock(baseValue));
-        double percentOutOfStock = Math.max(0d, targetStock - newStock) / targetStock;
+        BigDecimal percentOutOfStock = BigDecimal.valueOf(Math.max(0d, targetStock - newStock) / targetStock);
 
         // Use multipliers that result in a net 0, from min - max fluctuation
-        double multiplier = .1;
-        if (baseValue >= LOWER_MARKET_LOSS_THRESHOLD) {
-            multiplier = .04;
+        BigDecimal multiplier = BigDecimal.valueOf(.1);
+        if (baseValue.compareTo(LOWER_MARKET_LOSS_THRESHOLD) >= 0) {
+            multiplier = BigDecimal.valueOf(.04);
         }
 
         // Inject 30% noise
-        multiplier *= ChanceUtil.getRangedRandom(.7d, 1d);
+        double noise = ChanceUtil.getRangedRandom(.7d, 1d);
+        multiplier = multiplier.multiply(BigDecimal.valueOf(noise));
 
-        double change = baseValue * multiplier;
+        BigDecimal change = baseValue.multiply(multiplier);
 
-        double minPrice = baseValue - change;
-        double maxOverMin = 2 * change;
-        return minPrice + (percentOutOfStock * maxOverMin);
+        BigDecimal minPrice = baseValue.subtract(change);
+        BigDecimal maxOverMin = BigDecimal.valueOf(2).multiply(change);
+        return minPrice.add(percentOutOfStock.multiply(maxOverMin));
     }
 
     @Override
     public void updatePrices(int restockingRounds) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String updateSql = "UPDATE `market-items` SET `current-price` = ?, `stock` = ? WHERE `id` = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String updateSql = """
+                UPDATE minecraft.market_items SET current_price = ?, stock = ? WHERE id = ?
+            """;
             try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
-
-                String sql = "SELECT `id`, `price`, `stock` FROM `market-items`";
+                String sql = """
+                     SELECT id, price, stock FROM minecraft.market_items
+                """;
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
                     try (ResultSet results = statement.executeQuery()) {
                         while (results.next()) {
                             int id = results.getInt(1);
-                            double price = results.getDouble(2);
+                            BigDecimal price = results.getBigDecimal(2);
                             int stock = results.getInt(3);
 
                             int newStock = getNewStock(price, stock, restockingRounds);
-                            updateStatement.setDouble(1, getNewValue(price, newStock));
+                            updateStatement.setBigDecimal(1, getNewValue(price, newStock));
                             updateStatement.setInt(2, newStock);
                             updateStatement.setInt(3, id);
 
@@ -168,18 +130,69 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     @Override
-    public void addItem(String itemName, double price, boolean infinite, boolean disableBuy, boolean disableSell) {
-        queue.add(new ItemRowStatement(itemName, price, infinite, !disableBuy, !disableSell));
+    public void scaleMarket(double factor) {
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                UPDATE minecraft.market_items SET price = price * ?, current_price = price * ?
+            """;
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setDouble(1, factor);
+                statement.setDouble(2, factor);
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void addItem(String itemName, BigDecimal price, boolean infinite, boolean disableBuy, boolean disableSell) {
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                INSERT INTO minecraft.market_items (name, price, current_price, infinite, buyable, sellable)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT (name) DO UPDATE SET
+                    price = excluded.price,
+                    current_price = excluded.current_price,
+                    infinite = excluded.infinite,
+                    buyable = excluded.buyable,
+                    sellable = excluded.sellable
+            """;
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, itemName);
+                statement.setBigDecimal(2, price);
+                statement.setBigDecimal(3, price);
+                statement.setBoolean(4, infinite);
+                statement.setBoolean(5, !disableBuy);
+                statement.setBoolean(6, !disableSell);
+                statement.execute();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void removeItem(String itemName) {
-        queue.add(new ItemDeleteStatement(itemName));
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                DELETE FROM minecraft.market_items WHERE name = ?
+            """;
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, itemName);
+                statement.execute();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void adjustStocksCommon(List<MarketTransactionLine> transactionLines, boolean purchase) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String updateSql = "UPDATE `market-items` SET `stock` = `stock` + ? WHERE `name` = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String updateSql = """
+                UPDATE minecraft.market_items SET stock = stock + ? WHERE name = ?
+            """;
             try (PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
                 for (MarketTransactionLine transactionLine : transactionLines) {
                     if (transactionLine.getItem().hasInfiniteStock()) {
@@ -213,8 +226,10 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     }
 
     public static int getItemID(String name) throws SQLException {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `id` FROM `market-items` WHERE `name` = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT id FROM minecraft.market_items WHERE name = ?
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, name.toUpperCase());
                 try (ResultSet results = statement.executeQuery()) {
@@ -229,8 +244,10 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
 
     @Override
     public MarketItemInfo getItem(String name) {
-        try (Connection connection  = MySQLHandle.getConnection()) {
-            String sql = "SELECT " + MARKET_INFO_COLUMNS + " FROM `market-items` WHERE `name` = ?";
+        try (Connection connection  = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT MARKET_INFO_COLUMNS FROM minecraft.market_items WHERE name = ?
+            """.replace("MARKET_INFO_COLUMNS", MARKET_INFO_COLUMNS);
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, name.toUpperCase());
                 try (ResultSet results = statement.executeQuery()) {
@@ -253,8 +270,17 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
             return nameItemMapping;
         }
 
-        try (Connection connection  = MySQLHandle.getConnection()) {
-            String sql = "SELECT " + MARKET_INFO_COLUMNS + " FROM `market-items` WHERE `name` IN (" + preparePlaceHolders(names.size()) + ")";
+        try (Connection connection  = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT MARKET_INFO_COLUMNS FROM minecraft.market_items WHERE name IN (MARKET_INFO_COLUMN_PLACEHOLDERS)
+            """.replace(
+                "MARKET_INFO_COLUMNS",
+                MARKET_INFO_COLUMNS
+            ).replace(
+                "MARKET_INFO_COLUMN_PLACEHOLDERS",
+                preparePlaceHolders(names.size())
+            );
+
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 List<String> uppercaseNames = names.stream().map(String::toUpperCase).collect(Collectors.toList());
                 setStringValues(statement, uppercaseNames);
@@ -278,8 +304,11 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
     @Override
     public List<MarketItemInfo> getItemList() {
         List<MarketItemInfo> items = new ArrayList<>();
-        try (Connection connection = MySQLHandle.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement("SELECT " + MARKET_INFO_COLUMNS + " FROM `market-items`")) {
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT MARKET_INFO_COLUMNS FROM minecraft.market_items
+            """.replace("MARKET_INFO_COLUMNS", MARKET_INFO_COLUMNS);
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 try (ResultSet results = statement.executeQuery()) {
                     while (results.next()) {
                         items.add(getMarketItem(results, 1));
@@ -299,11 +328,14 @@ public class MySQLItemStoreDatabase implements ItemStoreDatabase {
         }
 
         List<MarketItemInfo> items = new ArrayList<>();
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT " + MARKET_INFO_COLUMNS + " FROM `market-items` WHERE SUBSTRING_INDEX(`name`, ':', -1) LIKE ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT MARKET_INFO_COLUMNS FROM minecraft.market_items WHERE split_part(name, ':', -1) LIKE ?
+            """.replace("MARKET_INFO_COLUMNS", MARKET_INFO_COLUMNS);
             if (!showHidden) {
-                sql += " AND (`buyable` = true OR `sellable` = true)";
+                sql += " AND (buyable = true OR sellable = true)";
             }
+
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, "%" + filter.replaceAll("\\s+", "_") + "%");
                 try (ResultSet results = statement.executeQuery()) {

@@ -10,7 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import gg.packetloss.grindstone.data.MySQLHandle;
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.world.type.city.CityCoreComponent;
 import gg.packetloss.grindstone.world.type.range.RangeCoreComponent;
 import org.bukkit.entity.Player;
@@ -63,7 +63,7 @@ public class PlayerHistoryComponent extends BukkitComponent implements Listener 
         }
 
         try {
-            Optional<Long> optOnlineTime = MySQLHandle.getOnlineTime(playerID);
+            Optional<Long> optOnlineTime = SQLHandle.getOnlineTime(playerID);
             if (optOnlineTime.isPresent()) {
                 history.loadExistingPlayer(optOnlineTime.get());
             } else {

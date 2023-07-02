@@ -6,14 +6,13 @@
 
 package gg.packetloss.grindstone.economic.lottery;
 
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.util.PlayernameGenerator;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import java.math.BigDecimal;
 import java.util.UUID;
-
-import static gg.packetloss.grindstone.economic.lottery.LotteryTicketDatabase.CPU_ID;
 
 public class LotteryWinner {
     private UUID playerID;
@@ -25,7 +24,7 @@ public class LotteryWinner {
     }
 
     public boolean isBot() {
-        return playerID.equals(CPU_ID);
+        return playerID.equals(SQLHandle.CPU_ID);
     }
 
     public UUID getPlayerID() {

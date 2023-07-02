@@ -14,11 +14,11 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
-import gg.packetloss.grindstone.data.DataBaseComponent;
-import gg.packetloss.grindstone.highscore.mysql.MySQLHighScoresDatabase;
+import gg.packetloss.grindstone.data.DatabaseComponent;
 import gg.packetloss.grindstone.highscore.scoretype.GobletScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreType;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
+import gg.packetloss.grindstone.highscore.sql.SQLHighScoresDatabase;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.PluginTaskExecutor;
 import gg.packetloss.grindstone.util.TimeUtil;
@@ -39,7 +39,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "High Scores Component", desc = "High Scores")
-@Depend(components = {ChatBridgeComponent.class, DataBaseComponent.class})
+@Depend(components = {ChatBridgeComponent.class, DatabaseComponent.class})
 public class HighScoresComponent extends BukkitComponent {
 
     private static final CommandBook inst = CommandBook.inst();
@@ -74,7 +74,7 @@ public class HighScoresComponent extends BukkitComponent {
     private Lock highScoreLock = new ReentrantLock();
     private List<HighScoreUpdate> highScoreUpdates = new ArrayList<>();
 
-    private HighScoreDatabase database = new MySQLHighScoresDatabase();
+    private HighScoreDatabase database = new SQLHighScoresDatabase();
 
     private GobletScoreType gobletScoreType;
     private GobletState gobletState = new GobletState();

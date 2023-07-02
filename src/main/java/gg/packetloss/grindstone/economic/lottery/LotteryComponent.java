@@ -17,9 +17,9 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
-import gg.packetloss.grindstone.data.DataBaseComponent;
-import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryTicketDatabase;
-import gg.packetloss.grindstone.economic.lottery.mysql.MySQLLotteryWinnerDatabase;
+import gg.packetloss.grindstone.data.DatabaseComponent;
+import gg.packetloss.grindstone.economic.lottery.sql.SQLLotteryTicketDatabase;
+import gg.packetloss.grindstone.economic.lottery.sql.SQLLotteryWinnerDatabase;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
 import gg.packetloss.grindstone.exceptions.NotFoundException;
@@ -53,7 +53,7 @@ import static gg.packetloss.grindstone.util.ChatUtil.WHOLE_NUMBER_FORMATTER;
 
 
 @ComponentInformation(friendlyName = "Lottery", desc = "Can you win it big?")
-@Depend(plugins = {"Vault"}, components = {ChatBridgeComponent.class, DataBaseComponent.class, WalletComponent.class})
+@Depend(plugins = {"Vault"}, components = {ChatBridgeComponent.class, DatabaseComponent.class, WalletComponent.class})
 public class LotteryComponent extends BukkitComponent implements Listener {
 
     private final CommandBook inst = CommandBook.inst();
@@ -70,9 +70,9 @@ public class LotteryComponent extends BukkitComponent implements Listener {
     private LotteryState lotteryState = new LotteryState();
     private SingleFileFilesystemStateHelper<LotteryState> stateHelper;
 
-    private List<Player> recentList = new ArrayList<>();
-    private LotteryTicketDatabase lotteryTicketDatabase;
-    private LotteryWinnerDatabase lotteryWinnerDatabase;
+    private final List<Player> recentList = new ArrayList<>();
+    private final LotteryTicketDatabase lotteryTicketDatabase = new SQLLotteryTicketDatabase();
+    private final LotteryWinnerDatabase lotteryWinnerDatabase = new SQLLotteryWinnerDatabase();
 
     @Override
     public void enable() {
@@ -91,22 +91,14 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             });
         });
 
-        // FIXME: Work around for database load order issue.
-        server.getScheduler().runTaskLater(inst, () -> {
-            lotteryTicketDatabase = new MySQLLotteryTicketDatabase();
-            lotteryTicketDatabase.load();
-            lotteryWinnerDatabase = new MySQLLotteryWinnerDatabase();
-            lotteryWinnerDatabase.load();
+        //noinspection AccessStaticViaInstance
+        inst.registerEvents(this);
 
-            //noinspection AccessStaticViaInstance
-            inst.registerEvents(this);
+        long ticks = TimeUtil.getTicksTill(17, 6);
+        server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24 * 7);
 
-            long ticks = TimeUtil.getTicksTill(17, 6);
-            server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24 * 7);
-
-            long nextHour = TimeUtil.getTicksTillHour();
-            server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
-        }, 1);
+        long nextHour = TimeUtil.getTicksTillHour();
+        server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
     }
 
     @Override
@@ -251,7 +243,6 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         ).thenAcceptAsynchronously(
             (ignored) -> {
                 lotteryTicketDatabase.addTickets(player.getUniqueId(), ticketsBought[0]);
-                lotteryTicketDatabase.save();
 
                 ChatUtil.sendNotice(
                     player,
@@ -288,11 +279,8 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             lotteryWinnerDatabase.addWinner(winner.getPlayerID(), winner.getAmt());
         }
 
-        lotteryWinnerDatabase.save();
-
         lotteryTicketDatabase.clearTickets();
         lotteryTicketDatabase.addCPUTickets(calculateCPUTicketCount());
-        lotteryTicketDatabase.save();
     }
 
     public void completeLottery() {

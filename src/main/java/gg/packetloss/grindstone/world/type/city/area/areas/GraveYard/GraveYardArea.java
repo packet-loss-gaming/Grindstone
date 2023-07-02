@@ -55,7 +55,9 @@ import org.bukkit.material.Lever;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -936,9 +938,9 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         MarketItemLookupInstance lookupInstance = MarketComponent.getLookupInstanceFromStacksImmediately(sortedItems);
         sortedItems.sort((o1, o2) -> {
-            double o1SellPrice = lookupInstance.checkMaximumValue(o1).orElse(0d);
-            double o2SellPrice = lookupInstance.checkMaximumValue(o2).orElse(0d);
-            return (int) (o2SellPrice - o1SellPrice);
+            BigDecimal o1SellPrice = lookupInstance.checkMaximumValue(o1).orElse(BigDecimal.ZERO);
+            BigDecimal o2SellPrice = lookupInstance.checkMaximumValue(o2).orElse(BigDecimal.ZERO);
+            return o2SellPrice.subtract(o1SellPrice).setScale(0, RoundingMode.HALF_UP).intValueExact();
         });
 
         itemStacks.clear();
@@ -1014,8 +1016,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         MarketItemLookupInstance lookupInstance = MarketComponent.getLookupInstanceFromStacksImmediately(itemStacks);
 
         for (ItemStack stack : itemStacks) {
-            double itemValue = lookupInstance.checkMaximumValue(stack).orElse(100d);
-            boolean destroy = itemValue < 100;
+            BigDecimal itemValue = lookupInstance.checkMaximumValue(stack).orElse(BigDecimal.valueOf(100));
+            boolean destroy = itemValue.compareTo(BigDecimal.valueOf(100)) < 0;
 
             String itemName = ItemNameCalculator.computeItemName(stack).orElse("UNKNOWN ITEM");
             String itemDescription = " (" + itemName + " x" + stack.getAmount() + (destroy ? " -- destroyed" : "") + ')';

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.economic.store.mysql;
+package gg.packetloss.grindstone.economic.store.sql;
 
 import gg.packetloss.grindstone.economic.store.MarketItemInfo;
 
@@ -12,21 +12,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 class MarketDatabaseHelper {
-    public static final String MARKET_INFO_COLUMNS = "`market-items`.`name`, " +
-        "`market-items`.`price`, " +
-        "`market-items`.`current-price`, " +
-        "`market-items`.`stock`, " +
-        "`market-items`.`buyable`, " +
-        "`market-items`.`sellable`";
+    public static final String MARKET_INFO_COLUMNS = """
+        market_items.name,
+        market_items.price,
+        market_items.current_price,
+        market_items.stock,
+        market_items.infinite,
+        market_items.buyable,
+        market_items.sellable
+    """;
 
     public static MarketItemInfo getMarketItem(ResultSet results, int startingIndex) throws SQLException {
         return new MarketItemInfo(
             results.getString(startingIndex),
-            results.getDouble(startingIndex + 1),
-            results.getDouble(startingIndex + 2),
+            results.getBigDecimal(startingIndex + 1),
+            results.getBigDecimal(startingIndex + 2),
             results.getInt(startingIndex + 3),
-            !results.getBoolean(startingIndex + 4),
-            !results.getBoolean(startingIndex + 5)
+            results.getBoolean(startingIndex + 4),
+            !results.getBoolean(startingIndex + 5),
+            !results.getBoolean(startingIndex + 6)
         );
     }
 }

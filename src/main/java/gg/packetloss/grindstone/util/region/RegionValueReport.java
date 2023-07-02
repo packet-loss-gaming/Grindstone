@@ -6,30 +6,32 @@
 
 package gg.packetloss.grindstone.util.region;
 
-public class RegionValueReport {
-    private double blockPrice;
-    private double itemPriceCurrentState;
-    private double maximumItemValue;
+import java.math.BigDecimal;
 
-    public RegionValueReport(double blockPrice, double itemPriceCurrentState, double maximumItemValue) {
+public class RegionValueReport {
+    private BigDecimal blockPrice;
+    private BigDecimal itemPriceCurrentState;
+    private BigDecimal maximumItemValue;
+
+    public RegionValueReport(BigDecimal blockPrice, BigDecimal itemPriceCurrentState, BigDecimal maximumItemValue) {
         this.blockPrice = blockPrice;
         this.itemPriceCurrentState = itemPriceCurrentState;
         this.maximumItemValue = maximumItemValue;
     }
 
-    public double getBlockPrice() {
+    public BigDecimal getBlockPrice() {
         return blockPrice;
     }
 
-    public double getItemPriceCurrentState() {
+    public BigDecimal getItemPriceCurrentState() {
         return itemPriceCurrentState;
     }
 
-    public double getMaximumItemValue() {
+    public BigDecimal getMaximumItemValue() {
         return maximumItemValue;
     }
 
-    public double getAutoSellPrice() {
-        return blockPrice + itemPriceCurrentState;
+    public BigDecimal getAutoSellPrice() {
+        return blockPrice.add(itemPriceCurrentState);
     }
 }

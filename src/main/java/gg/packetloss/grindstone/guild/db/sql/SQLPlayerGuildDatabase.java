@@ -4,11 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.guild.db.mysql;
+package gg.packetloss.grindstone.guild.db.sql;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import gg.packetloss.grindstone.data.MySQLHandle;
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.guild.GuildType;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.state.*;
@@ -20,7 +20,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
 
-public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
+public class SQLPlayerGuildDatabase implements PlayerGuildDatabase {
     private final Gson GUILD_SETTINGS_GSON = new Gson();
 
     private <T> Optional<T> tryLoadSettings(String settingsString, Class<T> settingsClass) {
@@ -53,9 +53,14 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
 
     @Override
     public Optional<InternalGuildState> loadGuild(UUID playerID) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `guild-type`, `experience`, `settings` FROM `player-guilds` WHERE `player-id` = " +
-                    "(SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1) AND `active` = true";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT guild_type, experience, settings FROM minecraft.player_guilds
+                    WHERE
+                        player_id = (SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1)
+                    AND
+                        active = true
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, playerID.toString());
 
@@ -78,9 +83,14 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
 
     @Override
     public Optional<InternalGuildState> loadGuild(UUID playerID, GuildType type) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `experience`, `settings` FROM `player-guilds` WHERE `player-id` = " +
-                    "(SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1) AND `guild-type` = ?";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT experience, settings FROM minecraft.player_guilds
+                    WHERE
+                        player_id = (SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1)
+                    AND
+                        guild_type = ?
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, playerID.toString());
                 statement.setInt(2, type.ordinal());
@@ -102,9 +112,12 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
     }
 
     private void deactivateGuilds(Connection connection, UUID playerID) throws SQLException {
-        String SQL = "UPDATE `player-guilds` SET `active` = false WHERE `player-id` = " +
-                "(SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1)";
-
+        String SQL = """
+            UPDATE minecraft.player_guilds SET
+                active = false
+            WHERE player_id =
+                (SELECT id FROM minecraft.players WHERE players.uuid = ? LIMIT 1)
+        """;
         try (PreparedStatement statement = connection.prepareStatement(SQL)) {
             statement.setString(1, playerID.toString());
 
@@ -113,9 +126,14 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
     }
 
     private void updateGuild(Connection connection, UUID playerID, InternalGuildState guildState) throws SQLException {
-        String SQL = "INSERT INTO `player-guilds` (`player-id`, `guild-type`, `experience`, `settings`, `active`) " +
-                "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?, ?, true) " +
-                "ON DUPLICATE KEY UPDATE experience = values(experience), settings = values(settings), active = true";
+        String SQL = """
+            INSERT INTO minecraft.player_guilds (player_id, guild_type, experience, settings, active)
+            VALUES ((SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1), ?, ?, ?, true)
+            ON CONFLICT (player_id, guild_type) DO UPDATE SET
+                experience = excluded.experience,
+                settings = excluded.settings,
+                active = true
+        """;
 
         try (PreparedStatement statement = connection.prepareStatement(SQL)) {
             statement.setString(1, playerID.toString());
@@ -129,7 +147,7 @@ public class MySQLPlayerGuildDatabase implements PlayerGuildDatabase {
 
     @Override
     public void updateActive(UUID playerID, InternalGuildState guildState) {
-        try (Connection connection = MySQLHandle.getConnection()) {
+        try (Connection connection = SQLHandle.getConnection()) {
             connection.setAutoCommit(false);
 
             deactivateGuilds(connection, playerID);

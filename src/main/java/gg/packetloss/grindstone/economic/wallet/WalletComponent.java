@@ -12,9 +12,9 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
-import gg.packetloss.grindstone.data.DataBaseComponent;
+import gg.packetloss.grindstone.data.DatabaseComponent;
 import gg.packetloss.grindstone.economic.wallet.database.DatabaseWalletProvider;
-import gg.packetloss.grindstone.economic.wallet.database.mysql.MySQLWalletDatabase;
+import gg.packetloss.grindstone.economic.wallet.database.sql.SQLWalletDatabase;
 import gg.packetloss.grindstone.events.PlayerWalletUpdate;
 import gg.packetloss.grindstone.highscore.HighScoresComponent;
 import gg.packetloss.grindstone.highscore.scoretype.ScoreTypes;
@@ -31,7 +31,7 @@ import java.math.BigDecimal;
 import static gg.packetloss.grindstone.util.ChatUtil.TWO_DECIMAL_FORMATTER;
 
 @ComponentInformation(friendlyName = "Wallet", desc = "Asynchronous currency system")
-@Depend(plugins = {"Vault"}, components = {DataBaseComponent.class, HighScoresComponent.class})
+@Depend(plugins = {"Vault"}, components = {DatabaseComponent.class, HighScoresComponent.class})
 public class WalletComponent extends BukkitComponent implements WalletProvider, Listener {
     @InjectComponent
     private HighScoresComponent highScores;
@@ -40,7 +40,7 @@ public class WalletComponent extends BukkitComponent implements WalletProvider, 
 
     @Override
     public void enable() {
-        provider = new DatabaseWalletProvider(new MySQLWalletDatabase());
+        provider = new DatabaseWalletProvider(new SQLWalletDatabase());
 
         // Register a vault compatibility layer
         CommandBook.server().getServicesManager().register(

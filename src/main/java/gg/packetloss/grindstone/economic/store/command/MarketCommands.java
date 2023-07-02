@@ -39,6 +39,8 @@ import org.enginehub.piston.annotation.param.ArgFlag;
 import org.enginehub.piston.annotation.param.Switch;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 
 import static gg.packetloss.grindstone.economic.store.MarketComponent.NOT_AVAILIBLE;
@@ -126,7 +128,7 @@ public class MarketCommands {
                 MarketItemLookupInstance lookupInstance = getLookupInstanceFromStacksImmediately(items);
                 CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
                     MarketTransactionBuilder transactionBuilder = new MarketTransactionBuilder();
-                    double payment = 0;
+                    BigDecimal payment = BigDecimal.ZERO;
 
                     // Calculate the payment and transactions for these items
                     Iterator<ItemStack> it = items.iterator();
@@ -143,13 +145,13 @@ public class MarketCommands {
                             continue;
                         }
 
-                        Optional<Double> optSellPrice = marketItem.getSellPriceForStack(item);
+                        Optional<BigDecimal> optSellPrice = marketItem.getSellPriceForStack(item);
                         if (optSellPrice.isEmpty()) {
                             continue;
                         }
 
                         transactionBuilder.add(marketItem, item.getAmount());
-                        payment += optSellPrice.get();
+                        payment = payment.add(optSellPrice.get());
 
                         it.remove();
                     }
@@ -164,7 +166,7 @@ public class MarketCommands {
                         return;
                     }
 
-                    BigDecimal finalPayment = new BigDecimal(payment);
+                    BigDecimal finalPayment = payment;
                     component.sellItems(player, transactionBuilder.toTransactionLines(), finalPayment).thenAccept(
                         (newBalance) -> {
                             ChatUtil.sendNotice(player, "Item(s) sold for: ", wallet.format(finalPayment), "!");
@@ -210,15 +212,19 @@ public class MarketCommands {
             }
         }
     }
-    private Text formatPriceForList(double price) {
+    private Text formatPriceForList(BigDecimal price) {
         String result = "";
         result += ChatColor.WHITE;
 
         boolean fullPriceShown = false;
-        if (price >= 10000) {
-            result += "~" + ChatUtil.WHOLE_NUMBER_FORMATTER.format(price / 1000) + "k";
-        } else if (price >= 1000) {
-            result += "~" + ChatUtil.ONE_DECIMAL_FORMATTER.format(price / 1000) + "k";
+        if (price.compareTo(BigDecimal.valueOf(1000)) >= 0) {
+            BigDecimal displayPrice = price.divide(BigDecimal.valueOf(1000), RoundingMode.HALF_UP);
+            DecimalFormat formatter = ChatUtil.ONE_DECIMAL_FORMATTER;
+
+            if (price.compareTo(BigDecimal.valueOf(10000)) >= 0) {
+                formatter = ChatUtil.WHOLE_NUMBER_FORMATTER;
+            }
+            result += "~" + formatter.format(displayPrice) + "k";
         } else {
             fullPriceShown = true;
             result += ChatUtil.TWO_DECIMAL_FORMATTER.format(price);
@@ -307,13 +313,14 @@ public class MarketCommands {
 
         // Sale Information
         if (item.displaySellInfo()) {
-            double fullyRepairedPrice = item.getSellPrice();
-            double sellPrice = stack == null ? fullyRepairedPrice : item.getSellUnitPriceForStack(stack).orElse(0d);
+            BigDecimal fullyRepairedPrice = item.getSellPrice();
+            BigDecimal sellPrice = stack == null ? fullyRepairedPrice
+                                                 : item.getSellUnitPriceForStack(stack).orElse(BigDecimal.ZERO);
 
             ChatUtil.sendNotice(sender, "When you sell it you get:");
             ChatUtil.sendNotice(sender, " - ", wallet.format(sellPrice), " each.");
 
-            if (fullyRepairedPrice != sellPrice) {
+            if (fullyRepairedPrice.compareTo(sellPrice) != 0) {
                 ChatUtil.sendNotice(sender, " - " + wallet.format(fullyRepairedPrice) + " each when new.");
             }
         } else {
@@ -348,7 +355,7 @@ public class MarketCommands {
                         builder.append(", ");
                     }
 
-                    double intervalPrice = item.getPrice() * i;
+                    BigDecimal intervalPrice = item.getPrice().multiply(BigDecimal.valueOf(i));
 
                     builder.append(Text.of(
                             ChatColor.BLUE,

@@ -16,14 +16,14 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
-import gg.packetloss.grindstone.data.DataBaseComponent;
+import gg.packetloss.grindstone.data.DatabaseComponent;
 import gg.packetloss.grindstone.events.guild.GuildGrantExpEvent;
 import gg.packetloss.grindstone.events.guild.GuildLevelUpEvent;
 import gg.packetloss.grindstone.guild.base.GuildBase;
 import gg.packetloss.grindstone.guild.base.NinjaBase;
 import gg.packetloss.grindstone.guild.base.RogueBase;
 import gg.packetloss.grindstone.guild.db.PlayerGuildDatabase;
-import gg.packetloss.grindstone.guild.db.mysql.MySQLPlayerGuildDatabase;
+import gg.packetloss.grindstone.guild.db.sql.SQLPlayerGuildDatabase;
 import gg.packetloss.grindstone.guild.listener.GuildCombatXPListener;
 import gg.packetloss.grindstone.guild.listener.NinjaListener;
 import gg.packetloss.grindstone.guild.listener.RogueListener;
@@ -56,7 +56,7 @@ import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Guild Management", desc = "Guild core systems and services")
 @Depend(components = {
-    AdminComponent.class, DataBaseComponent.class, HighScoresComponent.class,
+    AdminComponent.class, DatabaseComponent.class, HighScoresComponent.class,
     ChatBridgeComponent.class, ManagedWorldComponent.class
 })
 public class GuildComponent extends BukkitComponent implements Listener {
@@ -73,7 +73,7 @@ public class GuildComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private ManagedWorldComponent managedWorld;
 
-    private PlayerGuildDatabase database = new MySQLPlayerGuildDatabase();
+    private PlayerGuildDatabase database = new SQLPlayerGuildDatabase();
     private Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
     private Map<GuildType, GuildBase> guildBaseMap = new EnumMap<>(GuildType.class);
 

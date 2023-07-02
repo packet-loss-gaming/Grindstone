@@ -6,7 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.city.area.areas.Factory.db;
 
-import gg.packetloss.grindstone.data.MySQLHandle;
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.world.type.city.area.areas.Factory.FactoryJob;
 
 import java.sql.Connection;
@@ -26,10 +26,13 @@ import static gg.packetloss.grindstone.util.DBUtil.setStringValues;
 public class MySQLFactoryJobDatabase implements FactoryJobDatabase {
     @Override
     public Optional<FactoryJob> getJob(UUID playerID, String itemName) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String searchSQL = "SELECT `amount` FROM `factory-jobs` WHERE `player-id` = " +
-                "(SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1) AND `produced-item` = ?";
-
+        try (Connection connection = SQLHandle.getConnection()) {
+            String searchSQL = """
+                SELECT amount FROM minecraft.factory_jobs
+                    WHERE
+                        player_id = (SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1)
+                    AND produced_item = ?
+            """;
             try (PreparedStatement statement = connection.prepareStatement(searchSQL)) {
                 statement.setString(1, playerID.toString());
                 statement.setString(2, itemName);
@@ -67,9 +70,11 @@ public class MySQLFactoryJobDatabase implements FactoryJobDatabase {
     }
 
     private void insertOrUpdateActiveJobs(Connection connection, Stream<FactoryJob> factoryJobs) throws SQLException {
-        String SQL = "INSERT INTO `factory-jobs` (`player-id`, `produced-item`, `amount`) " +
-            "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
-            "ON DUPLICATE KEY UPDATE `amount` = values(amount)";
+        String SQL = """
+            INSERT INTO minecraft.factory_jobs (player_id, produced_item, amount)
+            VALUES ((SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1), ?, ?)
+            ON CONFLICT (player_id, produced_item) DO UPDATE SET amount = excluded.amount
+        """;
 
         try (PreparedStatement statement = connection.prepareStatement(SQL)) {
             factoryJobs.forEach((factoryJob -> {
@@ -89,7 +94,7 @@ public class MySQLFactoryJobDatabase implements FactoryJobDatabase {
 
     @Override
     public void updateJobs(List<FactoryJob> factoryJobs) {
-        try (Connection connection = MySQLHandle.getConnection()) {
+        try (Connection connection = SQLHandle.getConnection()) {
             connection.setAutoCommit(false);
 
             cleanupStaleJobs(connection, factoryJobs.stream().filter(FactoryJob::isComplete));
@@ -107,10 +112,13 @@ public class MySQLFactoryJobDatabase implements FactoryJobDatabase {
             return new ArrayList<>();
         }
 
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String searchSQL = "SELECT `lb-players`.`uuid`, `produced-item`, `amount` FROM `factory-jobs` " +
-                "JOIN `lb-players` ON `factory-jobs`.`player-id` = `lb-players`.`playerid` " +
-                "WHERE `lb-players`.`uuid` IN (" + preparePlaceHolders(activePlayers.size()) + ")";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String searchSQL = """
+                SELECT players.uuid, jobs.produced_item, jobs.amount FROM minecraft.factory_jobs AS jobs
+                JOIN minecraft.players ON players.id = jobs.player_id
+                WHERE players.uuid IN (
+            """;
+            searchSQL += preparePlaceHolders(activePlayers.size()) + ')';
 
             try (PreparedStatement statement = connection.prepareStatement(searchSQL)) {
                 setStringValues(statement, activePlayers.stream().map(UUID::toString).collect(Collectors.toList()));

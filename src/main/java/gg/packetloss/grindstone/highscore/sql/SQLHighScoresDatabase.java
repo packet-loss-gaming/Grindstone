@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.highscore.mysql;
+package gg.packetloss.grindstone.highscore.sql;
 
-import gg.packetloss.grindstone.data.MySQLHandle;
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.highscore.HighScoreDatabase;
 import gg.packetloss.grindstone.highscore.HighScoreUpdate;
 import gg.packetloss.grindstone.highscore.ScoreEntry;
@@ -22,16 +22,17 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MySQLHighScoresDatabase implements HighScoreDatabase {
+public class SQLHighScoresDatabase implements HighScoreDatabase {
     @Override
     public boolean deleteAllScores(ScoreType scoreType) {
         // For now limit this to goblet score types
         Validate.isTrue(scoreType instanceof GobletScoreType);
 
-        try (Connection con = MySQLHandle.getConnection()) {
-            String SQL = "DELETE FROM `high-scores` WHERE `score-type-id` = ?";
-
-            try (PreparedStatement statement = con.prepareStatement(SQL)) {
+        try (Connection con = SQLHandle.getConnection()) {
+            String sql = """
+                DELETE FROM minecraft.high_scores WHERE score_type_id = ?
+            """;
+            try (PreparedStatement statement = con.prepareStatement(sql)) {
                 statement.setInt(1, scoreType.getId());
                 statement.execute();
 
@@ -63,32 +64,47 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
     }
 
     private void incrementalUpdate(Connection con, List<HighScoreUpdate> updates) throws SQLException {
-        String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
-                "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
-                "ON DUPLICATE KEY UPDATE value = values(value) + value";
-        batchUpdate(con, SQL, updates);
+        // language=SQL
+        String sql = """
+            INSERT INTO minecraft.high_scores (player_id, score_type_id, value)
+            VALUES ((SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1), ?, ?)
+            ON CONFLICT (player_id, score_type_id) DO UPDATE SET value = high_scores.value + excluded.value
+        """;
+        batchUpdate(con, sql, updates);
     }
 
     private void overrideIfBetter(Connection con, ScoreType.Order order,
                                   List<HighScoreUpdate> updates) throws SQLException {
-        String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
-                "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
-                "ON DUPLICATE KEY UPDATE value = " + (order == ScoreType.Order.DESC ? "greatest(" : "least(") + "value, values(value))";
-        batchUpdate(con, SQL, updates);
+        // language=SQL
+        String sql = """
+            INSERT INTO minecraft.high_scores (player_id, score_type_id, value)
+            VALUES ((SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1), ?, ?)
+            ON CONFLICT (player_id, score_type_id) DO UPDATE SET value =
+        """;
+        if (order == ScoreType.Order.DESC) {
+            sql += "greatest(";
+        } else {
+            sql += "least(";
+        }
+        sql += "high_scores.value, excluded.value)";
+        batchUpdate(con, sql, updates);
     }
 
     private void overrideAlways(Connection con, List<HighScoreUpdate> updates) throws SQLException {
-        String SQL = "INSERT INTO `high-scores` (`player-id`, `score-type-id`, `value`) " +
-            "VALUES ((SELECT `playerid` FROM `lb-players` WHERE `lb-players`.`uuid` = ? LIMIT 1), ?, ?) " +
-            "ON DUPLICATE KEY UPDATE value = values(value)";
-        batchUpdate(con, SQL, updates);
+        // language=SQL
+        String sql = """
+            INSERT INTO minecraft.high_scores (player_id, score_type_id, value)
+            VALUES ((SELECT id FROM minecraft.players WHERE uuid = ? LIMIT 1), ?, ?)
+            ON CONFLICT (player_id, score_type_id) DO UPDATE SET value = excluded.value
+        """;
+        batchUpdate(con, sql, updates);
     }
 
     @Override
     public void batchProcess(List<HighScoreUpdate> scoresToUpdate) {
         Map<ScoreType, List<HighScoreUpdate>> groupedUpdates = groupUpdates(scoresToUpdate);
 
-        try (Connection con = MySQLHandle.getConnection()) {
+        try (Connection con = SQLHandle.getConnection()) {
             for (Map.Entry<ScoreType, List<HighScoreUpdate>> updateSet : groupedUpdates.entrySet()) {
                 ScoreType scoreType = updateSet.getKey();
                 List<HighScoreUpdate> updatesForScoreType = updateSet.getValue();
@@ -112,14 +128,21 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
 
     @Override
     public Optional<List<ScoreEntry>> getTop(ScoreType scoreType, int count) {
-        try (Connection con = MySQLHandle.getConnection()) {
-            String SQL = "SELECT `lb-players`.`uuid`, `high-scores`.`value` FROM `high-scores` " +
-                    "JOIN `lb-players` ON `high-scores`.`player-id` = `lb-players`.`playerid` " +
-                    "WHERE `high-scores`.`score-type-id` = ? " +
-                    "ORDER BY `high-scores`.`value`" + (scoreType.getOrder() == ScoreType.Order.ASC ? "ASC" : "DESC") +
-                    " LIMIT ?";
+        try (Connection con = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT players.uuid, high_scores.value FROM minecraft.high_scores
+                JOIN minecraft.players ON players.id = high_scores.player_id
+                WHERE high_scores.score_type_id = ?
+                ORDER BY high_scores.value
+            """;
+            if (scoreType.getOrder() == ScoreType.Order.ASC) {
+                sql += " ASC";
+            } else {
+                sql += " DESC";
+            }
+            sql += " LIMIT ?";
 
-            try (PreparedStatement statement = con.prepareStatement(SQL)) {
+            try (PreparedStatement statement = con.prepareStatement(sql)) {
                 statement.setInt(1, scoreType.getId());
                 statement.setInt(2, count);
 
@@ -145,11 +168,11 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
 
     @Override
     public Optional<Integer> getAverageScore(ScoreType scoreType) {
-        try (Connection con = MySQLHandle.getConnection()) {
-            String IS_EMPTY_SQL = "SELECT `high-scores`.`id` FROM `high-scores` " +
-                    "WHERE `high-scores`.`score-type-id` = ? LIMIT 1";
-
-            try (PreparedStatement statement = con.prepareStatement(IS_EMPTY_SQL)) {
+        try (Connection con = SQLHandle.getConnection()) {
+            String isEmptySql = """
+                SELECT id FROM minecraft.high_scores WHERE score_type_id = ? LIMIT 1
+            """;
+            try (PreparedStatement statement = con.prepareStatement(isEmptySql)) {
                 statement.setInt(1, scoreType.getId());
 
                 try (ResultSet results = statement.executeQuery()) {
@@ -159,10 +182,10 @@ public class MySQLHighScoresDatabase implements HighScoreDatabase {
                 }
             }
 
-            String SQL = "SELECT AVG(`high-scores`.`value`) FROM `high-scores` " +
-                    "WHERE `high-scores`.`score-type-id` = ?";
-
-            try (PreparedStatement statement = con.prepareStatement(SQL)) {
+            String sql = """
+                SELECT AVG(high_scores.value) FROM minecraft.high_scores WHERE score_type_id = ?
+            """;
+            try (PreparedStatement statement = con.prepareStatement(sql)) {
                 statement.setInt(1, scoreType.getId());
 
                 try (ResultSet results = statement.executeQuery()) {

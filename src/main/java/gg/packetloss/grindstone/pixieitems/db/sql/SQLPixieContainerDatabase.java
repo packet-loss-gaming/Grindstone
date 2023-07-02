@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package gg.packetloss.grindstone.pixieitems.db.mysql;
+package gg.packetloss.grindstone.pixieitems.db.sql;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
-import gg.packetloss.grindstone.data.MySQLHandle;
+import gg.packetloss.grindstone.data.SQLHandle;
 import gg.packetloss.grindstone.pixieitems.db.PixieChestDefinition;
 import gg.packetloss.grindstone.pixieitems.db.PixieChestDetail;
 import gg.packetloss.grindstone.pixieitems.db.PixieContainerDatabase;
@@ -27,12 +27,15 @@ import java.util.*;
 import static gg.packetloss.grindstone.util.DBUtil.preparePlaceHolders;
 import static gg.packetloss.grindstone.util.DBUtil.setIntValues;
 
-public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
+public class SQLPixieContainerDatabase implements PixieContainerDatabase {
     private static final Gson GSON = new Gson();
 
     private boolean addChests(int networkID, String itemMapping, Location... locations) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "INSERT INTO `pixie-chests` (`network-id`, `world`, `x`, `y`, `z`, `cx`, `cz`, `item-names`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                INSERT INTO minecraft.pixie_chests (network_id, world, x, y, z, cx, cz, item_names)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 for (Location loc : locations) {
                     statement.setInt(1, networkID);
@@ -67,7 +70,9 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
     }
 
     private String getChestDetailLookupSQL(Location location) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT `network-id`, `item-names` FROM `pixie-chests` WHERE ");
+        StringBuilder sqlBuilder = new StringBuilder(
+            "SELECT network_id, item_names FROM minecraft.pixie_chests WHERE "
+        );
         appendBlockPlaceHolders(sqlBuilder, location);
         return sqlBuilder.toString();
     }
@@ -90,7 +95,7 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
 
     @Override
     public Optional<PixieChestDetail> getDetailsAtLocation(Location location) {
-        try (Connection connection = MySQLHandle.getConnection()) {
+        try (Connection connection = SQLHandle.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(getChestDetailLookupSQL(location))) {
                 setBlockPlaceHolderParams(0, statement, location);
 
@@ -118,13 +123,14 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
     }
 
     private String getChestDeleteSQL(Location[] locations) {
-        StringBuilder sqlBuilder = new StringBuilder("DELETE FROM `pixie-chests` WHERE `network-id` = ? AND (");
+        StringBuilder sqlBuilder = new StringBuilder("DELETE FROM minecraft.pixie_chests WHERE network_id = ? AND (");
         appendBlockPlaceHolders(sqlBuilder, locations);
         sqlBuilder.append(')');
         return sqlBuilder.toString();
     }
 
-    private void setBlockPlaceHolderParams(int startingOffset, PreparedStatement statement, Location... locations) throws SQLException {
+    private void setBlockPlaceHolderParams(int startingOffset, PreparedStatement statement,
+                                           Location... locations) throws SQLException {
         for (int i = 0; i < locations.length; ++i) {
             int rowOffset = i * 3;
 
@@ -136,7 +142,7 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
 
     @Override
     public Optional<Integer> removeContainer(int networkID, Location... locations) {
-        try (Connection connection = MySQLHandle.getConnection()) {
+        try (Connection connection = SQLHandle.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(getChestDeleteSQL(locations))) {
                 statement.setInt(1, networkID);
                 setBlockPlaceHolderParams(1, statement, locations);
@@ -151,14 +157,14 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
     }
 
     private String getChestNetworkLookupSQL(Location[] locations) {
-        StringBuilder sqlBuilder = new StringBuilder("SELECT DISTINCT `network-id` FROM `pixie-chests` WHERE ");
+        StringBuilder sqlBuilder = new StringBuilder("SELECT DISTINCT network_id FROM minecraft.pixie_chests WHERE ");
         appendBlockPlaceHolders(sqlBuilder, locations);
         return sqlBuilder.toString();
     }
 
     @Override
     public Optional<Collection<Integer>> getNetworksInLocations(Location... locations) {
-        try (Connection connection = MySQLHandle.getConnection()) {
+        try (Connection connection = SQLHandle.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(getChestNetworkLookupSQL(locations))) {
                 setBlockPlaceHolderParams(0, statement, locations);
 
@@ -181,8 +187,10 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
 
     @Override
     public Optional<Collection<Integer>> getNetworksInChunk(Chunk chunk) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT DISTINCT `network-id` FROM `pixie-chests` WHERE `cx` = ? AND `cz` = ? AND `item-names` IS NULL";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT DISTINCT network_id FROM minecraft.pixie_chests WHERE cx = ? AND cz = ? AND item_names IS NULL
+            """;
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setInt(1, chunk.getX());
                 statement.setInt(2, chunk.getZ());
@@ -206,9 +214,12 @@ public class MySQLPixieContainerDatabase implements PixieContainerDatabase {
 
     @Override
     public Optional<Collection<PixieNetworkDefinition>> getChestsInNetworks(List<Integer> networks) {
-        try (Connection connection = MySQLHandle.getConnection()) {
-            String sql = "SELECT `network-id`, `world`, `x`, `y`, `z`, `item-names` FROM `pixie-chests` WHERE `network-id` IN ("
-                    + preparePlaceHolders(networks.size()) +")";
+        try (Connection connection = SQLHandle.getConnection()) {
+            String sql = """
+                SELECT network_id, world, x, y, z, item_names FROM minecraft.pixie_chests WHERE network_id IN (
+            """;
+            sql += preparePlaceHolders(networks.size()) + ')';
+
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 setIntValues(statement, networks);
 

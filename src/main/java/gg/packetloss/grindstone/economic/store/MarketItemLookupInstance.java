@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.economic.store;
 
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,15 +33,16 @@ public class MarketItemLookupInstance {
      * @param stack the item to check
      * @return the value if the item were in perfect condition at an unadjusted rate
      */
-    public Optional<Double> checkMaximumValue(ItemStack stack) {
-        return getItemDetails(stack).map(MarketItem::getValue).map((value) -> value * stack.getAmount());
+    public Optional<BigDecimal> checkMaximumValue(ItemStack stack) {
+        BigDecimal amount = BigDecimal.valueOf(stack.getAmount());
+        return getItemDetails(stack).map(MarketItem::getValue).map((value) -> value.multiply(amount));
     }
 
     /**
      * @param stack the item to check
      * @return the value of the item in its current condition at an unadjusted rate
      */
-    public Optional<Double> checkCurrentValue(ItemStack stack) {
+    public Optional<BigDecimal> checkCurrentValue(ItemStack stack) {
         return getItemDetails(stack).flatMap((item) -> item.getValueForStack(stack));
     }
 
@@ -64,7 +66,7 @@ public class MarketItemLookupInstance {
      * @param stack the item to check
      * @return the value of the item if it were to be sold on the market as is
      */
-    public Optional<Double> checkSellPrice(ItemStack stack) {
+    public Optional<BigDecimal> checkSellPrice(ItemStack stack) {
         return getItemDetailsIfSellable(stack).flatMap((item) -> item.getSellPriceForStack(stack));
     }
 
@@ -72,7 +74,7 @@ public class MarketItemLookupInstance {
      * @param itemName the item to check
      * @return the value of the item if it were to be sold on the market as is
      */
-    public Optional<Double> checkSellPrice(String itemName) {
+    public Optional<BigDecimal> checkSellPrice(String itemName) {
         return getItemDetailsIfSellable(itemName).map(MarketItem::getSellPrice);
     }
 }

@@ -15,10 +15,10 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.data.DataBaseComponent;
+import gg.packetloss.grindstone.data.DatabaseComponent;
 import gg.packetloss.grindstone.economic.store.command.*;
-import gg.packetloss.grindstone.economic.store.mysql.MySQLItemStoreDatabase;
-import gg.packetloss.grindstone.economic.store.mysql.MySQLMarketTransactionDatabase;
+import gg.packetloss.grindstone.economic.store.sql.SQLItemStoreDatabase;
+import gg.packetloss.grindstone.economic.store.sql.SQLMarketTransactionDatabase;
 import gg.packetloss.grindstone.economic.store.transaction.MarketTransactionLine;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.economy.MarketPurchaseEvent;
@@ -40,6 +40,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.logging.Logger;
@@ -50,9 +51,9 @@ import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemN
 import static gg.packetloss.grindstone.util.item.ItemNameDeserializer.getBaseStack;
 
 @ComponentInformation(friendlyName = "Market", desc = "Buy and sell goods.")
-@Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DataBaseComponent.class, WalletComponent.class})
+@Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DatabaseComponent.class, WalletComponent.class})
 public class MarketComponent extends BukkitComponent {
-    public static final int LOWER_MARKET_LOSS_THRESHOLD = 100000;
+    public static final BigDecimal LOWER_MARKET_LOSS_THRESHOLD = BigDecimal.valueOf(100000);
 
     private final CommandBook inst = CommandBook.inst();
     private final Logger log = CommandBook.logger();
@@ -65,8 +66,8 @@ public class MarketComponent extends BukkitComponent {
     @InjectComponent
     private WalletComponent wallet;
 
-    private static ItemStoreDatabase itemDatabase;
-    private static MarketTransactionDatabase transactionDatabase;
+    private static ItemStoreDatabase itemDatabase = new SQLItemStoreDatabase();
+    private static MarketTransactionDatabase transactionDatabase = new SQLMarketTransactionDatabase();
 
     private ProtectedRegion region = null;
 
@@ -82,12 +83,6 @@ public class MarketComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-        itemDatabase = new MySQLItemStoreDatabase();
-        itemDatabase.load();
-
-        transactionDatabase = new MySQLMarketTransactionDatabase();
-        transactionDatabase.load();
-
         CommandBook.registerEvents(new MarketTransactionLogger(transactionDatabase));
 
         // Register user facing commands
@@ -119,7 +114,7 @@ public class MarketComponent extends BukkitComponent {
 
     public static final String NOT_AVAILIBLE = "No item by that name is currently available!";
 
-    public TaskFuture<List<ItemTransaction>> getTransactions(String itemName, UUID playerID) {
+    public TaskFuture<List<ItemTransaction>> getTransactions(@Nullable String itemName, @Nullable UUID playerID) {
         return TaskFuture.asyncTask(() -> {
             return transactionDatabase.getTransactions(itemName, playerID);
         });
@@ -127,30 +122,16 @@ public class MarketComponent extends BukkitComponent {
 
     public TaskFuture<Void> scaleMarket(double factor) {
         return TaskFuture.asyncTask(() -> {
-            List<MarketItemInfo> items = itemDatabase.getItemList();
-            for (MarketItemInfo item : items) {
-                itemDatabase.addItem(
-                    item.getName(),
-                    item.getPrice() * factor,
-                    item.hasInfiniteStock(),
-                    !item.isBuyable(),
-                    !item.isSellable()
-                );
-            }
-            itemDatabase.save();
-
+            itemDatabase.scaleMarket(factor);
             return null;
         });
     }
 
-    public TaskFuture<MarketItemInfo> addItem(String itemName, double price, boolean infinite,
+    public TaskFuture<MarketItemInfo> addItem(String itemName, BigDecimal price, boolean infinite,
                                               boolean disableBuy, boolean disableSell) {
         return TaskFuture.asyncTask(() -> {
             MarketItemInfo oldItem = itemDatabase.getItem(itemName);
-
             itemDatabase.addItem(itemName, price, infinite, disableBuy, disableSell);
-            itemDatabase.save();
-
             return oldItem;
         });
     }
@@ -158,8 +139,6 @@ public class MarketComponent extends BukkitComponent {
     public TaskFuture<Void> removeItem(String itemName) {
         return TaskFuture.asyncTask(() -> {
             itemDatabase.removeItem(itemName);
-            itemDatabase.save();
-
             return null;
         });
     }
@@ -210,7 +189,7 @@ public class MarketComponent extends BukkitComponent {
                 }
             }
 
-            totalPrice = totalPrice.add(new BigDecimal(item.getPrice() * amount));
+            totalPrice = totalPrice.add(item.getPrice().multiply(BigDecimal.valueOf(amount)));
         }
 
         return totalPrice;

@@ -20,7 +20,7 @@ import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.invite.db.InviteResult;
 import gg.packetloss.grindstone.invite.db.InviteStatus;
 import gg.packetloss.grindstone.invite.db.PlayerInviteDatabase;
-import gg.packetloss.grindstone.invite.db.mysql.MySQLPlayerInviteDatabase;
+import gg.packetloss.grindstone.invite.db.sql.SQLPlayerInviteDatabase;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
@@ -70,7 +70,7 @@ public class PlayerInviteComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private WarpsComponent warps;
 
-    private final PlayerInviteDatabase inviteDatabase = new MySQLPlayerInviteDatabase();
+    private final PlayerInviteDatabase inviteDatabase = new SQLPlayerInviteDatabase();
 
     private LocalConfiguration config;
 

@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.economic.store;
 import gg.packetloss.bukkittext.Text;
 import org.bukkit.inventory.ItemStack;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 import static gg.packetloss.grindstone.util.StringUtil.toTitleCase;
@@ -40,27 +41,27 @@ public class MarketItem implements Comparable<MarketItem> {
         return itemInfo.getLookupName();
     }
 
-    public double getValue() {
+    public BigDecimal getValue() {
         return itemInfo.getValue();
     }
 
-    public Optional<Double> getValueForStack(ItemStack stack) {
+    public Optional<BigDecimal> getValueForStack(ItemStack stack) {
         return itemInfo.getValueForStack(stack);
     }
 
-    public double getPrice() {
+    public BigDecimal getPrice() {
         return itemInfo.getPrice();
     }
 
-    public double getSellPrice() {
+    public BigDecimal getSellPrice() {
         return itemInfo.getSellPrice();
     }
 
-    public Optional<Double> getSellUnitPriceForStack(ItemStack stack) {
+    public Optional<BigDecimal> getSellUnitPriceForStack(ItemStack stack) {
         return itemInfo.getSellUnitPriceForStack(stack);
     }
 
-    public Optional<Double> getSellPriceForStack(ItemStack stack) {
+    public Optional<BigDecimal> getSellPriceForStack(ItemStack stack) {
         return itemInfo.getSellPriceForStack(stack);
     }
 

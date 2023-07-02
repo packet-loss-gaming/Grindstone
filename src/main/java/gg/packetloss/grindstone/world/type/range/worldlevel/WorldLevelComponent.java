@@ -16,7 +16,7 @@ import com.zachsthings.libcomponents.InjectComponent;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.PacketInterceptionComponent;
-import gg.packetloss.grindstone.data.DataBaseComponent;
+import gg.packetloss.grindstone.data.DatabaseComponent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.util.ChanceUtil;
@@ -32,7 +32,7 @@ import gg.packetloss.grindstone.util.task.promise.TaskFuture;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.type.range.worldlevel.db.PlayerWorldLevelDatabase;
-import gg.packetloss.grindstone.world.type.range.worldlevel.db.mysql.MySQLPlayerWorldLevelDatabase;
+import gg.packetloss.grindstone.world.type.range.worldlevel.db.sql.SQLPlayerWorldLevelDatabase;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.Fangz;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.FearKnight;
 import gg.packetloss.grindstone.world.type.range.worldlevel.miniboss.StormBringer;
@@ -54,14 +54,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 @ComponentInformation(friendlyName = "World Level", desc = "Operate the world level for range worlds.")
-@Depend(components = {DataBaseComponent.class, ManagedWorldComponent.class, PacketInterceptionComponent.class})
+@Depend(components = {DatabaseComponent.class, ManagedWorldComponent.class, PacketInterceptionComponent.class})
 public class WorldLevelComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private ManagedWorldComponent managedWorld;
     @InjectComponent
     private PacketInterceptionComponent packetInterceptor;
 
-    private PlayerWorldLevelDatabase database = new MySQLPlayerWorldLevelDatabase();
+    private PlayerWorldLevelDatabase database = new SQLPlayerWorldLevelDatabase();
     private Map<UUID, Integer> playerWorldLevel = new HashMap<>();
     private FiniteCache<BlockVector2> recentChunks = new FiniteCache<>((int) (Bukkit.getServer().getMaxPlayers() * 1.5));
 

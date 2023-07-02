@@ -12,11 +12,6 @@ import java.util.UUID;
 
 
 public interface LotteryWinnerDatabase {
-
-    boolean load();
-
-    boolean save();
-
     void addWinner(UUID playerID, BigDecimal amount);
     void addCPUWin(BigDecimal amount);
 
