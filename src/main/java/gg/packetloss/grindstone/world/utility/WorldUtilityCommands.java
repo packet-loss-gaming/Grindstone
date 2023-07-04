@@ -152,39 +152,27 @@ public class WorldUtilityCommands {
                 return;
             }
 
-            TaskBuilder.Countdown genTaskBuilder = TaskBuilder.countdown();
-
-            genTaskBuilder.setAction((times) -> {
-                long startTime = System.nanoTime();
-                long maxTime = TimeUtil.convertTicksToNanos(1);
-
-                while (!toGenChunkList.isEmpty() && System.nanoTime() - startTime < maxTime) {
-                    BlockVector2 chunkCoords = toGenChunkList.remove(toGenChunkList.size() - 1);
-                    world.loadChunk(chunkCoords.getX(), chunkCoords.getZ());
-                }
-
-                if (ChanceUtil.getChance(20 * 5)) {
+            WorldPreGenerator generator = new WorldPreGenerator(world, toGenChunkList);
+            generator.generate(
+                (numRemaining) -> {
+                    if (ChanceUtil.getChance(20 * 5)) {
+                        ChatUtil.sendAdminNotice(
+                            ChatColor.YELLOW,
+                            noticePrefix,
+                            Text.of(ChatColor.WHITE, ChatUtil.WHOLE_NUMBER_FORMATTER.format(numRemaining)),
+                            " chunks left to generate."
+                        );
+                    }
+                },
+                () -> {
                     ChatUtil.sendAdminNotice(
                         ChatColor.YELLOW,
                         noticePrefix,
-                        Text.of(ChatColor.WHITE, ChatUtil.WHOLE_NUMBER_FORMATTER.format(toGenChunkList.size())),
-                        " chunks left to generate."
+                        "Generation complete."
                     );
+                    removeActive(worldName);
                 }
-
-                return toGenChunkList.isEmpty();
-            });
-
-            genTaskBuilder.setFinishAction(() -> {
-                ChatUtil.sendAdminNotice(
-                    ChatColor.YELLOW,
-                    noticePrefix,
-                    "Generation complete."
-                );
-                removeActive(worldName);
-            });
-
-            genTaskBuilder.build();
+            );
         });
 
         walkerTaskBuilder.build();
