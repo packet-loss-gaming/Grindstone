@@ -50,7 +50,8 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
     @Override
     public void enable() {
         config = configure(new LocalConfiguration());
-        processConfig();
+        // Process the configuration 1 tick late to make sure all worlds are loaded at the time of processing.
+        CommandBook.server().getScheduler().runTask(CommandBook.inst(), this::processConfig);
 
         CommandBook.registerEvents(this);
 
@@ -63,6 +64,7 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
     public void reload() {
         super.reload();
         configure(config);
+        processConfig();
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
