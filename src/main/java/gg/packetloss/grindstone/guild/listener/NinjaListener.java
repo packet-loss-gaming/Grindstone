@@ -458,7 +458,7 @@ public class NinjaListener implements Listener {
         // adjustment. In particularly, this works around a problem where the player sort of "twitches"
         // and just ends up standing next to a block with no upward velocity -- perhaps the client is
         // "fighting back" since we clicked on a block?
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             player.setVelocity(vel);
         }, 1);
 

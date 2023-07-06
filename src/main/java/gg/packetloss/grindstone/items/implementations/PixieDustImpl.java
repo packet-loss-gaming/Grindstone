@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.flight.FlightCategory;
@@ -18,6 +19,7 @@ import gg.packetloss.grindstone.util.item.inventory.PlayerStickyInventoryAdapter
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -174,6 +176,6 @@ public class PixieDustImpl extends AbstractItemFeatureImpl {
             event.setCancelled(true);
         }
         //noinspection deprecation
-        server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), player::updateInventory, 1);
     }
 }

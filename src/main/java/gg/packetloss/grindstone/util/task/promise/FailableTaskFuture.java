@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.util.task.promise;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.util.PluginTaskExecutor;
+import org.bukkit.Bukkit;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -52,7 +53,7 @@ public class FailableTaskFuture<T, K> {
 
     private <U> void handleFailure(TaskFuture<U> taskFuture, Consumer<K> failureHandler) {
         underlyingFailure.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 runFailureHandle(taskFuture, value, failureHandler);
             });
         });
@@ -61,7 +62,7 @@ public class FailableTaskFuture<T, K> {
 
     private <U, L> void handleFailure(FailableTaskFuture<U, L> taskFuture, Consumer<K> failureHandler) {
         underlyingFailure.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 runFailureHandle(taskFuture, value, failureHandler);
             });
         });
@@ -89,7 +90,7 @@ public class FailableTaskFuture<T, K> {
     public <U> TaskFuture<U> thenApply(Function<? super T, ? extends U> fn, Consumer<K> failureHandler) {
         TaskFuture<U> taskFuture = new TaskFuture<>();
         underlyingSuccess.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 taskFuture.complete(fn.apply(value));
             });
         });
@@ -111,7 +112,7 @@ public class FailableTaskFuture<T, K> {
     public <U, L> FailableTaskFuture<U, L> thenApplyFailable(Function<? super T, TaskResult<U, L>> fn, Consumer<K> failureHandler) {
         FailableTaskFuture<U, L> taskFuture = new FailableTaskFuture<>();
         underlyingSuccess.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 taskFuture.complete(fn.apply(value));
             });
         });
@@ -133,7 +134,7 @@ public class FailableTaskFuture<T, K> {
     public TaskFuture<Void> thenAccept(Consumer<? super T> action, Consumer<K> failureHandler) {
         TaskFuture<Void> taskFuture = new TaskFuture<>();
         underlyingSuccess.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 action.accept(value);
                 taskFuture.complete(null);
             });
@@ -157,7 +158,7 @@ public class FailableTaskFuture<T, K> {
     public <U> TaskFuture<U> thenCompose(Function<? super T, TaskFuture<U>> fn, Consumer<K> failureHandler) {
         TaskFuture<U> taskFuture = new TaskFuture<>();
         underlyingSuccess.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 fn.apply(value).underlying.thenAccept(taskFuture::complete);
             });
         });
@@ -168,7 +169,7 @@ public class FailableTaskFuture<T, K> {
     public <U> TaskFuture<U> thenComposeNative(Function<? super T, CompletableFuture<U>> fn, Consumer<K> failureHandler) {
         TaskFuture<U> taskFuture = new TaskFuture<>();
         underlyingSuccess.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 fn.apply(value).thenAccept(taskFuture::complete);
             });
         });
@@ -201,7 +202,7 @@ public class FailableTaskFuture<T, K> {
     public <U, L> FailableTaskFuture<U, L> thenComposeFailable(Function<? super T, FailableTaskFuture<U, L>> fn, Consumer<K> failureHandler) {
         FailableTaskFuture<U, L> taskFuture = new FailableTaskFuture<>();
         underlyingSuccess.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 FailableTaskFuture<U, L> composedFuture = fn.apply(value);
 
                 composedFuture.underlyingSuccess.thenAccept(
@@ -236,13 +237,13 @@ public class FailableTaskFuture<T, K> {
 
     public void thenFinally(Runnable finallyHandler) {
         this.underlyingSuccess.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), finallyHandler);
+            Bukkit.getScheduler().runTask(CommandBook.inst(), finallyHandler);
         });
         this.underlyingFailure.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), finallyHandler);
+            Bukkit.getScheduler().runTask(CommandBook.inst(), finallyHandler);
         });
         this.underlyingParentFailure.thenAccept((value) -> {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), finallyHandler);
+            Bukkit.getScheduler().runTask(CommandBook.inst(), finallyHandler);
         });
     }
 

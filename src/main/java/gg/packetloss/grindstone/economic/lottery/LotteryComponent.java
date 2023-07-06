@@ -29,7 +29,6 @@ import gg.packetloss.grindstone.util.probability.WeightedPicker;
 import gg.packetloss.grindstone.util.task.promise.TaskResult;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
@@ -40,6 +39,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.ChatUtil.WHOLE_NUMBER_FORMATTER;
 
@@ -55,11 +54,6 @@ import static gg.packetloss.grindstone.util.ChatUtil.WHOLE_NUMBER_FORMATTER;
 @ComponentInformation(friendlyName = "Lottery", desc = "Can you win it big?")
 @Depend(plugins = {"Vault"}, components = {ChatBridgeComponent.class, DatabaseComponent.class, WalletComponent.class})
 public class LotteryComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private ChatBridgeComponent chatBridge;
     @InjectComponent
@@ -91,14 +85,14 @@ public class LotteryComponent extends BukkitComponent implements Listener {
             });
         });
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
+        BukkitScheduler scheduler = Bukkit.getScheduler();
         long ticks = TimeUtil.getTicksTill(17, 6);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, runLottery, ticks, 20 * 60 * 60 * 24 * 7);
+        scheduler.scheduleSyncRepeatingTask(CommandBook.inst(), runLottery, ticks, 20 * 60 * 60 * 24 * 7);
 
         long nextHour = TimeUtil.getTicksTillHour();
-        server.getScheduler().scheduleSyncRepeatingTask(inst, broadcastLottery, nextHour, 20 * 60 * 60);
+        scheduler.scheduleSyncRepeatingTask(CommandBook.inst(), broadcastLottery, nextHour, 20 * 60 * 60);
     }
 
     @Override
@@ -119,7 +113,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
     private Runnable runLottery = this::completeLottery;
 
-    private Runnable broadcastLottery = () -> broadcastLottery(server.getOnlinePlayers());
+    private Runnable broadcastLottery = () -> broadcastLottery(Bukkit.getOnlinePlayers());
 
     private static class LocalConfiguration extends ConfigurationBase {
 
@@ -156,7 +150,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
 
         Sign sign = (Sign) block.getState();
 
-        if (sign.getLine(0).equals("[Lottery]") && inst.hasPermission(player, "aurora.lottery.ticket.buy.sign")) {
+        if (sign.getLine(0).equals("[Lottery]") && player.hasPermission("aurora.lottery.ticket.buy.sign")) {
             try {
                 int count = Integer.parseInt(sign.getLine(1).trim());
                 buyTickets(player, count);
@@ -175,7 +169,7 @@ public class LotteryComponent extends BukkitComponent implements Listener {
         Player player = event.getPlayer();
 
         if (event.getLine(0).equalsIgnoreCase("[lottery]")) {
-            if (!inst.hasPermission(player, "aurora.lottery.ticket.sell.sign")) {
+            if (!player.hasPermission("aurora.lottery.ticket.sell.sign")) {
                 event.setCancelled(true);
                 block.breakNaturally();
             }

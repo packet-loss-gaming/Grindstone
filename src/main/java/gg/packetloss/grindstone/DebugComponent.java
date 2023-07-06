@@ -17,8 +17,8 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.bosses.DebugCow;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Pig;
@@ -35,20 +35,14 @@ import org.bukkit.potion.PotionEffect;
 
 @ComponentInformation(friendlyName = "ADebug", desc = "Debug tools")
 public class DebugComponent extends BukkitComponent {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Server server = CommandBook.server();
-
     private DebugCow debugCowBoss;
 
     @Override
     public void enable() {
         debugCowBoss = new DebugCow();
 
-        //noinspection AccessStaticViaInstance
-        //inst.registerEvents(new InventoryCorruptionFixer());
-        //noinspection AccessStaticViaInstance
-        //inst.registerEvents(new BlockDebug());
+        //CommandBook.registerEvents(new InventoryCorruptionFixer());
+        //CommandBook.registerEvents(new BlockDebug());
 
         registerCommands(DebugCowCmd.class);
         registerCommands(TurboPigCmd.class);
@@ -60,12 +54,9 @@ public class DebugComponent extends BukkitComponent {
         // Bug fixes
 
         // Fixes an issue where potion effects are not removed from players on death
-        //noinspection AccessStaticViaInstance
-        //inst.registerEvents(new PotionDeathFix());
-        //noinspection AccessStaticViaInstance
-        //inst.registerEvents(new ItemSpawnPrinter());
-        //noinspection AccessStaticViaInstance
-        //inst.registerEvents(new DamageSys());
+        //CommandBook.registerEvents(new PotionDeathFix());
+        //CommandBook.registerEvents(new ItemSpawnPrinter());
+        //CommandBook.registerEvents(new DamageSys());
     }
 
     public class DebugCowCmd {
@@ -143,8 +134,7 @@ public class DebugComponent extends BukkitComponent {
 
         @EventHandler
         public void onRespawn(final PlayerRespawnEvent event) {
-
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 Player player = event.getPlayer();
 
                 for (PotionEffect next : player.getActivePotionEffects()) {

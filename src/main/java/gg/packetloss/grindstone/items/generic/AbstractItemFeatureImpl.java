@@ -17,6 +17,7 @@ import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.prayer.PrayerComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -71,7 +72,7 @@ public abstract class AbstractItemFeatureImpl implements Listener {
     @Deprecated
     protected SpecialAttackEvent callSpec(Player owner, SpecType context, SpecialAttack spec) {
         SpecialAttackEvent event = new SpecialAttackEvent(owner, context, spec);
-        server.getPluginManager().callEvent(event);
+        CommandBook.callEvent(event);
         return event;
     }
 
@@ -102,7 +103,7 @@ public abstract class AbstractItemFeatureImpl implements Listener {
             Player player = event.getPlayer();
 
             offhandBlockPlaceBlocked.add(player.getUniqueId());
-            server.getScheduler().runTask(inst, () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 offhandBlockPlaceBlocked.remove(player.getUniqueId());
             });
         }

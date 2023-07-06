@@ -117,7 +117,7 @@ public class ChatUtil {
                 sender.sendMessage(line.build());
             } else {
                 boolean hasNext = it.hasNext();
-                CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     sender.sendMessage(line.build());
                     if (!hasNext) {
                         future.complete(null);

@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.custom.CustomItem;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -15,6 +16,7 @@ import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
@@ -132,7 +134,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
         }
 
         if (event.getRightClicked() instanceof Cow) {
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 // Swap the magic bucket for mad milk
                 if (!ItemUtil.swapItem(player.getInventory(), CustomItems.MAGIC_BUCKET, CustomItems.MAD_MILK)) {
                     ChatUtil.sendError(player, "Your inventory is too full!");
@@ -153,7 +155,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
             event.setCancelled(true);
         }
 
-        server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), player::updateInventory, 1);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -165,7 +167,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
         if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET) || isHoldingMagicBucket(player)) {
             event.setCancelled(true);
 
-            server.getScheduler().runTaskLater(inst, player::updateInventory, 1);
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), player::updateInventory, 1);
         }
 
         if (isHoldingMagicBucket(player) && handleRightClick(player)) {
@@ -180,7 +182,7 @@ public class MagicBucketImpl extends AbstractItemFeatureImpl {
         ItemStack itemStack = event.getItemDrop().getItemStack();
 
         if (ItemUtil.isItem(itemStack, CustomItems.MAGIC_BUCKET)) {
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 if (!ItemUtil.hasItem(player, CustomItems.MAGIC_BUCKET)) {
                     takeFlight(player);
                 }

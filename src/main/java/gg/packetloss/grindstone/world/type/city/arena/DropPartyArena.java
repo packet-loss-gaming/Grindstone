@@ -46,40 +46,29 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 public class DropPartyArena extends AbstractRegionedArena implements CommandTriggeredArena, Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
-    private Deque<ItemStack> drops;
+    private final Deque<ItemStack> drops = new ArrayDeque<>();
     private BukkitTask task = null;
     private long lastDropPulse = 0;
     private long dropPartyStart = 0;
 
     public DropPartyArena(World world, ProtectedRegion region) {
-
         super(world, region);
-        drops = new ArrayDeque<>();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
         long ticks = TimeUtil.getTicksTill(20, 7);
-        server.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, ticks, 20 * 60 * 60 * 24 * 7);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, ticks, 20 * 60 * 60 * 24 * 7);
     }
 
     @Override
     public void run() {
-
         drop(ChanceUtil.getRangedRandom(1460, 5836));
     }
 
     @Override
     public void disable() {
-
         // No disabling code
     }
 
@@ -178,7 +167,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
 
         taskedFirework.add(firework);
 
-        server.getScheduler().runTaskLater(inst, firework::detonate, 2);
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), firework::detonate, 2);
     }
 
     public void drop(int populatorValue, int modifier) {
@@ -216,7 +205,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
             };
 
             TimedRunnable countdown = new TimedRunnable(dropPartyCountdown, DROP_PARTY_DELAY);
-            BukkitTask task = server.getScheduler().runTaskTimer(inst, countdown, 0, 20);
+            BukkitTask task = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), countdown, 0, 20);
             countdown.setTask(task);
         }
 
@@ -227,17 +216,17 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         List<ItemStack> newDrops = new ArrayList<>();
         final boolean populate = populatorValue > 0;
         if (populate) {
-            for (int k = 0; k < server.getMaxPlayers() * modifier; k++) {
+            for (int k = 0; k < Bukkit.getMaxPlayers() * modifier; k++) {
                 for (int i = 10; i > 0; --i) {
                     newDrops.add(new ItemStack(Material.EXPERIENCE_BOTTLE, 5));
                 }
 
                 newDrops.add(CustomItemCenter.build(CustomItems.SCROLL_OF_SUMMATION));
                 newDrops.add(CustomItemCenter.build(CustomItems.ODE_TO_THE_FROZEN_KING));
-                newDrops.addAll(SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 64, populatorValue));
+                newDrops.addAll(SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), 64, populatorValue));
             }
 
-            Collection<? extends Player> onlinePlayers = server.getOnlinePlayers();
+            Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
             if (!onlinePlayers.isEmpty()) {
                 newDrops.add(ItemUtil.makeSkull(CollectionUtil.getElement(onlinePlayers).getPlayerProfile()));
             }
@@ -259,7 +248,7 @@ public class DropPartyArena extends AbstractRegionedArena implements CommandTrig
         if (task != null) task.cancel();
 
         RegionChecker checker = new RegionChecker(rg);
-        task = server.getScheduler().runTaskTimer(inst, () -> {
+        task = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), () -> {
             if (lastDropPulse != 0 && System.currentTimeMillis() - lastDropPulse < TimeUnit.SECONDS.toMillis(3)) {
                 return;
             }

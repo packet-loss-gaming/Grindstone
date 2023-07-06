@@ -21,7 +21,6 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -31,18 +30,12 @@ import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.apocalypse.ApocalypseHelper.checkEntity;
 
 @ComponentInformation(friendlyName = "Creep Speak", desc = "Make mobs talk.")
 @Depend(components = {SessionComponent.class})
 public class CreepSpeakComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private SessionComponent sessions;
 
@@ -50,10 +43,8 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
 
     @Override
     public void enable() {
-
         config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
@@ -99,7 +90,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                 if (creeperChance != -1 && ChanceUtil.getChance(creeperChance)
                         && !nearbyAreaHasTooManyCreepers(player.getLocation())) {
                     HallowCreeperEvent hallowEvent = new HallowCreeperEvent(player, (Creeper) entity);
-                    server.getPluginManager().callEvent(hallowEvent);
+                    CommandBook.callEvent(hallowEvent);
                     if (hallowEvent.isCancelled()) return;
                     Location loc = entity.getLocation();
 
@@ -114,7 +105,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                     message = "That'sssss a very niccce everything you have there.";
                 }
             } catch (Exception e) {
-                log.warning("The creeper feature of the: " + this.getInformation().friendlyName()
+                CommandBook.logger().warning("The creeper feature of the: " + this.getInformation().friendlyName()
                         + " component could not be executed.");
             }
         } else if (entity instanceof IronGolem) {
@@ -128,7 +119,7 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                     message = "RAUGHHHHHHHHHHH!!!!!";
                 }
             } catch (Exception e) {
-                log.warning("The IronGolem feature of the: "
+                CommandBook.logger().warning("The IronGolem feature of the: "
                         + this.getInformation().friendlyName()
                         + " component could not be executed.");
             }
@@ -145,14 +136,14 @@ public class CreepSpeakComponent extends BukkitComponent implements Listener {
                     message = "Ugh...";
                 }
             } catch (Exception e) {
-                log.warning("The Zombie feature of the: " + this.getInformation().friendlyName()
+                CommandBook.logger().warning("The Zombie feature of the: " + this.getInformation().friendlyName()
                         + " component could not be executed.");
             }
         }
 
         if (!message.isEmpty()) {
             CreepSpeakEvent creepyEvent = new CreepSpeakEvent(player, entity, color + message);
-            server.getPluginManager().callEvent(creepyEvent);
+            CommandBook.callEvent(creepyEvent);
             if (!creepyEvent.isCancelled()) {
                 ChatUtil.sendNotice(creepyEvent.getPlayer(), creepyEvent.getMessage());
             }

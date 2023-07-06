@@ -53,17 +53,11 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Admin", desc = "Player Administration commands.")
 @Depend(plugins = {"WorldEdit", "Vault"}, components = {GodComponent.class, PlayerStateComponent.class})
 public class AdminComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private GodComponent godComponent;
     @InjectComponent
@@ -74,8 +68,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     @Override
     public void enable() {
         registerCommands(Commands.class);
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
         setupPermissions();
 
         CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {
@@ -84,8 +77,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     }
 
     private WorldEditPlugin worldEdit() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldEdit");
+        Plugin plugin = CommandBook.server().getPluginManager().getPlugin("WorldEdit");
 
         // WorldEdit may not be loaded
         if (!(plugin instanceof WorldEditPlugin)) return null;
@@ -95,8 +87,9 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
     private boolean setupPermissions() {
 
-        RegisteredServiceProvider<Permission> permissionProvider = server.getServicesManager().getRegistration(net
-                .milkbowl.vault.permission.Permission.class);
+        RegisteredServiceProvider<Permission> permissionProvider = Bukkit.getServicesManager().getRegistration(
+            net.milkbowl.vault.permission.Permission.class
+        );
         if (permissionProvider != null) permission = permissionProvider.getProvider();
 
         return (permission != null);
@@ -133,7 +126,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         if (!isAdmin(player)) {
             PlayerAdminModeChangeEvent event = new PlayerAdminModeChangeEvent(player, true);
-            server.getPluginManager().callEvent(event);
+            CommandBook.callEvent(event);
 
             if (!event.isCancelled()) {
                 try {
@@ -152,7 +145,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
     private boolean depermission(Player player) {
         if (isAdmin(player)) {
             PlayerAdminModeChangeEvent event = new PlayerAdminModeChangeEvent(player, false);
-            server.getPluginManager().callEvent(event);
+            CommandBook.callEvent(event);
 
             if (!event.isCancelled()) {
                 try {
@@ -189,7 +182,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
 
         if (wasFlying) {
             player.setFallDistance(0);
-            server.getScheduler().runTaskLater(inst, () -> GeneralPlayerUtil.findSafeSpot(player), 1);
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> GeneralPlayerUtil.findSafeSpot(player), 1);
         }
 
         return true;
@@ -253,7 +246,7 @@ public class AdminComponent extends BukkitComponent implements Listener {
                 .build();
         player.sendTitle(warning);
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             recentlyWarned.remove(playerID);
         }, 40);
     }

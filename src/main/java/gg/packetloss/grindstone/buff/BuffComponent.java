@@ -16,20 +16,14 @@ import com.sk89q.minecraft.util.commands.CommandException;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 
 import java.util.*;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Buff Component", desc = "Manages player buffs.")
 public class BuffComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     private List<Map<UUID, BuffSet>> playerBuffs = Lists.newArrayList();
 
     public BuffComponent() {
@@ -43,9 +37,7 @@ public class BuffComponent extends BukkitComponent implements Listener {
     @Override
     public void enable() {
         registerCommands(Commands.class);
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     public void clearBuffs(BuffCategory category) {

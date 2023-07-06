@@ -29,9 +29,9 @@ import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.events.egg.EggHatchEvent;
 import gg.packetloss.grindstone.util.*;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -56,12 +56,8 @@ import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 @ComponentInformation(friendlyName = "Eggs", desc = "Mob Eggs")
 @Depend(components = {SessionComponent.class})
 public class EggComponent extends BukkitComponent implements Listener, Runnable {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
-    SessionComponent sessions;
+    private SessionComponent sessions;
 
     private WorldGuardPlugin worldGuard;
     private LocalConfiguration config;
@@ -70,12 +66,11 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
     public void enable() {
 
         config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
         setUpWorldGuard();
 
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 120);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 120);
     }
 
     @Override
@@ -98,7 +93,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
     @Override
     public void run() {
 
-        for (World world : server.getWorlds()) {
+        for (World world : Bukkit.getWorlds()) {
             for (Item item : world.getEntitiesByClass(Item.class)) {
                 if (item.getTicksLived() < 300) {
                     continue;
@@ -115,8 +110,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
     }
 
     private void setUpWorldGuard() {
-
-        Plugin plugin = server.getPluginManager().getPlugin("WorldGuard");
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("WorldGuard");
 
         // WorldGuard may not be loaded
         if (!(plugin instanceof WorldGuardPlugin)) {
@@ -162,7 +156,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
 
     private void attemptEggDrop(SpawnEgg egg, Location location) {
         EggDropEvent eggDropEvent = new EggDropEvent(egg, location);
-        server.getPluginManager().callEvent(eggDropEvent);
+        CommandBook.callEvent(eggDropEvent);
         if (!eggDropEvent.isCancelled()) {
             location.getWorld().dropItemNaturally(eggDropEvent.getLocation(), eggDropEvent.getEggType().toItemStack());
         }
@@ -255,7 +249,7 @@ public class EggComponent extends BukkitComponent implements Listener, Runnable 
 
     private boolean hatchEgg(Item egg, SpawnEgg eggInfo) {
         EggHatchEvent event = new EggHatchEvent(egg, eggInfo.getEntityType(), egg.getLocation());
-        server.getPluginManager().callEvent(event);
+        CommandBook.callEvent(event);
 
         if (!event.isCancelled()) {
 

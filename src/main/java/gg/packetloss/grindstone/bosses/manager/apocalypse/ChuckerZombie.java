@@ -21,8 +21,8 @@ import gg.packetloss.openboss.bukkit.entity.BukkitBoss;
 import gg.packetloss.openboss.bukkit.util.BukkitUtil;
 import gg.packetloss.openboss.entity.LocalControllable;
 import gg.packetloss.openboss.instruction.*;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
@@ -30,14 +30,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class ChuckerZombie {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private SimpleRebindableBoss<Zombie> chuckerZombie;
 
     public static final String BOUND_NAME = "Chucker Zombie";
@@ -45,11 +39,11 @@ public class ChuckerZombie {
     private PerformanceDropTable dropTable = new PerformanceDropTable();
 
     public ChuckerZombie() {
-        chuckerZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        chuckerZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, CommandBook.inst(), new SimpleInstructionDispatch<>());
         setupDropTable();
         setupChuckerZombie();
-        server.getScheduler().runTaskTimer(
-                inst,
+        Bukkit.getScheduler().runTaskTimer(
+                CommandBook.inst(),
                 () -> {
                     Lists.newArrayList(chuckerZombie.controlled.values()).forEach((ce) -> chuckerZombie.process(ce));
                 },

@@ -14,8 +14,8 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -25,15 +25,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @TemplateComponent
 public abstract class AreaComponent<Config extends ConfigurationBase> extends BukkitComponent implements Runnable {
-    protected final CommandBook inst = CommandBook.inst();
-    protected final Logger log = inst.getLogger();
-    protected final Server server = CommandBook.server();
-
     protected int tick;
     protected AreaListener<? extends AreaComponent<Config>> listener;
 
@@ -48,14 +43,13 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     public void enable() {
         setUp();
         if (listener != null) {
-            //noinspection AccessStaticViaInstance
-            inst.registerEvents(listener);
+            CommandBook.registerEvents(listener);
         }
         if (config != null) {
             config = configure(config);
             saveConfig();
         }
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, tick);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 0, tick);
     }
 
     @Override
@@ -158,7 +152,7 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     }
 
     public boolean isEmpty(int parentsUp) {
-        for (Player player : server.getOnlinePlayers()) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
             if (contains(player, parentsUp) && isParticipant(player)) {
                 empty = false;
                 return false;
@@ -223,6 +217,6 @@ public abstract class AreaComponent<Config extends ConfigurationBase> extends Bu
     }
 
     public File getWorkingDir() {
-        return new File(inst.getDataFolder() + "/area/" + region.getId() + "/");
+        return new File(CommandBook.inst().getDataFolder() + "/area/" + region.getId() + "/");
     }
 }

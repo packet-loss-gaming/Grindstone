@@ -22,7 +22,6 @@ import gg.packetloss.openboss.entity.LocalEntity;
 import gg.packetloss.openboss.instruction.*;
 import gg.packetloss.openboss.util.AttackDamage;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
@@ -34,14 +33,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class StickyZombie {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private SimpleRebindableBoss<Zombie> stickyZombie;
 
     public static final String BOUND_NAME = "Sticky Zombie";
@@ -49,7 +42,7 @@ public class StickyZombie {
     private PerformanceDropTable dropTable = new PerformanceDropTable();
 
     public StickyZombie() {
-        stickyZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        stickyZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, CommandBook.inst(), new SimpleInstructionDispatch<>());
         setupDropTable();
         setupStickyZombie();
     }

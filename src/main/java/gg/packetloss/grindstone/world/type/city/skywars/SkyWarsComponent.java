@@ -26,7 +26,6 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.admin.AdminComponent;
-import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
@@ -86,7 +85,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 
@@ -95,11 +93,6 @@ import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
 @Depend(components = {AdminComponent.class, PrayerComponent.class, PlayerStateComponent.class},
         plugins = {"WorldEdit", "WorldGuard"})
 public class SkyWarsComponent extends BukkitComponent implements Runnable {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     private ProtectedRegion region;
     private ProtectedRegion lobbyRegion;
     private World world;
@@ -117,8 +110,6 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
     @InjectComponent
     private GuildComponent guilds;
-    @InjectComponent
-    private AntiCheatCompatibilityComponent antiCheat;
     @InjectComponent
     private SessionComponent sessions;
     @InjectComponent
@@ -167,9 +158,8 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         spectatorComponent.registerSpectatorKind(PlayerStateKind.SKY_WARS_SPECTATOR);
         setupRegionInfo();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(new SkyWarsListener());
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 10);
+        CommandBook.registerEvents(new SkyWarsListener());
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 10);
     }
 
     @Override
@@ -269,7 +259,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
     }
 
     private void launchPlayer(Player player, double mod) {
-        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+        CommandBook.callEvent(new ThrowPlayerEvent(player));
         player.setVelocity(new Vector(0, 3.5, 0).multiply(mod));
     }
 
@@ -541,7 +531,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             gameState.addPlayer(player);
 
             // Delay by a tick to prevent leaping at the door
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 if (lobbyContains(player) && gameState.containsPlayer(player)) {
                     applyPlayerEquipment(player);
                 }
@@ -693,7 +683,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
             newStack = null;
         }
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             player.getInventory().setItemInMainHand(newStack);
 
             //noinspection deprecation
@@ -975,7 +965,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
 
                         vel.multiply(flight);
 
-                        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+                        CommandBook.callEvent(new ThrowPlayerEvent(player));
                         player.setVelocity(vel);
 
                         session.stopFlight(250);
@@ -1019,7 +1009,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                                             ChatUtil.sendNotice(player, "You push back: " + aPlayer.getName() + "!");
 
                                             // Handle Target
-                                            server.getPluginManager().callEvent(new ThrowPlayerEvent(aPlayer));
+                                            CommandBook.callEvent(new ThrowPlayerEvent(aPlayer));
                                             aPlayer.setVelocity(vel);
                                             if (isFlagEnabled(SkyWarsFlag.FLAMMABLE)) {
                                                 aPlayer.setFireTicks((int) aPlayer.getHealth() * 20 * 2);
@@ -1065,7 +1055,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                     //noinspection deprecation
                     player.updateInventory();
                 } else {
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         player.setItemInHand(null);
                         //noinspection deprecation
                         player.updateInventory();
@@ -1086,7 +1076,7 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
                     //noinspection deprecation
                     player.updateInventory();
                 } else {
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         player.setItemInHand(null);
                         //noinspection deprecation
                         player.updateInventory();

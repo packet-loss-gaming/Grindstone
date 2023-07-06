@@ -11,7 +11,6 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
@@ -19,20 +18,11 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.PortalCreateEvent;
 
-import java.util.logging.Logger;
-
 @ComponentInformation(friendlyName = "Ender Dragon", desc = "Stop Enderdragon portals")
 public class EnderDragonComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @Override
     public void enable() {
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

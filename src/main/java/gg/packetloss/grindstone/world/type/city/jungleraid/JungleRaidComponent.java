@@ -33,7 +33,6 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.bukkittext.Text;
-import gg.packetloss.grindstone.anticheat.AntiCheatCompatibilityComponent;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
@@ -111,7 +110,6 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
@@ -124,11 +122,6 @@ import static gg.packetloss.grindstone.util.item.ItemUtil.NO_ARMOR;
     plugins = {"WorldEdit", "WorldGuard"}
 )
 public class JungleRaidComponent extends BukkitComponent implements Runnable {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     private ProtectedRegion region;
     private ProtectedRegion lobbyRegion;
     private World world;
@@ -157,8 +150,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     GuildComponent guilds;
     @InjectComponent
     PrayerComponent prayerComponent;
-    @InjectComponent
-    AntiCheatCompatibilityComponent antiCheat;
     @InjectComponent
     HighScoresComponent highScoresComponent;
     @InjectComponent
@@ -446,7 +437,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public Collection<Player> getPlayersInArena() {
-        return server.getOnlinePlayers().stream()
+        return Bukkit.getOnlinePlayers().stream()
                 .filter(p -> arenaContains(p.getLocation()))
                 .collect(Collectors.toList());
     }
@@ -460,7 +451,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
     }
 
     public Collection<Player> getPlayersInLobby() {
-        return server.getOnlinePlayers().stream()
+        return Bukkit.getOnlinePlayers().stream()
                 .filter(p -> lobbyContains(p.getLocation()))
                 .collect(Collectors.toList());
     }
@@ -480,10 +471,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
         spectatorComponent.registerSpectatorKind(PlayerStateKind.JUNGLE_RAID_SPECTATOR);
         setupRegionInfo();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(new JungleRaidListener());
+        CommandBook.registerEvents(new JungleRaidListener());
 
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 10);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 10);
     }
 
     public void end() {
@@ -1069,7 +1059,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 for (final Player player : getPlayersInArena()) {
                     if (!ChanceUtil.getChance(30)) continue;
                     for (int i = 0; i < 5; i++) {
-                        server.getScheduler().runTaskLater(inst, () -> {
+                        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                             Location targetLocation = player.getLocation();
                             Firework firework = targetLocation.getWorld().spawn(targetLocation, Firework.class);
                             FireworkMeta meta = firework.getFireworkMeta();
@@ -1108,7 +1098,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         BukkitConfiguration worldEditConfig = WorldEditBridge.getLocalConfiguration();
         if ((worldEditConfig != null ? worldEditConfig.snapshotRepo : null) == null) {
-            log.warning("No snapshots configured, restoration cancelled.");
+            CommandBook.logger().warning("No snapshots configured, restoration cancelled.");
             return;
         }
 
@@ -1121,7 +1111,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             final Snapshot snap = worldEditConfig.snapshotRepo.getDefaultSnapshot(config.worldName);
 
             if (snap == null) {
-                log.warning("No snapshot could be found, restoration cancelled.");
+                CommandBook.logger().warning("No snapshot could be found, restoration cancelled.");
                 return;
             }
 
@@ -1151,9 +1141,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 }
             }
 
-            log.info("Snapshot '" + snap.getName() + "' loaded; now restoring Jungle Arena...");
+            CommandBook.logger().info("Snapshot '" + snap.getName() + "' loaded; now restoring Jungle Arena...");
             // Tell players restoration is beginning
-            for (Player player : server.getOnlinePlayers()) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
 
                 ChatUtil.sendWarning(player, "Restoring Jungle Arena...");
             }
@@ -1167,12 +1157,12 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             try {
                 chunkStore = snap.getChunkStore();
             } catch (DataException | IOException e) {
-                log.warning("Failed to load snapshot: " + e.getMessage());
+                CommandBook.logger().warning("Failed to load snapshot: " + e.getMessage());
                 return;
             }
 
             for (final BlockVector2 chunkCoords : chunkList) {
-                BukkitTask aTask = server.getScheduler().runTaskLater(inst, () -> {
+                BukkitTask aTask = Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     boolean isLastRestore = chunkList.indexOf(chunkCoords) == chunkList.size() - 1;
 
                     try {
@@ -1191,7 +1181,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                             restore.restore();
                             fakeEditor.flushSession();
                         } catch (MaxChangedBlocksException e) {
-                            log.warning("Congratulations! You got an error which makes no sense!");
+                            CommandBook.logger().warning("Congratulations! You got an error which makes no sense!");
                             e.printStackTrace();
                             return;
                         }
@@ -1199,16 +1189,18 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                         if (restore.hadTotalFailure()) {
                             String error = restore.getLastErrorMessage();
                             if (error != null) {
-                                log.warning("Errors prevented any blocks from being restored.");
-                                log.warning("Last error: " + error);
+                                CommandBook.logger().warning("Errors prevented any blocks from being restored.");
+                                CommandBook.logger().warning("Last error: " + error);
                             } else {
-                                log.warning("No chunks could be loaded. (Bad archive?)");
+                                CommandBook.logger().warning("No chunks could be loaded. (Bad archive?)");
                             }
                         } else {
                             if (restore.getMissingChunks().size() > 0 || restore.getErrorChunks().size() > 0) {
-                                log.info(String.format("Restored, %d missing chunks and %d other errors.",
-                                        restore.getMissingChunks().size(),
-                                        restore.getErrorChunks().size()));
+                                CommandBook.logger().info(
+                                    String.format("Restored, %d missing chunks and %d other errors.",
+                                    restore.getMissingChunks().size(),
+                                    restore.getErrorChunks().size())
+                                );
                             }
 
                             if (isLastRestore) {
@@ -1232,9 +1224,9 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             }
 
             // Setup a task to clear out any restoration task
-            server.getScheduler().runTaskLater(inst, restorationTask::clear, (5 * chunkList.size()) + 20);
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), restorationTask::clear, (5 * chunkList.size()) + 20);
         } catch (MissingWorldException e) {
-            log.warning("The world: " + config.worldName + " could not be found, restoration cancelled.");
+            CommandBook.logger().warning("The world: " + config.worldName + " could not be found, restoration cancelled.");
         }
     }
 
@@ -1401,8 +1393,8 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                     case FALL:
                         if (LocationUtil.hasBelow(e.getLocation(), (type) -> type == Material.JUNGLE_LEAVES)
                                 || (isFlagEnabled(JungleRaidFlag.SUPER) && isFlagEnabled(JungleRaidFlag.TRAMPOLINE))) {
-                            server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
-                            server.getPluginManager().callEvent(new FallBlockerEvent(player));
+                            CommandBook.callEvent(new ThrowPlayerEvent(player));
+                            CommandBook.callEvent(new FallBlockerEvent(player));
                             if (ChanceUtil.getChance(2) || isFlagEnabled(JungleRaidFlag.TRAMPOLINE)) {
                                 org.bukkit.util.Vector v = player.getLocation().getDirection();
                                 v.setY(0);
@@ -1535,7 +1527,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
                 final Location playerLoc = player.getLocation().clone();
 
                 for (int i = 0; i < 12; i++) {
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         Firework firework = world.spawn(playerLoc, Firework.class);
                         FireworkMeta meta = firework.getFireworkMeta();
                         FireworkEffect.Builder builder = FireworkEffect.builder();

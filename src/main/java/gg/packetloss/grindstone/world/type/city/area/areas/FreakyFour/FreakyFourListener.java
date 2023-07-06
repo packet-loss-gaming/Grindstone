@@ -32,7 +32,10 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import org.apache.commons.lang.Validate;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -49,16 +52,11 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class FreakyFourListener extends AreaListener<FreakyFourArea> {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     public FreakyFourListener(FreakyFourArea parent) {
         super(parent);
     }
@@ -258,7 +256,7 @@ public class FreakyFourListener extends AreaListener<FreakyFourArea> {
             if (lastDamageLoc != null && LocationUtil.isWithin2DDistance(entity.getLocation(), lastDamageLoc, 3)) {
                 int totalTimesDamagedAtLoc = bossNumTimesDamaged.merge(boss, 1, Integer::sum);
                 if (totalTimesDamagedAtLoc >= 3) {
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         entity.teleport(player);
                         throwBack(entity);
                     }, 1);

@@ -6,12 +6,14 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractCondenserImpl;
 import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -36,7 +38,7 @@ public class ImbuedCrystalImpl extends AbstractCondenserImpl {
                 return;
             }
 
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
                 if (condenser.operate(adapter, true)) {
                     adapter.applyChanges();

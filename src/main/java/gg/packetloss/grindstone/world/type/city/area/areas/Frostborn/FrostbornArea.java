@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.city.area.areas.Frostborn;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.commandbook.util.entity.ProjectileUtil;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -58,6 +59,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.item.ItemNameCalculator.computeItemName;
@@ -111,7 +113,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
     public void setUp() {
         spectator.registerSpectatorKind(PlayerStateKind.FROSTBORN_SPECTATOR);
 
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
         gateOuter = new Location(world, -48.5, 81, 392, 270, 0);
         gateInner = new Location(world, -50.5, 81, 392, 90, 0);
         bossSpawnLoc = new Location(getWorld(), -137, 67, 392, 270, 0);
@@ -124,7 +126,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         listener = new FrostbornListener(this);
         config = new FrostbornConfig();
 
-        server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::updateBossBarProgress, 0, 5);
 
         reloadData();
 
@@ -318,7 +320,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             }
         };
         TimedRunnable fountainTask = new TimedRunnable(snowballFountain, timesToRun);
-        BukkitTask fountainTaskExecutor = server.getScheduler().runTaskTimer(inst, fountainTask, 20, 7);
+        BukkitTask fountainTaskExecutor = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), fountainTask, 20, 7);
         fountainTask.setTask(fountainTaskExecutor);
     }
 
@@ -340,7 +342,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             }
         };
         TimedRunnable snowballVomitTask = new TimedRunnable(snowballVomit, 40);
-        BukkitTask snowballVomitTaskExecutor = server.getScheduler().runTaskTimer(inst, snowballVomitTask, 10, 4);
+        BukkitTask snowballVomitTaskExecutor = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), snowballVomitTask, 10, 4);
         snowballVomitTask.setTask(snowballVomitTaskExecutor);
     }
 
@@ -350,7 +352,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             case 1:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "THIS ONE IS GOING TO HURT!");
                 Snowball snowball = boss.launchProjectile(Snowball.class);
-                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(inst, 1));
+                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(CommandBook.inst(), 1));
                 break;
             case 2:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "I AM SNOWTASTIC!");
@@ -382,7 +384,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
                 break;
             case 3:
                 ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "ME NO FEEL SO GOOD...");
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     ChatUtil.sendNotice(getContained(1, Player.class), ChatColor.DARK_RED + "BLAARRGGGHHHH!!!");
                     createEvilSnowballVomit();
                 }, 20);
@@ -417,7 +419,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
             snowball.setVelocity(vector);
 
             if (iteration > 0) {
-                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(inst, iteration));
+                snowball.setMetadata("forstborn-avalanche", new FixedMetadataValue(CommandBook.inst(), iteration));
             }
         }
     }
@@ -450,7 +452,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         };
 
         TimedRunnable aerialBombardTask = new TimedRunnable(snowballVomit, timesToRun);
-        BukkitTask aerialBombardTaskExecutor = server.getScheduler().runTaskTimer(inst, aerialBombardTask, 10, 4);
+        BukkitTask aerialBombardTaskExecutor = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), aerialBombardTask, 10, 4);
         aerialBombardTask.setTask(aerialBombardTaskExecutor);
     }
 
@@ -652,6 +654,7 @@ public class FrostbornArea extends AreaComponent<FrostbornConfig> implements Per
         File lootFile = new File(getWorkingDir().getPath() + "/loot.dat");
         if (lootFile.exists()) {
             Object lootFileO = IOUtil.readBinaryFile(lootFile);
+            Logger log = CommandBook.logger();
             if (lootFileO instanceof ArrayList) {
                 //noinspection unchecked
                 lootItems = (ArrayList<ProtectedSerializedItemStack>) lootFileO;

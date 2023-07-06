@@ -15,8 +15,8 @@ import gg.packetloss.grindstone.events.HomeTeleportEvent;
 import gg.packetloss.grindstone.events.PortalRecordEvent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -31,7 +31,6 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 
 import java.io.File;
 import java.util.*;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.click.ClickRecord.TICKS_FOR_DOUBLE_CLICK;
 
@@ -40,10 +39,6 @@ import static gg.packetloss.grindstone.click.ClickRecord.TICKS_FOR_DOUBLE_CLICK;
         desc = "Provides warps functionality"
 )
 public class WarpsComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private WarpManager warpManager;
 
     protected WarpManager getWarpManager() {
@@ -64,7 +59,7 @@ public class WarpsComponent extends BukkitComponent implements Listener {
             });
         });
 
-        File warpsDirectory = new File(inst.getDataFolder().getPath() + "/warps");
+        File warpsDirectory = new File(CommandBook.inst().getDataFolder().getPath() + "/warps");
         if (!warpsDirectory.exists()) warpsDirectory.mkdir();
 
         WarpDatabase warpDatabase = new CSVWarpDatabase("warps", warpsDirectory);
@@ -123,7 +118,7 @@ public class WarpsComponent extends BukkitComponent implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         HomeTeleportEvent HTE = new HomeTeleportEvent(event.getPlayer(), getRespawnLocation(event.getPlayer()));
-        server.getPluginManager().callEvent(HTE);
+        CommandBook.callEvent(HTE);
         if (!HTE.isCancelled()) event.setRespawnLocation(HTE.getDestination());
     }
 
@@ -195,7 +190,7 @@ public class WarpsComponent extends BukkitComponent implements Listener {
     }
 
     private void queueRespawnMechanicNotification(Player player) {
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (!rightClickedOnBedPlayers.contains(player.getUniqueId())) {
                 return;
             }

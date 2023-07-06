@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.DoubleClickEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -55,7 +56,7 @@ public class ClickComponent extends BukkitComponent implements Listener {
     // This helps simplify logic when we want to treat the interaction and the double click interaction
     // as separate events.
     private void callEvent(DoubleClickEvent event) {
-        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> CommandBook.callEvent(event));
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> CommandBook.callEvent(event));
     }
 
     @EventHandler

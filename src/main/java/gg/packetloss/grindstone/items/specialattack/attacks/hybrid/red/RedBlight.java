@@ -117,7 +117,7 @@ public class RedBlight extends EntityAttack implements MeleeSpecial, RangedSpeci
             // Spread out some of the load, the distance checks we just processed could get expensive.
 
             // Run the attack logic, and drain redstone - 1 tick from now
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 int redstoneTally = Integer.MAX_VALUE;
 
                 InventoryAdapter adapter = null;
@@ -131,7 +131,7 @@ public class RedBlight extends EntityAttack implements MeleeSpecial, RangedSpeci
                         return;
                     }
 
-                    server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+                    CommandBook.callEvent(new RapidHitEvent((Player) owner));
                 }
 
                 for (Entity entity : infected) {
@@ -173,7 +173,7 @@ public class RedBlight extends EntityAttack implements MeleeSpecial, RangedSpeci
             }, 1);
 
             // Cleanup dead entities - 2 ticks from now
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 infected.removeIf(entity -> {
                     if (entity.isValid()) {
                         return false;

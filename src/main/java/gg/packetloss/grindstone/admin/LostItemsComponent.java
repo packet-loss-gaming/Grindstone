@@ -9,17 +9,9 @@ package gg.packetloss.grindstone.admin;
 import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import org.bukkit.Server;
-
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Lost Custom Items", desc = "Lost item commands.")
 public class LostItemsComponent extends BukkitComponent {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @Override
     public void enable() {
         CommandBook.getComponentRegistrar().registerTopLevelCommands((registrar) -> {

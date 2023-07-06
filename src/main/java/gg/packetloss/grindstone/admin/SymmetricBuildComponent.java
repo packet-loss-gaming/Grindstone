@@ -39,15 +39,10 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Symmetric Build", desc = "Build symmetric structures faster.")
 @Depend(components = {SessionComponent.class})
 public class SymmetricBuildComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private final double MAX_TELEPORT_DISTANCE = 200;
     private final double MAX_TELEPORT_DISTANCE_SQ = Math.pow(MAX_TELEPORT_DISTANCE, 2);
 
@@ -57,8 +52,7 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
     @Override
     public void enable() {
         registerCommands(Commands.class);
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     private boolean isBuildingWithSymmetricBuilding(Player player) {
@@ -200,7 +194,7 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
 
         // Processing of mirroring needs delayed so that it doesn't interfere with other "block multiplication"
         // systems like the linear block placer.
-        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
             mirrorBlockPlace(player, placedBlock, placedAgainstBlockVector, event.getItemInHand(), event.getHand());
         });
     }
@@ -239,7 +233,7 @@ public class SymmetricBuildComponent extends BukkitComponent implements Listener
 
         // Processing of mirroring needs delayed so that it doesn't interfere with other "block multiplication"
         // systems like the linear block placer.
-        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
             mirrorBlockBreak(player, event.getBlock());
         });
     }

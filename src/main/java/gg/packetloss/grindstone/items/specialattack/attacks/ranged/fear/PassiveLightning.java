@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.LocationAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
@@ -24,7 +25,7 @@ public class PassiveLightning extends LocationAttack implements RangedSpecial {
     @Override
     public void activate() {
         if (owner instanceof Player) {
-            server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+            CommandBook.callEvent(new RapidHitEvent((Player) owner));
         }
 
         // Simulate a lightning strike

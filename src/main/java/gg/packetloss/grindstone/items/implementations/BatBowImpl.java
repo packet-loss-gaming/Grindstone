@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
 import gg.packetloss.grindstone.events.entity.ProjectileTickEvent;
 import gg.packetloss.grindstone.items.CustomItemSession;
@@ -15,6 +16,7 @@ import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.misc.MobAttack;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.entity.Bat;
@@ -69,10 +71,10 @@ public class BatBowImpl extends AbstractItemFeatureImpl {
                 if (ItemUtil.isItem(launcher, CustomItems.BAT_BOW)) {
 
                     if (!ChanceUtil.getChance(5)) return;
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         final Bat bat = location.getWorld().spawn(location, Bat.class);
                         bat.setRemoveWhenFarAway(true);
-                        server.getScheduler().runTaskLater(inst, () -> {
+                        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                             if (bat.isValid()) {
                                 bat.remove();
                                 for (int i = 0; i < 20; i++) {

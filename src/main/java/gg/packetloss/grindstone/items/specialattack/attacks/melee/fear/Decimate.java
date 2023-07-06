@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.melee.fear;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
@@ -25,7 +26,7 @@ public class Decimate extends EntityAttack implements MeleeSpecial {
     public void activate() {
 
         if (owner instanceof Player) {
-            server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+            CommandBook.callEvent(new RapidHitEvent((Player) owner));
         }
 
         double damage = ChanceUtil.getRandom(target instanceof Player ? 4 : 20) * 25;

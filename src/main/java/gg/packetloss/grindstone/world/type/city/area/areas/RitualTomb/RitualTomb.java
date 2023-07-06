@@ -103,7 +103,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
 
         setDefaults();
 
-        server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::updateBossBarProgress, 0, 5);
 
         CommandBook.registerEvents(new FlightBlockingListener(this::contains));
 
@@ -156,7 +156,7 @@ public class RitualTomb extends AreaComponent<RitualTombConfig> {
 
             int numPlayers = info.getKillInfo().getPlayers().size();
             SacrificeComponent.getCalculatedLoot(new SacrificeInformation(
-                server.getConsoleSender(),
+                Bukkit.getConsoleSender(),
                 10,
                 ritualValue.divide(BigDecimal.valueOf(numPlayers), RoundingMode.HALF_UP)
             )).forEach(consumer);

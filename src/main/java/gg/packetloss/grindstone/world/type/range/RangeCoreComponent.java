@@ -22,7 +22,7 @@ import gg.packetloss.grindstone.util.listener.combatwatchdog.UnbalancedCombatWat
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldMassQuery;
-import org.bukkit.Server;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.block.Block;
@@ -36,15 +36,10 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Range Core", desc = "Operate the range worlds.")
 @Depend(components = {ManagedWorldComponent.class, FlightItemsComponent.class})
 public class RangeCoreComponent extends BukkitComponent implements Listener, Runnable {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private ManagedWorldComponent managedWorld;
     @InjectComponent
@@ -56,7 +51,7 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
     public void enable() {
         config = configure(new LocalConfiguration());
         // Process the configuration 1 tick late to make sure all worlds are loaded at the time of processing.
-        CommandBook.server().getScheduler().runTask(CommandBook.inst(), this::processConfig);
+        Bukkit.getScheduler().runTask(CommandBook.inst(), this::processConfig);
 
         CommandBook.registerEvents(this);
         CommandBook.registerEvents(new UnbalancedCombatWatchdog(this::isRangeWorld));
@@ -65,7 +60,7 @@ public class RangeCoreComponent extends BukkitComponent implements Listener, Run
         CommandBook.registerEvents(new BetterMobSpawningListener(this::isRangeWorld));
 
         // Start tree growth task
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 20 * 2);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 0, 20 * 2);
     }
 
     @Override

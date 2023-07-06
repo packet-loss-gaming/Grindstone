@@ -24,7 +24,10 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -35,17 +38,11 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Auto Clear", desc = "Automatically clears items on the ground.")
 @Depend(components = {SessionComponent.class})
 public class AutoClearComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private SessionComponent sessions;
 
@@ -59,8 +56,7 @@ public class AutoClearComponent extends BukkitComponent implements Listener {
         this.config = configure(new LocalConfiguration());
         registerCommands(Commands.class);
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
@@ -107,7 +103,7 @@ public class AutoClearComponent extends BukkitComponent implements Listener {
         int computedCount = worldCount.getOrDefault(world, 0);
         if (computedCount >= (config.itemCountMin * 3)) {
             if (nextTickCleanupTask == null) {
-                nextTickCleanupTask = server.getScheduler().runTask(inst, () -> {
+                nextTickCleanupTask = Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                     emergencyDropClear(world);
                     nextTickCleanupTask = null;
                 });
@@ -416,7 +412,7 @@ public class AutoClearComponent extends BukkitComponent implements Listener {
         // Setup new task
         runnable = new TimedRunnable(dropClear, seconds);
         // Offset this by one to prevent the drop clear from triggering twice
-        runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 1, 20));
+        runnable.setTask(Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), runnable, 1, 20));
         worldTimer.put(world, runnable);
     }
 

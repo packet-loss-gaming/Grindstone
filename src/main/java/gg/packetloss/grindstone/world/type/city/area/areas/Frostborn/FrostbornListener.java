@@ -22,9 +22,9 @@ import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -43,22 +43,17 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 
 public class FrostbornListener extends AreaListener<FrostbornArea> {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private int explosionCounter = 0;
     private double rollingAvgExplosionsPerSecond = 0;
 
     public FrostbornListener(FrostbornArea parent) {
         super(parent);
 
-        server.getScheduler().runTaskTimer(inst, () -> {
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), () -> {
             rollingAvgExplosionsPerSecond = (explosionCounter + rollingAvgExplosionsPerSecond) / 2;
             explosionCounter = 0;
         }, 0, 20);

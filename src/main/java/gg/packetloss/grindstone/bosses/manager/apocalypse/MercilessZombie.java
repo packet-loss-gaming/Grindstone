@@ -30,10 +30,10 @@ import gg.packetloss.openboss.entity.LocalEntity;
 import gg.packetloss.openboss.instruction.*;
 import gg.packetloss.openboss.util.AttackDamage;
 import gg.packetloss.openboss.util.DamageSource;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -45,14 +45,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 public class MercilessZombie {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private BossBarRebindableBoss<Zombie> mercilessZombie;
 
     public static final String BOUND_NAME = "Merciless Zombie";
@@ -62,11 +56,11 @@ public class MercilessZombie {
     private PerformanceDropTable dropTable = new PerformanceDropTable();
 
     public MercilessZombie() {
-        mercilessZombie = new BossBarRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        mercilessZombie = new BossBarRebindableBoss<>(BOUND_NAME, Zombie.class, CommandBook.inst(), new SimpleInstructionDispatch<>());
         setupDropTable();
         setupMercilessZombie();
-        server.getScheduler().runTaskTimer(
-                inst,
+        Bukkit.getScheduler().runTaskTimer(
+                CommandBook.inst(),
                 () -> {
                     Lists.newArrayList(mercilessZombie.controlled.values()).forEach((ce) -> {
                         mercilessZombie.process(ce);
@@ -137,7 +131,7 @@ public class MercilessZombie {
     private void distanceTrap(LivingEntity boss, LivingEntity toHit) {
         toHit.teleport(boss);
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (boss.isDead()) {
                 return;
             }
@@ -240,7 +234,7 @@ public class MercilessZombie {
                 Entity toHit = BukkitUtil.getBukkitEntity(localToHit);
                 if (getEvent(damage).getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE)) {
                     ChatUtil.sendWarning(toHit, "Cute.");
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         distanceTrap((LivingEntity) boss, (LivingEntity) toHit);
                     }, 10);
                 }
@@ -283,7 +277,7 @@ public class MercilessZombie {
 
                         if (entity instanceof Player && ((Player) entity).hasLineOfSight(boss)) {
                             Location pLoc = entity.getLocation();
-                            server.getScheduler().runTaskLater(inst, () -> {
+                            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                                 pLoc.getWorld().strikeLightningEffect(pLoc);
                                 for (Player player : pLoc.getNearbyEntitiesByType(Player.class, 2)) {
                                     if (player.isValid()) {

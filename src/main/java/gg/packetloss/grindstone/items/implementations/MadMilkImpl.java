@@ -6,10 +6,12 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
-import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
-import gg.packetloss.grindstone.util.item.ItemUtil;
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
+import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -23,7 +25,11 @@ public class MadMilkImpl extends AbstractItemFeatureImpl {
         ItemStack stack = event.getItem();
 
         if (ItemUtil.isItem(stack, CustomItems.MAD_MILK)) {
-            server.getScheduler().runTaskLater(inst, () -> player.getInventory().setItemInHand(CustomItemCenter.build(CustomItems.MAGIC_BUCKET)), 1);
+            Bukkit.getScheduler().runTaskLater(
+                CommandBook.inst(),
+                () -> player.getInventory().setItemInHand(CustomItemCenter.build(CustomItems.MAGIC_BUCKET)),
+                1
+            );
             event.setCancelled(true);
         }
     }

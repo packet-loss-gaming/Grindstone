@@ -88,7 +88,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
     public void setUp() {
         spectator.registerSpectatorKind(PlayerStateKind.PATIENT_X_SPECTATOR);
 
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         String base = "glacies-mare-district-mad-man";
         region = manager.getRegion(base);
@@ -108,9 +108,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
 
         rescanLight();
 
-        server.getScheduler().runTaskTimer(inst, (Runnable) this::runAttack, 0, 20 * 20);
-        server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
-        server.getScheduler().runTaskTimer(inst, this::updateBossIcePad, 0, 1);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), (Runnable) this::runAttack, 0, 20 * 20);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::updateBossBarProgress, 0, 5);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::updateBossIcePad, 0, 1);
 
         destinations.add(new Location(world, -180, 54, 109.5));
         destinations.add(new Location(world, -173, 54, 120));
@@ -276,7 +276,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                     ChatUtil.sendWarning(player, "Patient X throws you off!");
                 }
             } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
+                CommandBook.logger().warning("The player: " + player.getName() + " may have an unfair advantage.");
             }
         }
     }
@@ -338,7 +338,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 for (Player player : contained) {
                     final double old = player.getHealth();
                     EntityUtil.forceDecreaseHealthTo(player, 3);
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         if (player.isValid() && !contains(player)) return;
                         EntityUtil.forceAdjustHealth(player, old * .75);
                     }, 20 * 2);
@@ -395,7 +395,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 ChatUtil.sendWarning(audible, "But only cause I'm a little batty...");
                 break;
             case 8:
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 
                     taskBuilder.setInterval(10);
@@ -469,9 +469,9 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 break;
             case 9:
                 final int burst = ChanceUtil.getRangedRandom(10, 20);
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     for (int i = burst; i > 0; i--) {
-                        server.getScheduler().runTaskLater(inst, () -> {
+                        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                             if (boss != null) freezeBlocks(true);
                         }, i * 10);
                     }

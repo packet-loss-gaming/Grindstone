@@ -11,7 +11,7 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
-import org.bukkit.Server;
+import org.bukkit.Bukkit;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,14 +27,9 @@ import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Block State", desc = "Block state management")
 public class BlockStateComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private Path statesDir;
 
     private Gson gson = new Gson();
@@ -44,7 +39,7 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
     @Override
     public void enable() {
         try {
-            Path baseDir = Path.of(inst.getDataFolder().getPath(), "state");
+            Path baseDir = Path.of(CommandBook.inst().getDataFolder().getPath(), "state");
             statesDir = Files.createDirectories(baseDir.resolve("states/blocks"));
 
             loadBlockStates();
@@ -52,8 +47,7 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
             ex.printStackTrace();
         }
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
@@ -76,7 +70,7 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
             try (BufferedReader reader = Files.newBufferedReader(stateFile)) {
                 states[kind.ordinal()] = gson.fromJson(reader, BlockStateCollection.class);
             } catch (IOException e) {
-                log.warning("Failed to load block records for: " + kind.name());
+                CommandBook.logger().warning("Failed to load block records for: " + kind.name());
                 e.printStackTrace();
             }
         }
@@ -95,7 +89,7 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
             writer.write(gson.toJson(blockStateCollection));
             blockStateCollection.resetDirtyFlag();
         } catch (IOException e) {
-            log.warning("Failed to load write records for: " + kind.name());
+            CommandBook.logger().warning("Failed to load write records for: " + kind.name());
             e.printStackTrace();
         }
     }
@@ -157,6 +151,6 @@ public class BlockStateComponent extends BukkitComponent implements Listener {
 
     @EventHandler
     public void onWorldSave(WorldSaveEvent event) {
-        server.getScheduler().runTask(CommandBook.inst(), this::saveBlockStates);
+        Bukkit.getScheduler().runTask(CommandBook.inst(), this::saveBlockStates);
     }
 }

@@ -26,9 +26,9 @@ import gg.packetloss.grindstone.util.item.inventory.InventoryAdapter;
 import gg.packetloss.grindstone.util.item.inventory.PlayerStoragePriorityInventoryAdapter;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
@@ -46,14 +46,8 @@ import org.bukkit.inventory.ItemStack;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Set;
-import java.util.logging.Logger;
 
 public class MirageArenaListener extends AreaListener<MirageArena> {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     public MirageArenaListener(MirageArena parent) {
         super(parent);
     }
@@ -91,7 +85,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
         parent.manuallyPlacedLocations.add(blockLocVec);
         BlockState replacedState = event.getBlockReplacedState();
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             // If the position was still in the set, restore it to whatever it was before.
             if (parent.manuallyPlacedLocations.remove(blockLocVec)) {
                 replacedState.update(true);
@@ -285,7 +279,7 @@ public class MirageArenaListener extends AreaListener<MirageArena> {
                 return;
             }
 
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 InventoryAdapter adapter = new PlayerStoragePriorityInventoryAdapter(player);
                 if (goldCondenser.operate(adapter, true)) {
                     adapter.applyChanges();

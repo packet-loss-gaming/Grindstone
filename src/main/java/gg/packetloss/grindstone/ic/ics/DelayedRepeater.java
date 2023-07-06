@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.ic.ics;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.craftbook.ChangedSign;
 import com.sk89q.craftbook.mechanics.ic.*;
+import org.bukkit.Bukkit;
 import org.bukkit.Server;
 
 import java.util.logging.Logger;
@@ -50,7 +51,7 @@ public class DelayedRepeater extends AbstractIC {
     public void trigger(final ChipState chip) {
 
         final boolean trigger = chip.getInput(0);
-        server.getScheduler().runTaskLater(inst, () -> chip.setOutput(0, trigger), delay);
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> chip.setOutput(0, trigger), delay);
     }
 
     public static class Factory extends AbstractICFactory implements RestrictedIC {

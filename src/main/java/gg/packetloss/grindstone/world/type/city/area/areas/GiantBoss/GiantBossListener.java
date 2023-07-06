@@ -63,13 +63,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 public class GiantBossListener extends AreaListener<GiantBossArea> {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     public GiantBossListener(GiantBossArea parent) {
         super(parent);
     }
@@ -193,7 +188,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                         door = parent.westDoor;
                     }
                     parent.setDoor(door, Material.AIR);
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         if (parent.isBossSpawnedFast()) {
                             parent.setDoor(door, Material.CHISELED_SANDSTONE);
                         }
@@ -260,7 +255,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 ChatUtil.sendNotice(attacker, "Come closer...");
                 attacker.teleport(parent.boss.getLocation());
                 ((Player) attacker).damage(100, parent.boss);
-                server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) attacker));
+                CommandBook.callEvent(new ThrowPlayerEvent((Player) attacker));
                 attacker.setVelocity(new Vector(
                         parent.random.nextDouble() * 3 - 1.5,
                         parent.random.nextDouble() * 2,
@@ -298,7 +293,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
                 int babySpawns = ChanceUtil.getRandom(maxBabySpawns);
                 final int chancePerSpawnPoint = Math.max(11 / babySpawns, 1);
 
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     if (boss.getHealth() > oldHP) return;
 
                     parent.spawnBabies(chancePerSpawnPoint);
@@ -317,7 +312,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
                     final Player finalAttacker = (Player) attacker;
                     if (!finalAttacker.getGameMode().equals(GameMode.CREATIVE)) {
-                        server.getScheduler().runTaskLater(inst, () -> {
+                        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                             ItemStack stack = finalAttacker.getItemInHand();
                             if (stack.getAmount() == 1) {
                                 finalAttacker.setItemInHand(null);
@@ -353,7 +348,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
             }
 
             if (attacker instanceof Giant) {
-                server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) defender));
+                CommandBook.callEvent(new ThrowPlayerEvent((Player) defender));
 
                 Vector newVelocityVec = VectorUtil.createDirectionalVector(
                         parent.boss.getLocation(), defender.getLocation()
@@ -430,7 +425,7 @@ public class GiantBossListener extends AreaListener<GiantBossArea> {
 
                 // Remove remaining XP and que new xp
                 for (int i = 0; i < 7; i++) {
-                    server.getScheduler().runTaskLater(inst, parent.spawnXP, i * 2 * 20);
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), parent.spawnXP, i * 2 * 20);
                 }
 
                 parent.setDoor(parent.eastDoor, Material.AIR);

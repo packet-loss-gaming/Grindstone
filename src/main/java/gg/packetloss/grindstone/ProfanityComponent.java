@@ -14,9 +14,9 @@ import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -27,25 +27,18 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.ChatUtil.loonizeWord;
 
 @ComponentInformation(friendlyName = "Profanity", desc = "Kill Profanity.")
 public class ProfanityComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     private LocalConfiguration config;
 
     @Override
     public void enable() {
 
         this.config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
@@ -101,7 +94,7 @@ public class ProfanityComponent extends BukkitComponent implements Listener {
                 ChatUtil.sendWarning(player, "Let that be a lesson to you to not use profanity.");
 
                 // Public Embarrassment? :P
-                for (final Player otherPlayer : server.getOnlinePlayers()) {
+                for (final Player otherPlayer : Bukkit.getOnlinePlayers()) {
                     // Don't tell the player we are sending this message
                     if (otherPlayer != player) {
                         ChatUtil.sendNotice(otherPlayer, "The player: "

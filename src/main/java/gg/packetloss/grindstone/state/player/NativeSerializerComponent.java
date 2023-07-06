@@ -10,7 +10,6 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.hackbook.ItemSerializer;
-import org.bukkit.Server;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.ByteArrayInputStream;
@@ -27,16 +26,12 @@ import java.util.stream.Collectors;
 
 @ComponentInformation(friendlyName = "Native Serializer", desc = "Native object serialization")
 public class NativeSerializerComponent extends BukkitComponent {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     private Path migrationFile;
     private Path itemStorageDir;
 
     @Override
     public void enable() {
-        String nativeDirectory = inst.getDataFolder().getPath() + "/native/";
+        String nativeDirectory = CommandBook.inst().getDataFolder().getPath() + "/native/";
         String objectStorageDirectory = nativeDirectory + "objects/";
 
         try {
@@ -75,7 +70,7 @@ public class NativeSerializerComponent extends BukkitComponent {
         }).collect(Collectors.toList());
 
         for (Path file : files) {
-            log.info("Migrating " + file.getFileName());
+            CommandBook.logger().info("Migrating " + file.getFileName());
 
             serializeTo(file, deserializeFrom(file, true));
         }
@@ -83,6 +78,7 @@ public class NativeSerializerComponent extends BukkitComponent {
 
     private void upgradeOutOfDate() throws IOException {
         if (Files.exists(migrationFile)) {
+            Logger log = CommandBook.logger();
             log.info("Migration file found, initializing migration");
             performUpgrade();
             Files.delete(migrationFile);

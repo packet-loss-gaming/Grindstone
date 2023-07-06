@@ -99,7 +99,7 @@ public class HighScoresComponent extends BukkitComponent {
 
         CommandBook.registerEvents(new GobletLoginListener(this));
 
-        server.getScheduler().runTaskTimerAsynchronously(inst, this::processUpdateQueue, 25, 20);
+        Bukkit.getScheduler().runTaskTimerAsynchronously(CommandBook.inst(), this::processUpdateQueue, 25, 20);
     }
 
     @Override
@@ -185,7 +185,7 @@ public class HighScoresComponent extends BukkitComponent {
 
         loadGobletScoreType();
 
-        server.getScheduler().runTaskLater(
+        Bukkit.getScheduler().runTaskLater(
             CommandBook.inst(),
             this::checkGobletForUpdate,
             TimeUtil.getTicksTillNextMonth()

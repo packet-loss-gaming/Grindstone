@@ -35,10 +35,7 @@ import gg.packetloss.grindstone.util.listener.InventorySlotBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
@@ -105,7 +102,7 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
     public void setUp() {
         spectator.registerSpectatorKind(PlayerStateKind.CURSED_MINE_SPECTATOR);
 
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
 
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         String base = "oblitus-district-cursed-mine";
@@ -247,7 +244,7 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
     }
 
     private boolean checkInventory(Player player, ItemStack[] itemStacks) {
-        if (!inst.hasPermission(player, "aurora.tome.divinity")) return false;
+        if (!player.hasPermission("aurora.tome.divinity")) return false;
 
         for (ItemStack stack : itemStacks) {
             if (getMaxStackDrain(stack) > 0) {
@@ -516,9 +513,9 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
             addToHitList(player);
             ChatUtil.sendWarning(player, "Capn' Dave yells: FIRE!");
             player.chat("Who's a good ghost?!?!");
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 player.chat("Don't hurt me!!!");
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     player.chat("Nooooooooooo!!!");
 
                     PrayerComponent.constructPrayer(player, Prayers.CANNON, TimeUnit.MINUTES.toMillis(2));
@@ -537,7 +534,7 @@ public class CursedMineArea extends AreaComponent<CursedMineConfig> {
             }
             for (int i = ChanceUtil.getRandom(24) + 20; i > 0; --i) {
                 final boolean untele = i == 11;
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     if (untele) {
                         revertPlayerBlocks(player);
                         removeFromHitList(player);

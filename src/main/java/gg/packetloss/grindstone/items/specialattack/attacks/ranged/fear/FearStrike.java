@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
@@ -30,7 +31,7 @@ public class FearStrike extends EntityAttack implements RangedSpecial {
     public void activate() {
 
         if (owner instanceof Player) {
-            server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+            CommandBook.callEvent(new RapidHitEvent((Player) owner));
         }
 
         List<Entity> entityList = target.getNearbyEntities(8, 4, 8);
@@ -49,7 +50,7 @@ public class FearStrike extends EntityAttack implements RangedSpecial {
                 }
 
                 if (e instanceof Player) {
-                    server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
+                    CommandBook.callEvent(new ThrowPlayerEvent((Player) e));
                 }
 
                 // Set velocity/throw entity

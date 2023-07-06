@@ -27,8 +27,8 @@ import gg.packetloss.grindstone.util.probability.WeightedPicker;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
 import gg.packetloss.grindstone.world.managed.ManagedWorldMassQuery;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -37,21 +37,17 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.weather.ThunderChangeEvent;
 import org.bukkit.event.weather.WeatherChangeEvent;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static com.zachsthings.libcomponents.bukkit.BasePlugin.callEvent;
 
 @ComponentInformation(friendlyName = "Better Weather", desc = "Improves weather mechanics.")
 @Depend(components = {ManagedWorldComponent.class})
 public class BetterWeatherComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private ManagedWorldComponent managedWorld;
 
@@ -72,12 +68,11 @@ public class BetterWeatherComponent extends BukkitComponent implements Listener 
         }
 
         registerCommands(Commands.class);
+        CommandBook.registerEvents(this);
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-
-        server.getScheduler().runTask(inst, this::syncWeather);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this::updateWeather, 0, 20 * 60);
+        BukkitScheduler scheduler = Bukkit.getScheduler();
+        scheduler.runTask(CommandBook.inst(), this::syncWeather);
+        scheduler.scheduleSyncRepeatingTask(CommandBook.inst(), this::updateWeather, 0, 20 * 60);
     }
 
     @Override

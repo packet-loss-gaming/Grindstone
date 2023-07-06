@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.items.specialattack.attacks.hybrid.fear;
 
 import com.destroystokyo.paper.ParticleBuilder;
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
@@ -72,7 +73,7 @@ public class HellCano extends EntityAttack implements MeleeSpecial, RangedSpecia
 
         taskBuilder.setAction((times) -> {
             if (owner instanceof Player) {
-                server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+                CommandBook.callEvent(new RapidHitEvent((Player) owner));
             }
 
             if (!hasErupted && numRuns - times >= 40 && ChanceUtil.getChance(20)) {

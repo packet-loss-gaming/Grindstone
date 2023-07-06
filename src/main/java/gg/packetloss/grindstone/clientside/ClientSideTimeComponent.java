@@ -15,7 +15,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
-import org.bukkit.Server;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,25 +24,18 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Client Side Time Manager", desc = "Turn off the night!")
 public class ClientSideTimeComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
-    private List<Player> enabledFor = new ArrayList<>();
+    private final List<Player> enabledFor = new ArrayList<>();
 
     @Override
     public void enable() {
         registerCommands(Commands.class);
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
-        server.getScheduler().runTaskTimer(inst, this::syncTimes, 0, 20 * 5);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::syncTimes, 0, 20 * 5);
     }
 
     private void applyToPlayer(Player player) {

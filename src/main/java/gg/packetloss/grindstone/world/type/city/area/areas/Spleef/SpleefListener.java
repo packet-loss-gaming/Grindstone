@@ -6,10 +6,8 @@
 
 package gg.packetloss.grindstone.world.type.city.area.areas.Spleef;
 
-import com.sk89q.commandbook.CommandBook;
 import de.diddiz.LogBlock.events.BlockChangePreLogEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
-import org.bukkit.Server;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -23,13 +21,8 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.UUID;
-import java.util.logging.Logger;
 
 public class SpleefListener implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private SpleefArea parent;
 
     public SpleefListener(SpleefArea parent) {

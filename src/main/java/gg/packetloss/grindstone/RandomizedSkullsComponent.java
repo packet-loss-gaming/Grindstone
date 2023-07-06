@@ -51,7 +51,7 @@ public class RandomizedSkullsComponent extends BukkitComponent implements Runnab
 
         // Create an initial set blocking, then schedule updates every hour
         updatePlayersTo(getRandomSetOfPlayers());
-        CommandBook.server().getScheduler().runTaskTimer(
+        Bukkit.getScheduler().runTaskTimer(
                 CommandBook.inst(),
                 this,
                 TimeUtil.convertSecondsToTicks(config.updateFrequency),

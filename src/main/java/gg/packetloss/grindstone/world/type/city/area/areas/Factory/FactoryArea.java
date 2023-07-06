@@ -53,7 +53,7 @@ public class FactoryArea extends AreaComponent<FactoryConfig> {
 
     @Override
     public void setUp() {
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
 
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         String base = "oblitus-district-old-factory";
@@ -256,7 +256,7 @@ public class FactoryArea extends AreaComponent<FactoryConfig> {
         int max = participants.size() * (hexa ? 6 : 1) * config.productionBaseSpeed;
 
         for (int i = ChanceUtil.getRangedRandom(max / 3, max); i > 0; --i) {
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 getRandomActiveJob().ifPresent((job) -> {
                     producer.produce(job);
 

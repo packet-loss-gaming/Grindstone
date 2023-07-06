@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.EntityHealthInContextEvent;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
@@ -140,7 +141,7 @@ public class EntityUtil {
         // This prevents double deaths if we're coming from a EntityDamageEvent and this kills the player (the
         // original damage event would then become a secondary "kill"/death).
         if (entity instanceof Player) {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> forceDamageNow(entity, amt));
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> forceDamageNow(entity, amt));
         } else {
             forceDamageNow(entity, amt);
         }

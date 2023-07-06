@@ -21,8 +21,8 @@ import gg.packetloss.grindstone.util.listener.NaturalSpawnBlockingListener;
 import gg.packetloss.grindstone.util.listener.NuisanceSpawnBlockingListener;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
 import gg.packetloss.grindstone.world.managed.ManagedWorldIsQuery;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
@@ -31,15 +31,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.PortalCreateEvent;
 
-import java.util.logging.Logger;
-
 @ComponentInformation(friendlyName = "City Core", desc = "Operate the core city functionality.")
 @Depend(components = {AdminComponent.class, ManagedWorldComponent.class})
 public class CityCoreComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private AdminComponent admin;
     @InjectComponent
@@ -51,7 +45,7 @@ public class CityCoreComponent extends BukkitComponent implements Listener {
     public void enable() {
         config = configure(new LocalConfiguration());
         // Process the configuration 1 tick late to make sure all worlds are loaded at the time of processing.
-        CommandBook.server().getScheduler().runTask(CommandBook.inst(), this::processConfig);
+        Bukkit.getScheduler().runTask(CommandBook.inst(), this::processConfig);
 
         CommandBook.registerEvents(this);
 

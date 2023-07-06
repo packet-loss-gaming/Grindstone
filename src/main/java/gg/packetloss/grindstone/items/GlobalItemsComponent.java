@@ -38,9 +38,9 @@ import gg.packetloss.grindstone.util.ItemCondenser;
 import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -63,10 +63,6 @@ import java.util.Set;
         FlightItemsComponent.class, ManagedWorldComponent.class
 })
 public class GlobalItemsComponent extends BukkitComponent implements Listener {
-
-    private static final CommandBook inst = CommandBook.inst();
-    private static final Server server = CommandBook.server();
-
     @InjectComponent
     protected static AdminComponent admin;
     @InjectComponent
@@ -134,12 +130,11 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
         SUMMATION_CONDENSER.addSupport(new ItemStack(Material.WHEAT, 9), new ItemStack(Material.HAY_BLOCK, 1));
     }
 
-    private MigrationManager migrationManager = new MigrationManager();
+    private final MigrationManager migrationManager = new MigrationManager();
 
     @Override
     public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
         loadResources();
         registerSpecWeapons();
@@ -168,7 +163,7 @@ public class GlobalItemsComponent extends BukkitComponent implements Listener {
     private void registerSpecWeapons() {
         // Delay by 1 tick to allow the packet interceptor to get setup.
         // This should be removable once libcomponents respects component dependencies
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             WeaponSysImpl wepSys = handle(new WeaponSysImpl(packetInterceptor));
 
             wepSys.add(WeaponType.RANGED, CustomItems.MASTER_BOW, handle(new MasterBowImpl()));

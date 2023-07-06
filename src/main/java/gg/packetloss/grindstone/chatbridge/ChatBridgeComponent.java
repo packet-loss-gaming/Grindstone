@@ -12,6 +12,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.ComponentManager;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
+import org.bukkit.Bukkit;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,7 +29,7 @@ public class ChatBridgeComponent extends BukkitComponent {
 
     @Override
     public void enable() {
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), this::integrateWithTelegram, 1);
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), this::integrateWithTelegram, 1);
     }
 
     private void registerDebugIntegration() {

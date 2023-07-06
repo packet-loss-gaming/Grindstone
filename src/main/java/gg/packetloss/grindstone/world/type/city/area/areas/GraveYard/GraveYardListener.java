@@ -291,7 +291,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
             parent.wallet.addToBalance(player, totalAmount).thenAcceptAsynchronously(
                 (ignored) -> {
                     // Delay by a tick to prevent this message from appearing before the ancient fire ignites message
-                    CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         ChatUtil.sendNotice(player, "You receive ", parent.wallet.format(totalAmount), ".");
                     }, 1);
                 },
@@ -497,7 +497,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
         final Player player = event.getPlayer();
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (parent.isHostileTempleArea(player.getLocation()) && parent.isParticipant(player)) {
                 player.teleport(parent.getRandomHeadstoneOrSpawn(), TeleportCause.UNKNOWN);
                 ChatUtil.sendWarning(player, "You feel dazed and confused as you wake up near a head stone.");
@@ -553,7 +553,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         if (parent.isHostileTempleArea(clickedLoc)) {
             switch (block.getType()) {
                 case LEVER:
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         parent.isPressurePlateLocked = !parent.checkPressurePlateLock();
                     }, 1);
                     break;
@@ -592,7 +592,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
                         parent.cleanupEntitiesInRewardsRoom();
                         player.teleport(new Location(parent.getWorld(), -126, 42, -685), TeleportCause.UNKNOWN);
                         final int amt = stack.getAmount() - 1;
-                        server.getScheduler().runTaskLater(inst, () -> {
+                        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                             ItemStack newStack = null;
                             if (amt > 0) {
                                 newStack = CustomItemCenter.build(CustomItems.PHANTOM_CLOCK, amt);
@@ -679,7 +679,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
         if (event.isUsingGemOfLife()) {
             GemOfLifeUsageEvent aEvent = new GemOfLifeUsageEvent(player);
-            server.getPluginManager().callEvent(aEvent);
+            CommandBook.callEvent(aEvent);
             if (!aEvent.isCancelled()) {
                 parent.playerState.pushState(PlayerStateKind.GRAVE_YARD, player);
                 return;

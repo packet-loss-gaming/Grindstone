@@ -70,7 +70,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.ProjectileWatchingComponent.getSpawningItem;
@@ -82,11 +81,6 @@ import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 @Depend(components = {BuffComponent.class, JailComponent.class, AdminComponent.class,
         WarpsComponent.class, HighScoresComponent.class})
 public class ApocalypseComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private BuffComponent buffComponent;
     @InjectComponent
@@ -118,10 +112,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         stickyBossManager = new StickyZombie();
         chuckerBossManager = new ChuckerZombie();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
-        server.getScheduler().runTaskTimer(inst, this::upgradeToMerciless, 0, 20 * 5);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::upgradeToMerciless, 0, 20 * 5);
     }
 
     @Override
@@ -331,12 +324,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
 
         ApocalypseRespawnBoostEvent apocalypseEvent = new ApocalypseRespawnBoostEvent(player, respawnLocation);
-        server.getPluginManager().callEvent(apocalypseEvent);
+        CommandBook.callEvent(apocalypseEvent);
         if (apocalypseEvent.isCancelled()) {
             return;
         }
 
-        server.getScheduler().scheduleSyncDelayedTask(inst, () -> {
+        Bukkit.getScheduler().scheduleSyncDelayedTask(CommandBook.inst(), () -> {
             player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20 * 30, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20 * 45, 1));
             player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20 * 45, 1));
@@ -532,7 +525,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(
           player, freeBedLocation.get(), ChanceUtil.getRandom(multiplier)
         );
-        server.getPluginManager().callEvent(apocalypseEvent);
+        CommandBook.callEvent(apocalypseEvent);
         if (apocalypseEvent.isCancelled()) {
             return;
         }
@@ -590,7 +583,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             Location l = findLocation(player.getLocation());
 
             ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, l);
-            server.getPluginManager().callEvent(apocalypseEvent);
+            CommandBook.callEvent(apocalypseEvent);
             if (apocalypseEvent.isCancelled()) {
                 continue;
             }
@@ -675,7 +668,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     private void upgradeToMerciless() {
-        for (World world : server.getWorlds()) {
+        for (World world : Bukkit.getWorlds()) {
             if (!hasThunderstorm(world)) {
                 continue;
             }

@@ -21,7 +21,6 @@ import gg.packetloss.openboss.entity.LocalControllable;
 import gg.packetloss.openboss.entity.LocalEntity;
 import gg.packetloss.openboss.instruction.*;
 import gg.packetloss.openboss.util.AttackDamage;
-import org.bukkit.Server;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -29,14 +28,8 @@ import org.bukkit.entity.Zombie;
 import org.bukkit.inventory.EntityEquipment;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class ZapperZombie {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private SimpleRebindableBoss<Zombie> zapperZombie;
 
     public static final String BOUND_NAME = "Zapper Zombie";
@@ -44,7 +37,7 @@ public class ZapperZombie {
     private PerformanceDropTable dropTable = new PerformanceDropTable();
 
     public ZapperZombie() {
-        zapperZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        zapperZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, CommandBook.inst(), new SimpleInstructionDispatch<>());
         setupDropTable();
         setupZapperZombie();
     }

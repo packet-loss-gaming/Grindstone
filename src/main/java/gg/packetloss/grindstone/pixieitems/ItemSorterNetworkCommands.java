@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.pixieitems.db.PixieNetworkDetail;
 import gg.packetloss.grindstone.pixieitems.manager.PixieNetworkManager;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.chat.TextComponentChatPaginator;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.enginehub.piston.annotation.Command;
@@ -73,7 +74,7 @@ public class ItemSorterNetworkCommands {
                                 @ArgFlag(name = 'p', desc = "page", def = "1") int page) {
         manager.selectNetworks(owner.getUniqueId()).thenAcceptAsynchronously((networks) -> {
             Collections.sort(networks);
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 new TextComponentChatPaginator<PixieNetworkDetail>(ChatColor.GOLD, "Networks") {
                     @Override
                     public Optional<String> getPagerCommand(int page) {

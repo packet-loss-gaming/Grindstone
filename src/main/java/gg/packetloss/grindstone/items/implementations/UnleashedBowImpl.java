@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.custom.CustomItems;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.items.generic.weapons.SpecWeaponImpl;
@@ -59,7 +60,7 @@ public class UnleashedBowImpl extends AbstractItemFeatureImpl implements SpecWea
 
                 if (ItemUtil.isItem(launcher, CustomItems.UNLEASHED_BOW) && !projectile.hasMetadata("splashed")) {
 
-                    projectile.setMetadata("splashed", new FixedMetadataValue(inst, true));
+                    projectile.setMetadata("splashed", new FixedMetadataValue(CommandBook.inst(), true));
 
                     TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
 

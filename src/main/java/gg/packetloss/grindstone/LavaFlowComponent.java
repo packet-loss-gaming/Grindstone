@@ -15,28 +15,19 @@ import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
-import org.bukkit.Server;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFromToEvent;
 
-import java.util.logging.Logger;
-
 @ComponentInformation(friendlyName = "Lava Flow", desc = "Law flow stopper.")
 @Depend(plugins = "WorldGuard")
 public class LavaFlowComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private WorldGuardPlugin worldGuard;
 
     @Override
     public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -51,7 +42,7 @@ public class LavaFlowComponent extends BukkitComponent implements Listener {
                     }
                 }
             } catch (NullPointerException ex) {
-                log.warning("Blocking lava flow, configuration error!");
+                ex.printStackTrace();
                 event.setCancelled(true);
             }
         }

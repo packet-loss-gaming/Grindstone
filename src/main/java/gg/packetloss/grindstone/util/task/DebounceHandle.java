@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.util.task;
 
 import com.sk89q.commandbook.CommandBook;
+import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.function.BiFunction;
@@ -66,7 +67,7 @@ public class DebounceHandle<T> {
 
         cancelCurrentTask();
 
-        state.setCurrentTask(CommandBook.server().getScheduler().runTaskLater(
+        state.setCurrentTask(Bukkit.getScheduler().runTaskLater(
                 CommandBook.inst(),
                 this::performBounceAction,
                 waitTime

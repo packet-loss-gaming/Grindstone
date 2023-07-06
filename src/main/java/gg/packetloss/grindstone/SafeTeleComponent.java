@@ -12,7 +12,6 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -22,10 +21,6 @@ import java.util.List;
 
 @ComponentInformation(friendlyName = "Safe Tele", desc = "No falling pl0x.")
 public class SafeTeleComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Server server = CommandBook.server();
-
     private static final List<PlayerTeleportEvent.TeleportCause> causes = new ArrayList<>(2);
 
     static {
@@ -35,9 +30,7 @@ public class SafeTeleComponent extends BukkitComponent implements Listener {
 
     @Override
     public void enable() {
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @EventHandler(ignoreCancelled = true)

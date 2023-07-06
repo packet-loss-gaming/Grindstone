@@ -87,7 +87,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
 
     @Override
     public void setUp() {
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
         region = WorldGuardBridge.getManagerFor(world).getRegion("carpe-diem-district-mirage-arena");
         tick = 5 * 20;
         listener = new MirageArenaListener(this);
@@ -267,7 +267,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             session.rawSetBlock(placementTarget, BlockTypes.AIR.getDefaultState());
         });
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             callDrainEdit(editorState);
         }, 1);
     }
@@ -299,7 +299,7 @@ public class MirageArena extends AreaComponent<MirageArenaConfig> {
             session.rawSetBlock(placementTarget, targetBlock);
         });
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             callEdit(editorState);
         }, 1);
     }

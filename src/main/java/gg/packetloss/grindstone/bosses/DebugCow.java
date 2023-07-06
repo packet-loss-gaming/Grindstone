@@ -19,23 +19,17 @@ import gg.packetloss.openboss.instruction.BindInstruction;
 import gg.packetloss.openboss.instruction.DamagedInstruction;
 import gg.packetloss.openboss.instruction.InstructionResult;
 import gg.packetloss.openboss.instruction.SimpleInstructionDispatch;
-import org.bukkit.Server;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class DebugCow {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private BukkitBossDeclaration<CowDetail> debugCow;
 
     public DebugCow() {
-        debugCow = new BukkitBossDeclaration<>(inst, new SimpleInstructionDispatch<>()) {
+        debugCow = new BukkitBossDeclaration<>(CommandBook.inst(), new SimpleInstructionDispatch<>()) {
             @Override
             public boolean matchesBind(LocalEntity entity) {
                 Entity boss = BukkitUtil.getBukkitEntity(entity);

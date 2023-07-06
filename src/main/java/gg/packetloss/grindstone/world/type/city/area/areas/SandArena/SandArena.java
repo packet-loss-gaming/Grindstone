@@ -18,6 +18,7 @@ import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -27,7 +28,6 @@ import java.util.Set;
 @ComponentInformation(friendlyName = "Sand Arena", desc = "It's a bit dry")
 @Depend(components = {AdminComponent.class, PlayerStateComponent.class}, plugins = {"WorldGuard"})
 public class SandArena extends AreaComponent<SandArenaConfig> {
-
     @InjectComponent
     protected AdminComponent admin;
     @InjectComponent
@@ -39,7 +39,7 @@ public class SandArena extends AreaComponent<SandArenaConfig> {
 
     @Override
     public void setUp() {
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
         region = WorldGuardBridge.getManagerFor(world).getRegion("oblitus-district-arena-pvp");
         tick = 5 * 20;
         listener = new SandArenaListener(this);

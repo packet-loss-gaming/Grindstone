@@ -33,10 +33,10 @@ import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.restoration.RestorationUtil;
 import gg.packetloss.grindstone.world.type.city.arena.*;
 import org.bukkit.Bukkit;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Listener;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -49,11 +49,6 @@ import java.util.logging.Logger;
         PlayerStateComponent.class, BlockStateComponent.class, GuildComponent.class
 }, plugins = {"WorldEdit", "WorldGuard"})
 public class ArenaComponent extends BukkitComponent implements Listener, Runnable {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private AdminComponent adminComponent;
     @InjectComponent
@@ -81,13 +76,13 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
 
     @Override
     public void enable() {
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
         this.config = configure(new LocalConfiguration());
         this.arenaManager = new ArenaManager();
-        server.getScheduler().runTaskLater(inst, arenaManager::setupArenas, 1);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 20 * 2, 20 * 4);
+
+        BukkitScheduler scheduler = Bukkit.getScheduler();
+        scheduler.runTaskLater(CommandBook.inst(), arenaManager::setupArenas, 1);
+        scheduler.scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20 * 4);
 
         registerCommands(Commands.class);
     }
@@ -135,7 +130,7 @@ public class ArenaComponent extends BukkitComponent implements Listener, Runnabl
     private class ArenaManager {
 
         public void setupArenas() {
-
+            Logger log = CommandBook.logger();
             RegionManager mgr = WorldGuardBridge.getManagerFor(world);
             // Add Enchanted Forest
             for (String region : config.enchantedForest) {

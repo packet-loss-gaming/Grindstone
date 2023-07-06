@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -26,7 +27,7 @@ public class FearBlaze extends EntityAttack implements MeleeSpecial {
     }
 
     private void ignite(LivingEntity target, int maxRuns, double power) {
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (owner.isDead()) {
                 return;
             }
@@ -36,7 +37,7 @@ public class FearBlaze extends EntityAttack implements MeleeSpecial {
             }
 
             if (owner instanceof Player) {
-                server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+                CommandBook.callEvent(new RapidHitEvent((Player) owner));
             }
 
             double newPower = power;

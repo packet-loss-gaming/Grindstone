@@ -40,13 +40,11 @@ public class CustomICComponent extends BukkitComponent {
         registerICs();
     }
 
-    @SuppressWarnings("AccessStaticViaInstance")
     private void registerICs() {
-
-        ICCore.registerIC("SK1278", "group sentry", new GroupSentryGun.Factory(server), ICCore.familySISO, ICCore.familyAISO);
-        ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(server), ICCore.familySISO, ICCore.familyAISO);
-        ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(server), ICCore.familySISO, ICCore.familyAISO);
-        ICCore.registerIC("SK9003", "region portal", new RegionPortal.Factory(server), ICCore.familySISO, ICCore.familyAISO);
-        ICCore.registerIC("SK9004", "guild detector", new GuildDetector.Factory(server, guild), ICCore.familySISO, ICCore.familyAISO);
+        ICCore.registerIC("SK1278", "group sentry", new GroupSentryGun.Factory(server), ICManager.familySISO, ICManager.familyAISO);
+        ICCore.registerIC("SK9001", "star spawner", new NinjaStarSpawner.Factory(server), ICManager.familySISO, ICManager.familyAISO);
+        ICCore.registerIC("SK9002", "delay repeater", new DelayedRepeater.Factory(server), ICManager.familySISO, ICManager.familyAISO);
+        ICCore.registerIC("SK9003", "region portal", new RegionPortal.Factory(server), ICManager.familySISO, ICManager.familyAISO);
+        ICCore.registerIC("SK9004", "guild detector", new GuildDetector.Factory(server, guild), ICManager.familySISO, ICManager.familyAISO);
     }
 }

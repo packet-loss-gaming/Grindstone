@@ -14,6 +14,7 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.combat.PvMComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -61,7 +62,7 @@ class MobListener implements Listener {
             return;
         }
 
-        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
             if (!parent.hasScaledHealth(entity)) {
                 return;
             }

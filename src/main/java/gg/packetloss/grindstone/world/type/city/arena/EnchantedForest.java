@@ -52,17 +52,12 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.ChatUtil.loonizeWord;
 
 public class EnchantedForest extends AbstractRegionedArena implements MonitoredArena, Listener {
     private static final long TREE_RESTORE_DELAY = TimeUnit.HOURS.toMillis(3);
     private static final long SHRUBBERY_RESTORE_DELAY = TimeUnit.MINUTES.toMillis(8);
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
 
     private AdminComponent adminComponent;
     private EggComponent eggComponent;
@@ -79,8 +74,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         this.eggComponent = eggComponent;
         this.blockStateComponent = blockStateComponent;
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
         CommandBook.registerEvents(new FlightBlockingListener(adminComponent, this::contains));
     }
 
@@ -225,7 +219,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
 
                     if (hasAxe) {
                         ChatUtil.sendWarning(player, "The fairy breaks your axe.");
-                        server.getScheduler().runTaskLater(inst, () -> player.getInventory().setItemInHand(null), 1);
+                        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> player.getInventory().setItemInHand(null), 1);
                     }
                 },
                 () -> {
@@ -257,13 +251,13 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                             }
                         };
                         TimedRunnable timedRunnable = new TimedRunnable(runnable, 1);
-                        timedRunnable.setTask(server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 20));
+                        timedRunnable.setTask(Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), timedRunnable, 0, 20));
                     }
                 },
                 () -> {
                     ChatUtil.sendWarning(player, "The tooth fairy takes your teeth!");
                     noTeeth.add(player);
-                    server.getScheduler().runTaskLater(inst, () -> noTeeth.remove(player), 20 * 60 * 2);
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> noTeeth.remove(player), 20 * 60 * 2);
                 }
             );
         }
@@ -307,7 +301,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                     rabbit.setTarget(player);
                     rabbit.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(50);
 
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         player.chat("OH " + loonizeWord("four") + ChatColor.WHITE + "!!!");
                     }, 10);
                 }
@@ -344,7 +338,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
                 blockStateComponent.pushAnonymousBlock(BlockStateKind.ENCHANTED_FOREST_TREES, block.getState());
 
                 if (!ChanceUtil.getChance(14)) return;
-                getWorld().dropItemNaturally(block.getLocation(), getRandomDropSet(server.getConsoleSender()).get(0));
+                getWorld().dropItemNaturally(block.getLocation(), getRandomDropSet(Bukkit.getConsoleSender()).get(0));
             } catch (UnstorableBlockStateException e) {
                 e.printStackTrace();
 
@@ -384,7 +378,7 @@ public class EnchantedForest extends AbstractRegionedArena implements MonitoredA
         Player player = event.getPlayer();
 
         if (!adminComponent.isAdmin(player) && contains(event.getBlock())
-                && !inst.hasPermission(player, "aurora.mine.builder")) {
+                && !player.hasPermission("aurora.mine.builder")) {
             event.setCancelled(true);
             ChatUtil.sendNotice(player, ChatColor.DARK_RED, "You don't have permission for this area.");
         }

@@ -6,12 +6,14 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import gg.packetloss.grindstone.util.SimpleRayTrace;
 import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -41,7 +43,7 @@ public class Surge extends EntityAttack implements RangedSpecial {
             return;
         }
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             Location loc = it.next();
 
             for (int i = 0; i < 5 && it.hasNext(); ++i) {

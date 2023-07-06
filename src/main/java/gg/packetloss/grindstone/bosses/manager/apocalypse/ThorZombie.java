@@ -23,23 +23,17 @@ import gg.packetloss.openboss.entity.LocalControllable;
 import gg.packetloss.openboss.entity.LocalEntity;
 import gg.packetloss.openboss.instruction.*;
 import gg.packetloss.openboss.util.AttackDamage;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class ThorZombie {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private SimpleRebindableBoss<Zombie> thorZombie;
 
     public static final String BOUND_NAME = "Thor Zombie";
@@ -47,7 +41,7 @@ public class ThorZombie {
     private PerformanceDropTable dropTable = new PerformanceDropTable();
 
     public ThorZombie() {
-        thorZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        thorZombie = new SimpleRebindableBoss<>(BOUND_NAME, Zombie.class, CommandBook.inst(), new SimpleInstructionDispatch<>());
         setupDropTable();
         setupThorZombie();
     }
@@ -120,9 +114,9 @@ public class ThorZombie {
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
                 toHit.setVelocity(boss.getLocation().getDirection().multiply(2).setY(.2));
 
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     final Location targetLocation = toHit.getLocation();
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         targetLocation.getWorld().strikeLightning(targetLocation);
                     }, 15);
                 }, 30);

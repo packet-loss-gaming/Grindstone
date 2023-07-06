@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.util.player;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.RefCountedTracker;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -21,13 +22,13 @@ public class FallDamageDeathBlocker {
     }
 
     public static void protectPlayer(Player player, RefCountedTracker<UUID> tracker) {
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (!isLaunched(player)) {
                 return;
             }
 
             tracker.increment(player.getUniqueId());
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 tracker.decrement(player.getUniqueId());
             }, 20 * 20);
         }, 20);

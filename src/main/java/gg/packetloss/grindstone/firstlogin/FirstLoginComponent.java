@@ -55,7 +55,6 @@ import org.bukkit.inventory.ItemStack;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -65,10 +64,6 @@ import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 @Depend(components = {ManagedWorldComponent.class, BuffComponent.class, PlayerHistoryComponent.class,
                       PlayerInviteComponent.class, WarpsComponent.class})
 public class FirstLoginComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private BuffComponent buffs;
     @InjectComponent
@@ -233,7 +228,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onThunderChange(BetterWeatherChangeEvent event) {
         if (event.getNewWeatherType() == WeatherType.THUNDERSTORM) {
-            server.getScheduler().runTask(inst, () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 for (Player player : event.getWorld().getPlayers()) {
                     maybeApplyNewPlayerBuffs(player);
                 }
@@ -296,7 +291,7 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         sendStaggered(player, combinedText);
 
         // Tell others to great him/her
-        for (Player otherPlayer : server.getOnlinePlayers()) {
+        for (Player otherPlayer : Bukkit.getOnlinePlayers()) {
             // Don't tell the player we are sending this message
             if (otherPlayer != player) {
                 ChatUtil.sendNotice(otherPlayer, "Please welcome, " + player.getDisplayName() + " to the server.");

@@ -17,9 +17,9 @@ import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -35,14 +35,8 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class HotSpringArena extends AbstractRegionedArena implements GenericArena, Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private AdminComponent adminComponent;
 
     List<Player> playerL = new ArrayList<>();
@@ -52,8 +46,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
         super(world, region);
         this.adminComponent = adminComponent;
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
@@ -127,8 +120,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                 }
             }
         } catch (Exception e) {
-
-            log.warning("The region: " + getId() + " does not exists in the world: " + getWorld().getName() + ".");
+            CommandBook.logger().warning("The region: " + getId() + " does not exists in the world: " + getWorld().getName() + ".");
         }
     }
 
@@ -186,7 +178,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
                         GeneralPlayerUtil.takeFlightSafely(player);
 
-                        server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+                        CommandBook.callEvent(new ThrowPlayerEvent(player));
                         Vector vector = player.getVelocity();
                         vector.add(new Vector(0, 1.2, 0));
                         player.setVelocity(vector);
@@ -209,11 +201,10 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
                 };
 
                 TimedRunnable timedRunnable = new TimedRunnable(runnable, 1);
-                BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 15);
+                BukkitTask task = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), timedRunnable, 0, 15);
                 timedRunnable.setTask(task);
             } catch (Exception e) {
-
-                log.warning("The player: " + player.getName() + " was not boosted by the hot spring: " + getId() + ".");
+                e.printStackTrace();
             }
         }
     }

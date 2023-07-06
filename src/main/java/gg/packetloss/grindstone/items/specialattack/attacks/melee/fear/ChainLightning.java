@@ -12,6 +12,7 @@ import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.DamageUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -28,7 +29,7 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
     }
 
     private void chainOn(LivingEntity target, Class<? extends LivingEntity> filterType, int depth, int delayModifier) {
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (owner.isDead()) {
                 return;
             }
@@ -38,7 +39,7 @@ public class ChainLightning extends EntityAttack implements MeleeSpecial {
             }
 
             if (owner instanceof Player) {
-                server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+                CommandBook.callEvent(new RapidHitEvent((Player) owner));
             }
 
             List<Entity> targets = target.getNearbyEntities(5, 5, 5).stream().filter(e -> {

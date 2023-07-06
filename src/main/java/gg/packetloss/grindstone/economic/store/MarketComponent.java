@@ -35,7 +35,6 @@ import gg.packetloss.grindstone.util.task.promise.TaskResult;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -43,7 +42,6 @@ import org.bukkit.inventory.ItemStack;
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
@@ -54,10 +52,6 @@ import static gg.packetloss.grindstone.util.item.ItemNameDeserializer.getBaseSta
 @Depend(plugins = {"WorldGuard"}, components = {AdminComponent.class, DatabaseComponent.class, WalletComponent.class})
 public class MarketComponent extends BukkitComponent {
     public static final BigDecimal LOWER_MARKET_LOSS_THRESHOLD = BigDecimal.valueOf(100000);
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
 
     @InjectComponent
     private AdminComponent adminComponent;
@@ -74,7 +68,7 @@ public class MarketComponent extends BukkitComponent {
     public void simulateMarket(int restockingRounds) {
         itemDatabase.updatePrices(restockingRounds);
 
-        ChatUtil.sendNotice(server.getOnlinePlayers(), ChatColor.GOLD + "The market has been updated!");
+        ChatUtil.sendNotice(Bukkit.getOnlinePlayers(), ChatColor.GOLD + "The market has been updated!");
     }
 
     public void simulateMarket() {
@@ -107,8 +101,8 @@ public class MarketComponent extends BukkitComponent {
         long nextRunDelay = TimeUtil.getTicksTill(nextEventHour);
 
         // Schedule an update task for every two hours
-        server.getScheduler().runTaskTimerAsynchronously(
-            inst, (Runnable) this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
+        Bukkit.getScheduler().runTaskTimerAsynchronously(
+            CommandBook.inst(), (Runnable) this::simulateMarket, nextRunDelay, TimeUtil.convertHoursToTicks(2)
         );
     }
 

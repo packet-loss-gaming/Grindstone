@@ -14,30 +14,21 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import org.bukkit.GameMode;
-import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 
-import java.util.logging.Logger;
-
 @ComponentInformation(friendlyName = "Grounder", desc = "GameMode enforcement to a new level.")
 @Depend(components = {AdminComponent.class})
 public class GrounderComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private AdminComponent adminComponent;
 
     @Override
     public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -54,11 +45,11 @@ public class GrounderComponent extends BukkitComponent implements Listener {
                 if (!wasAdmin && adminComponent.admin(player)) {
                     ChatUtil.sendNotice(player, "Admin mode enabled automatically.");
                 }
-            } else if (!inst.hasPermission(player, "aurora.gamemode.creative.permit")) {
+            } else if (!player.hasPermission("aurora.gamemode.creative.permit")) {
                 // Stop this change & notify
                 event.setCancelled(true);
                 ChatUtil.sendWarning(player, "Your gamemode change has been denied.");
-                log.info("The player: " + player.getName() + " was stopped from changing gamemodes.");
+                CommandBook.logger().info("The player: " + player.getName() + " was stopped from changing gamemodes.");
             }
         }
     }

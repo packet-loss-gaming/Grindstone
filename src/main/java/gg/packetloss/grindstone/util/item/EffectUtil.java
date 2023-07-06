@@ -13,6 +13,7 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -58,7 +59,7 @@ public class EffectUtil {
                     }
                 } else if (!(entity instanceof Player) || EntityUtil.isHostileMob(e)) {
                     if (e instanceof Player) {
-                        server.getPluginManager().callEvent(new ThrowPlayerEvent((Player) e));
+                        CommandBook.callEvent(new ThrowPlayerEvent((Player) e));
                     }
                     e.setVelocity(new Vector(
                             Math.random() * 3 - 1.5,
@@ -112,7 +113,7 @@ public class EffectUtil {
                 entities.add(entity);
             }
 
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 for (T entity : entities) {
                     if (entity.isValid()) {
                         entity.remove();

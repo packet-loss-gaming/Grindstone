@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.implementations;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
 import gg.packetloss.grindstone.events.graveyard.PlayerDisturbGraveEvent;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -13,6 +14,7 @@ import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EntityTargetUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -49,8 +51,8 @@ public class PhantomPotionImpl extends AbstractItemFeatureImpl {
                 // Protect the player for 30 seconds
                 UUID playerID = player.getUniqueId();
                 affectedPlayers.add(playerID);
-                server.getScheduler().runTaskLater(
-                        inst,
+                Bukkit.getScheduler().runTaskLater(
+                        CommandBook.inst(),
                         () -> affectedPlayers.remove(playerID),
                         20 * 30
                 );

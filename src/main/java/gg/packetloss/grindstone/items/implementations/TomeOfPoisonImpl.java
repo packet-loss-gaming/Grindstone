@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.items.implementations;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.ChanceUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -38,7 +39,7 @@ public class TomeOfPoisonImpl extends AbstractItemFeatureImpl {
         }
 
         if (ChanceUtil.getChance(5)) {
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 if (player.getPotionEffect(PotionEffectType.REGENERATION) == null) {
                     player.addPotionEffect(new PotionEffect(
                         PotionEffectType.REGENERATION,

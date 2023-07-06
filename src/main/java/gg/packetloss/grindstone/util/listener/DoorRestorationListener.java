@@ -7,6 +7,7 @@
 package gg.packetloss.grindstone.util.listener;
 
 import com.sk89q.commandbook.CommandBook;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -35,7 +36,7 @@ public class DoorRestorationListener implements Listener {
         }
 
         // Open the door.
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             BlockState state = block.getRelative(BlockFace.DOWN).getState();
             Door doorData = (Door) state.getData();
             doorData.setOpen(true);

@@ -47,7 +47,10 @@ import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.world.type.city.area.AreaListener;
 import gg.packetloss.grindstone.world.type.city.area.areas.DropParty.DropPartyTask;
 import org.apache.commons.lang.Validate;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -66,16 +69,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static org.bukkit.event.entity.EntityDamageEvent.DamageModifier;
 
 public class PatientXListener extends AreaListener<PatientXArea> {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     public PatientXListener(PatientXArea parent) {
         super(parent);
     }
@@ -289,7 +287,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
         } else if (defender instanceof Player) {
             Player player = (Player) defender;
             if (attacker.equals(parent.boss)) {
-                if (inst.hasPermission(player, "aurora.prayer.divinity") && ChanceUtil.getChance(parent.difficulty)) {
+                if (player.hasPermission("aurora.prayer.divinity") && ChanceUtil.getChance(parent.difficulty)) {
                     ChatUtil.sendNotice(player, "A divine force protects you.");
                     return;
                 }
@@ -436,7 +434,7 @@ public class PatientXListener extends AreaListener<PatientXArea> {
                 );
                 task.setXPChance(5);
                 task.setXPSize(10);
-                task.start(CommandBook.inst(), server.getScheduler(), 20 * 5, 20 * 3);
+                task.start(CommandBook.inst(), Bukkit.getScheduler(), 20 * 5, 20 * 3);
                 parent.freezeBlocks(100, false);
 
                 // Reset respawn mechanics

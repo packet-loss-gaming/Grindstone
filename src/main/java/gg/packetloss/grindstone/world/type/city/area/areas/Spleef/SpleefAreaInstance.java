@@ -17,7 +17,6 @@ import gg.packetloss.grindstone.util.RegionUtil;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -26,13 +25,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 public class SpleefAreaInstance {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private final SpleefArea component;
 
     private World world;
@@ -92,7 +86,7 @@ public class SpleefAreaInstance {
         CuboidRegion snow = new CuboidRegion(floorRegion.getMaximumPoint(), floorRegion.getMinimumPoint());
 
         if (snow.getArea() > 8208 || snow.getHeight() > 1) {
-            log.warning("The region: " + floorRegion.getId() + " is too large.");
+            CommandBook.logger().warning("The region: " + floorRegion.getId() + " is too large.");
             return;
         }
 

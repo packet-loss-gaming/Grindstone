@@ -19,9 +19,9 @@ import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.ErrorUtil;
 import gg.packetloss.grindstone.util.task.promise.TaskResult;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.EntityEffect;
-import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
@@ -36,34 +36,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Casino", desc = "Risk it!")
 @Depend(plugins = {"Vault"}, components = {WalletComponent.class})
 public class CasinoComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private WalletComponent wallet;
 
-    private List<Player> recentList = new ArrayList<>();
+    private final List<Player> recentList = new ArrayList<>();
     private LocalConfiguration config;
 
     @Override
     public void enable() {
-
         config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
     public void reload() {
-
         super.reload();
         configure(config);
     }
@@ -110,7 +101,7 @@ public class CasinoComponent extends BukkitComponent implements Listener {
         }
 
         recentList.add(player);
-        server.getScheduler().scheduleSyncDelayedTask(inst, () -> recentList.remove(player), 10);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(CommandBook.inst(), () -> recentList.remove(player), 10);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -123,22 +114,22 @@ public class CasinoComponent extends BukkitComponent implements Listener {
         boolean validHeader = false;
 
         if (header.equalsIgnoreCase("[Slots]")) {
-            if (inst.hasPermission(player, "aurora.casino.slots")) {
+            if (player.hasPermission("aurora.casino.slots")) {
                 event.setLine(1, "[Slots]");
                 validHeader = true;
             }
         } else if (header.equalsIgnoreCase("[Roulette]")) {
-            if (inst.hasPermission(player, "aurora.casino.roulette")) {
+            if (player.hasPermission("aurora.casino.roulette")) {
                 event.setLine(1, "[Roulette]");
                 validHeader = true;
             }
         } else if (header.equalsIgnoreCase("[RussianR]")) {
-            if (inst.hasPermission(player, "aurora.casino.russianr")) {
+            if (player.hasPermission("aurora.casino.russianr")) {
                 event.setLine(1, "[RussianR]");
                 validHeader = true;
             }
         } else if (header.equalsIgnoreCase("[RS Dice]")) {
-            if (inst.hasPermission(player, "aurora.casino.rsdice")) {
+            if (player.hasPermission("aurora.casino.rsdice")) {
                 event.setLine(1, "[RS Dice]");
                 validHeader = true;
             }

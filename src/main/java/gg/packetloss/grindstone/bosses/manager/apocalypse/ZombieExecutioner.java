@@ -25,10 +25,10 @@ import gg.packetloss.openboss.entity.LocalControllable;
 import gg.packetloss.openboss.entity.LocalEntity;
 import gg.packetloss.openboss.instruction.*;
 import gg.packetloss.openboss.util.AttackDamage;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.Server;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -40,14 +40,8 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class ZombieExecutioner {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private BossBarRebindableBoss<Zombie> zombieExecutioner;
 
     public static final String BOUND_NAME = "Zombie Executioner";
@@ -55,11 +49,11 @@ public class ZombieExecutioner {
     private PerformanceDropTable dropTable = new PerformanceDropTable();
 
     public ZombieExecutioner() {
-        zombieExecutioner = new BossBarRebindableBoss<>(BOUND_NAME, Zombie.class, inst, new SimpleInstructionDispatch<>());
+        zombieExecutioner = new BossBarRebindableBoss<>(BOUND_NAME, Zombie.class, CommandBook.inst(), new SimpleInstructionDispatch<>());
         setupDropTable();
         setupAssassinZombie();
-        server.getScheduler().runTaskTimer(
-            inst,
+        Bukkit.getScheduler().runTaskTimer(
+            CommandBook.inst(),
             () -> {
                 Lists.newArrayList(zombieExecutioner.controlled.values()).forEach((ce) -> {
                     zombieExecutioner.process(ce);

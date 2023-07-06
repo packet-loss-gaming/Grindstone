@@ -57,16 +57,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 public class GoldRush extends AbstractRegionedArena implements MonitoredArena, Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private Economy economy;
     private GuildComponent guildComponent;
     private HighScoresComponent highScoresComponent;
@@ -121,8 +115,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         setupEconomy();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
@@ -311,7 +304,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
                 mutable.getBlock().setType(Material.STONE_BRICKS);
             }
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 for (Map.Entry<Location, Boolean> entry : leverBlocks.entrySet()) {
                     Location mutable = entry.getKey().clone();
                     mutable.add(0, -2, 0);
@@ -319,7 +312,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                     Material targetBlock = entry.getValue() ? Material.REDSTONE_BLOCK : Material.STONE_BRICKS;
                     mutable.getBlock().setType(targetBlock);
                 }
-                server.getScheduler().runTaskLater(inst, this::randomizeLevers, 1);
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), this::randomizeLevers, 1);
             }, 15);
         } else {
             for (Location entry : leverBlocks.keySet()) {
@@ -422,7 +415,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
         long timeSpent = System.currentTimeMillis() - startTime;
         if (timeSpent > TimeUnit.MINUTES.toMillis(7)) killAll();
         if (!players.isEmpty()) return (int) ((TimeUnit.MINUTES.toMillis(7) - timeSpent) / 1000);
-        for (Player aPlayer : server.getOnlinePlayers()) {
+        for (Player aPlayer : Bukkit.getOnlinePlayers()) {
 
             if (LocationUtil.isInRegion(getWorld(), lobby, aPlayer)) {
                 try {
@@ -622,7 +615,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
                 ChatUtil.sendNotice(event.getPlayer(), "[Partner] Ey there kid, just press that button over there to start.");
             }
         } else if (state.getType() == Material.LEVER && leverBlocks.containsKey(state.getLocation())) {
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 if (checkLevers()) leversTriggered = true;
             }, 1);
         } else if (state.getType() == Material.CHEST && contains(state.getLocation())) {
@@ -665,7 +658,7 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
         final Player player = event.getPlayer();
         if (contains(player) || players.contains(player.getName())) {
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 ChatUtil.sendWarning(player, "[Partner] Thought you'd scam me huh kid?");
                 ChatUtil.sendWarning(player, "[Partner] Well I'll teach you kid!");
                 ChatUtil.sendWarning(player, "The alarm goes off.");
@@ -722,9 +715,9 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
     }
 
     private boolean setupEconomy() {
-
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
-                .vault.economy.Economy.class);
+        RegisteredServiceProvider<Economy> economyProvider = Bukkit.getServicesManager().getRegistration(
+            net.milkbowl.vault.economy.Economy.class
+        );
         if (economyProvider != null) {
             economy = economyProvider.getProvider();
         }

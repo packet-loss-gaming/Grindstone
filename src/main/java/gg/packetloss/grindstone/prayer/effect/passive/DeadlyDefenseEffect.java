@@ -10,6 +10,7 @@ import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.prayer.PassivePrayerEffect;
 import gg.packetloss.grindstone.util.ArrowUtil;
 import gg.packetloss.grindstone.util.EntityUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
@@ -58,7 +59,7 @@ public class DeadlyDefenseEffect implements PassivePrayerEffect {
     }
 
     private void registerArrowCleanup(List<Arrow> arrowEnts) {
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             for (Arrow arrowEnt : arrowEnts) {
                 arrowEnt.remove();
             }

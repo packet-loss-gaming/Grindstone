@@ -9,6 +9,7 @@ package gg.packetloss.grindstone.highscore;
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.util.ChatUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,7 +30,7 @@ public class GobletLoginListener implements Listener {
         Player player = event.getPlayer();
 
         AnnotatedScoreType scoreType = component.getGobletScoreType();
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (!player.isOnline()) {
                 return;
             }

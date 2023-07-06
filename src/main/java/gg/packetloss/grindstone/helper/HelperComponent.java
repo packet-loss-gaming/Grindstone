@@ -11,7 +11,7 @@ import com.sk89q.util.yaml.YAMLFormat;
 import com.sk89q.util.yaml.YAMLProcessor;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
-import org.bukkit.Server;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,15 +22,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Helper", desc = "Regex based auto messaging.")
 public class HelperComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     private List<Response> responses = new ArrayList<>();
     private YAMLResponseList responseList;
 
@@ -38,15 +32,14 @@ public class HelperComponent extends BukkitComponent implements Listener {
     public void enable() {
         responseList = new YAMLResponseList(
                 new YAMLProcessor(
-                        new File(inst.getDataFolder().getPath() + "/helper/responses.yml"),
+                        new File(CommandBook.inst().getDataFolder().getPath() + "/helper/responses.yml"),
                         false,
                         YAMLFormat.EXTENDED
                 )
         );
         configureResponses();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
@@ -67,7 +60,7 @@ public class HelperComponent extends BukkitComponent implements Listener {
         Collection<Player> recipients = event.getRecipients();
         String message = event.getMessage();
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             for (Response response : responses) {
                 if (response.accept(player, recipients, message)) {
                     break;

@@ -6,11 +6,13 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.melee.guild.rogue;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.timer.IntegratedRunnable;
 import gg.packetloss.grindstone.util.timer.TimedRunnable;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Snowball;
@@ -68,8 +70,8 @@ public class Nightmare extends EntityAttack implements MeleeSpecial {
             public boolean run(int times) {
                 locations.stream().filter(location -> ChanceUtil.getChance(3)).forEach(location -> {
                     Snowball snowball = location.getWorld().spawn(location, Snowball.class);
-                    snowball.setMetadata("rogue-snowball", new FixedMetadataValue(inst, true));
-                    snowball.setMetadata("nightmare", new FixedMetadataValue(inst, true));
+                    snowball.setMetadata("rogue-snowball", new FixedMetadataValue(CommandBook.inst(), true));
+                    snowball.setMetadata("nightmare", new FixedMetadataValue(CommandBook.inst(), true));
                     snowball.setShooter(owner);
                 });
                 return true;
@@ -82,6 +84,6 @@ public class Nightmare extends EntityAttack implements MeleeSpecial {
         };
 
         TimedRunnable runnable = new TimedRunnable(hellFire, 40);
-        runnable.setTask(server.getScheduler().runTaskTimer(inst, runnable, 50, 10));
+        runnable.setTask(Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), runnable, 50, 10));
     }
 }

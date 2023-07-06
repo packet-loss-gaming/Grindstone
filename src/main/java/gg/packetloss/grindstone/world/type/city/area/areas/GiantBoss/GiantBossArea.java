@@ -105,7 +105,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     public void setUp() {
         spectator.registerSpectatorKind(PlayerStateKind.SHNUGGLES_PRIME_SPECTATOR);
 
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         region = manager.getRegion("vineam-district-giant-boss-area");
         eastDoor = manager.getRegion("vineam-district-giant-boss-east-door");
@@ -114,7 +114,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         listener = new GiantBossListener(this);
         config = new GiantBossConfig();
 
-        server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::updateBossBarProgress, 0, 5);
 
         // First spawn requirement
         probeArea();
@@ -189,9 +189,9 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         dropTable.registerCustomPlayerDrop((info, consumer) -> {
             int modifier = getModifier(info.getPlayer());
 
-            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier, 400000).forEach(consumer);
-            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier * 5, 15000).forEach(consumer);
-            SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), modifier * 16, 4000).forEach(consumer);
+            SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), modifier, 400000).forEach(consumer);
+            SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), modifier * 5, 15000).forEach(consumer);
+            SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), modifier * 16, 4000).forEach(consumer);
 
             for (int i = 0; i < modifier; i++) {
                 consumer.accept(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRangedRandom(32, 64)));
@@ -343,13 +343,13 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
                 if (Math.abs(groundLevel - player.getLocation().getY()) > 10) runAttack(4);
             } catch (Exception e) {
-                log.warning("The player: " + player.getName() + " may have an unfair advantage.");
+                CommandBook.logger().warning("The player: " + player.getName() + " may have an unfair advantage.");
             }
         }
     }
 
     private boolean tryDivineWind(Player player) {
-        if (inst.hasPermission(player, "aurora.tome.divinity") && ChanceUtil.getChance(3)) {
+        if (player.hasPermission("aurora.tome.divinity") && ChanceUtil.getChance(3)) {
             ChatUtil.sendNotice(player, "A divine wind hides you from the boss.");
             return true;
         }
@@ -425,7 +425,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     }
 
     public void handlePlayerSurrender() {
-        server.getScheduler().runTask(inst, () -> {
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
             if (!isBossSpawned()) {
                 return;
             }
@@ -466,7 +466,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 ChatUtil.sendWarning(audiblePlayers, "Taste my wrath!");
                 for (Player player : contained) {
                     // Call this event to notify AntiCheat
-                    server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+                    CommandBook.callEvent(new ThrowPlayerEvent(player));
                     player.setVelocity(new Vector(
                             random.nextDouble() * 3 - 1.5,
                             random.nextDouble() * 1 + 1.3,
@@ -489,7 +489,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 break;
             case 4:
                 ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "Tango time!");
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     if (!isBossSpawned()) return;
 
                     for (Player player : getContainedParticipants()) {
@@ -502,7 +502,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                             player.teleport(boss.getLocation());
                             player.damage(100, boss);
                             // Call this event to notify AntiCheat
-                            server.getPluginManager().callEvent(new ThrowPlayerEvent(player));
+                            CommandBook.callEvent(new ThrowPlayerEvent(player));
                             player.setVelocity(new Vector(
                                     random.nextDouble() * 1.7 - 1.5,
                                     random.nextDouble() * 2,
@@ -520,7 +520,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                 if (!damageHeals) {
                     ChatUtil.sendWarning(audiblePlayers, "I am everlasting!");
                     damageHeals = true;
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         if (damageHeals) {
                             damageHeals = false;
                             if (!isBossSpawned()) return;
@@ -572,7 +572,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                             playerNewLoc.put(player.getUniqueId(), playerLoc);
                         }
 
-                        server.getScheduler().runTaskLater(inst, () -> {
+                        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                             playerNewLoc.forEach((playerId, newLoc) -> {
                                 Location lastLoc = playerLastLoc.get(playerId);
                                 playerLastLoc.put(playerId, newLoc);
@@ -609,7 +609,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
 
                     @Override
                     public void end() {
-                        server.getScheduler().runTaskLater(inst, () -> {
+                        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                             RegionWalker.walk(region, (x, y, z) -> {
                                 Block block = world.getBlockAt(x, y, z);
                                 if (block.getType() == Material.FIRE) {
@@ -620,13 +620,13 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                     }
                 };
                 TimedRunnable runnable = new TimedRunnable(integratedRunnable, 50);
-                BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 4);
+                BukkitTask task = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), runnable, 0, 4);
                 runnable.setTask(task);
                 break;
             }
             case 7:
                 ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "Bask in my glory!");
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     if (!isBossSpawned()) return;
                     // Set defaults
                     boolean baskInGlory = false;
@@ -634,7 +634,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                     damageHeals = true;
 
                     // Schedule Reset
-                    server.getScheduler().runTaskLater(inst, () -> damageHeals = false, 10);
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> damageHeals = false, 10);
 
                     // Check Players
                     for (Player player : getContainedParticipants()) {
@@ -663,7 +663,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
             case 8:
                 ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "I ask thy lord for aid in this all mighty battle...");
                 ChatUtil.sendWarning(audiblePlayers, ChatColor.DARK_RED + "Heed thy warning, or perish!");
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     if (!isBossSpawned()) return;
                     ChatUtil.sendWarning(getAudiblePlayers(), "May those who appose me die a death like no other...");
                     getContainedParticipants().stream().filter(boss::hasLineOfSight).forEach(player -> {
@@ -711,7 +711,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
                     }
                 };
                 TimedRunnable runnable = new TimedRunnable(integratedRunnable, 20);
-                BukkitTask task = server.getScheduler().runTaskTimer(inst, runnable, 0, 10);
+                BukkitTask task = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), runnable, 0, 10);
                 runnable.setTask(task);
                 break;
             }
@@ -749,7 +749,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         for (BlockFace face : (north ? northFaces : southFaces)) {
             doNextDoorBlock(limit, block.getRelative(face), north, newType, depth + 1);
         }
-        server.getScheduler().runTaskLater(inst, () -> block.setType(newType, true), 9 * depth);
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> block.setType(newType, true), 9 * depth);
     }
 
     public void clearChests() {

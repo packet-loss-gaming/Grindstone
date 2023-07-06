@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.util.listener;
 
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import com.sk89q.commandbook.CommandBook;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
@@ -39,7 +40,7 @@ public class BossBuggedRespawnListener implements Listener {
         LivingEntity living = (LivingEntity) entity;
         if (shouldRespawn.test(living)) {
             // Delay to avoid possible concurrent modification during entity processing.
-            CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                 CommandBook.logger().info("Respawning " + bossName + " due to bugged despawn");
                 respawnHook.accept(living);
             });

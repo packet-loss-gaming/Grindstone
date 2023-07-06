@@ -53,17 +53,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.EnvironmentUtil.isChest;
 
 @ComponentInformation(friendlyName = "Item Sorter", desc = "A system of magical pixie item sorting.")
 @Depend(components = {SessionComponent.class, ManagedWorldComponent.class, WalletComponent.class})
 public class ItemSorterComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private SessionComponent sessions;
     @InjectComponent
@@ -95,8 +90,8 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             });
         });
 
-        server.getScheduler().runTaskTimerAsynchronously(
-                inst,
+        Bukkit.getScheduler().runTaskTimerAsynchronously(
+                CommandBook.inst(),
                 this::processQueuedInventories,
                 TimeUtil.convertMinutesToTicks(5),
                 TimeUtil.convertMinutesToTicks(5)
@@ -104,8 +99,9 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
     }
 
     private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> economyProvider = server.getServicesManager().getRegistration(net.milkbowl
-                .vault.economy.Economy.class);
+        RegisteredServiceProvider<Economy> economyProvider = Bukkit.getServicesManager().getRegistration(
+            net.milkbowl.vault.economy.Economy.class
+        );
         if (economyProvider != null) {
             economy = economyProvider.getProvider();
         }
@@ -166,7 +162,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
 
     public void processQueuedInventories() {
         Set<Inventory> oldInventories = swapInventories();
-        server.getScheduler().runTask(inst, () -> {
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
             oldInventories.forEach(this::processInventory);
         });
     }
@@ -275,7 +271,7 @@ public class ItemSorterComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (!inventory.getViewers().isEmpty()) {
                 return;
             }

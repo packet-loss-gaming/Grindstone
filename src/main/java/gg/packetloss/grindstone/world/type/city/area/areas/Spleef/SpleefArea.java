@@ -19,10 +19,7 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -51,7 +48,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
     protected Set<UUID> warnedPlayers = new HashSet<>();
 
     private void reloadConfig() {
-        World world = server.getWorlds().get(0);
+        World world = Bukkit.getWorlds().get(0);
 
         configure(config);
         for (String regionName : config.arenas) {
@@ -66,10 +63,9 @@ public class SpleefArea extends BukkitComponent implements Runnable {
 
         reloadConfig();
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(new SpleefListener(this));
+        CommandBook.registerEvents(new SpleefListener(this));
 
-        server.getScheduler().scheduleSyncRepeatingTask(inst, this, 0, 5);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 0, 5);
     }
 
     @Override
@@ -139,7 +135,7 @@ public class SpleefArea extends BukkitComponent implements Runnable {
             }
         }
 
-        for (Player player : server.getOnlinePlayers()) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
             if (isUsingArenaTools(player) && !allPlayers.contains(player)) {
                 removePlayer(player);
             }

@@ -17,10 +17,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.LocationUtil;
 import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 
 import java.util.ArrayDeque;
@@ -149,7 +146,7 @@ public class RegionPortal extends AbstractSelfTriggeredIC {
             return;
         }
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             for (int i = finalSize - curSize; i > 0; --i) {
                 coolDown.poll();
             }

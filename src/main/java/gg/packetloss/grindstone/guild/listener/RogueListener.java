@@ -31,6 +31,7 @@ import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
 import gg.packetloss.grindstone.util.player.effects.RiptideEffectHandle;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.world.type.city.combat.PvPComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -405,7 +406,7 @@ public class RogueListener implements Listener {
                         int boostDamage = getBoostDamage(hits, backstabbed);
                         event.setDamage(event.getDamage() + boostDamage);
 
-                        CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                             if (event.isCancelled()) {
                                 return;
                             }
@@ -555,7 +556,7 @@ public class RogueListener implements Listener {
                 return;
             }
 
-            CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 if (state.canBlip()) {
                     blip(player, state, 2, false);
                 }

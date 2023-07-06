@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.unleashed;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
@@ -38,7 +39,7 @@ public class GlowingFog extends EntityAttack implements RangedSpecial {
 
         taskBuilder.setAction((times) -> {
             if (owner instanceof Player) {
-                server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+                CommandBook.callEvent(new RapidHitEvent((Player) owner));
             }
 
             EnvironmentUtil.generateRadialEffect(targeted, Effect.MOBSPAWNER_FLAMES);

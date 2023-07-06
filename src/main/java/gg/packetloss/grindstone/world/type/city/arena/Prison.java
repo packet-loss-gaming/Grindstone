@@ -22,9 +22,9 @@ import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Enderman;
@@ -42,14 +42,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class Prison extends AbstractRegionedArena implements GenericArena, Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private AdminComponent adminComponent;
     private GuildComponent guildComponent;
     private PlayerStateComponent playerStateComponent;
@@ -75,8 +69,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         findRewardChest();     // Setup office
         entranceLoc = new Location(getWorld(), 256.18, 81, 136);
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
         CommandBook.registerEvents(new FlightBlockingListener(adminComponent, this::contains));
     }
 
@@ -142,7 +135,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
             }
         }
 
-        for (Player player : server.getOnlinePlayers()) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
             if (isGuildBlocked(player) && !allPlayers.contains(player)) {
                 removePlayer(player);
             }
@@ -222,7 +215,7 @@ public class Prison extends AbstractRegionedArena implements GenericArena, Liste
         BlockState state = event.getClickedBlock().getLocation().getBlock().getState();
         if (state.getType() == Material.CHEST && rewardChest.equals(state.getLocation())) {
 
-            List<ItemStack> loot = SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 10, 4000);
+            List<ItemStack> loot = SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), 10, 4000);
             int lootSplit = ChanceUtil.getRangedRandom(64 * 2, 64 * 4);
             if (ChanceUtil.getChance(135)) lootSplit *= 10;
             else if (ChanceUtil.getChance(65)) lootSplit *= 2;

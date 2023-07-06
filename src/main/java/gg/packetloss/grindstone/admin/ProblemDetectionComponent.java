@@ -22,6 +22,7 @@ import gg.packetloss.grindstone.util.functional.TriFunction;
 import gg.packetloss.grindstone.util.task.DebounceHandle;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -52,12 +53,12 @@ public class ProblemDetectionComponent extends BukkitComponent {
     public void enable() {
         config = configure(new LocalConfiguration());
 
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             CommandBook.registerEvents(new TickMonitor());
             CommandBook.registerEvents(new ChunkMonitor());
         }, 20 * 5);
 
-        CommandBook.server().getScheduler().runTaskTimer(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), () -> {
             if (knownHeavyOperationsInProgress > 0) {
                 // Allow heavy operations to run through, always.
                 return;
@@ -181,7 +182,7 @@ public class ProblemDetectionComponent extends BukkitComponent {
         private void scheduleNextCheck() {
             checkChunkThrashing();
 
-            CommandBook.server().getScheduler().runTaskLater(
+            Bukkit.getScheduler().runTaskLater(
                 CommandBook.inst(),
                 this::scheduleNextCheck,
                 config.chunkCheckIntervalTicks

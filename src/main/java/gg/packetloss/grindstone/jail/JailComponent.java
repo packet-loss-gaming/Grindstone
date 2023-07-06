@@ -23,7 +23,10 @@ import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.CollectionUtil;
 import gg.packetloss.grindstone.util.TimeUtil;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -35,18 +38,12 @@ import org.bukkit.event.player.*;
 
 import java.io.File;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "Jail", desc = "Jail System")
 @Depend(plugins = {"WorldEdit"}, components = {ChatBridgeComponent.class, GuildComponent.class})
 public class JailComponent extends BukkitComponent implements Listener, Runnable {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private ChatBridgeComponent chatBridge;
     @InjectComponent
@@ -64,7 +61,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
         config = configure(new LocalConfiguration());
 
         // Setup the inmates database
-        File jailDirectory = new File(inst.getDataFolder().getPath() + "/jail");
+        File jailDirectory = new File(CommandBook.inst().getDataFolder().getPath() + "/jail");
         if (!jailDirectory.exists()) jailDirectory.mkdir();
 
         inmates = new CSVInmateDatabase(jailDirectory);
@@ -80,9 +77,8 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         registerCommands(Commands.class);
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-        server.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20 * 2);
+        CommandBook.registerEvents(this);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20 * 2);
     }
 
     @Override
@@ -160,7 +156,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
         String unjailBroadcastMessage = liberator.getName() + " has unjailed " + inmate.getName() +
                 (reason.isEmpty() ? "." : " - " + reason + ".");
-        ChatUtil.sendNotice(server.getOnlinePlayers(), unjailBroadcastMessage);
+        ChatUtil.sendNotice(Bukkit.getOnlinePlayers(), unjailBroadcastMessage);
         chatBridge.broadcast(unjailBroadcastMessage);
     }
 
@@ -277,7 +273,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     @Override
     public void run() {
 
-        for (Player player : server.getOnlinePlayers()) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
             try {
                 if (isJailed(player)) {
                     JailCell cell = cells.get(player);
@@ -291,7 +287,7 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
 
                     if (cell == null) {
                         player.kickPlayer("Unable to find a jail cell...");
-                        log.warning("Could not find a cell for the player: " + player.getName() + ".");
+                        CommandBook.logger().warning("Could not find a cell for the player: " + player.getName() + ".");
                         continue;
                     }
 
@@ -305,14 +301,14 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
                         player.teleport(cell.getLocation(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
                     }
 
-                    if (server.getMaxPlayers() - server.getOnlinePlayers().size() <= config.freeSpotsHeld) {
+                    if (Bukkit.getMaxPlayers() - Bukkit.getOnlinePlayers().size() <= config.freeSpotsHeld) {
                         player.kickPlayer("You are not currently permitted to be online!");
                     }
                 }
             } catch (Exception e) {
                 player.kickPlayer("An error has occurred!");
-                log.warning("The Jail could not process the player: " + player.getName() + ".");
-                log.warning("Printing stack trace...");
+                CommandBook.logger().warning("The Jail could not process the player: " + player.getName() + ".");
+                CommandBook.logger().warning("Printing stack trace...");
                 e.printStackTrace();
             }
         }

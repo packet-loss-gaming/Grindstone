@@ -6,10 +6,12 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.fear;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.ranged.RangedSpecial;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
@@ -48,7 +50,7 @@ public class Disarm extends EntityAttack implements RangedSpecial {
             inv.setContents(items);
         } else {
             target.getEquipment().setItemInMainHand(null);
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 if (target.isValid()) {
                     target.getEquipment().setItemInMainHand(held);
                 }

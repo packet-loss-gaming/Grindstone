@@ -10,8 +10,8 @@ import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.entity.ProjectileTickEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -26,23 +26,15 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Projectile Watcher", desc = "Projectile Watcher.")
 public class ProjectileWatchingComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     private Map<Integer, BukkitTask> projectileTask = new HashMap<>();
     private Map<Integer, Location> projectileLoc = new HashMap<>();
 
     @Override
     public void enable() {
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     // Entity
@@ -56,9 +48,9 @@ public class ProjectileWatchingComponent extends BukkitComponent implements List
         ItemStack bow = event.getBow();
 
         if (bow != null) {
-            p.setMetadata("launcher", new FixedMetadataValue(inst, bow));
+            p.setMetadata("launcher", new FixedMetadataValue(CommandBook.inst(), bow));
         }
-        p.setMetadata("launch-force", new FixedMetadataValue(inst, event.getForce()));
+        p.setMetadata("launch-force", new FixedMetadataValue(CommandBook.inst(), event.getForce()));
     }
 
     // Not entity
@@ -89,14 +81,14 @@ public class ProjectileWatchingComponent extends BukkitComponent implements List
 
         if (projectileTask.containsKey(projectile.getEntityId()) || !(projectile instanceof Projectile)) return;
 
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, () -> {
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), () -> {
             Location loc = projectile.getLocation();
 
             if (projectile.isDead() || !hasChangedLocation(projectile)) {
                 projectileLoc.remove(projectile.getEntityId());
                 projectileTask.get(projectile.getEntityId()).cancel();
             } else {
-                server.getPluginManager().callEvent(new ProjectileTickEvent((Projectile) projectile, force));
+                CommandBook.server().getPluginManager().callEvent(new ProjectileTickEvent((Projectile) projectile, force));
                 projectileLoc.put(projectile.getEntityId(), loc);
             }
         }, 0, 1); // Start at 0 ticks and repeat every 1 ticks

@@ -13,6 +13,7 @@ import gg.packetloss.openboss.bukkit.util.BukkitUtil;
 import gg.packetloss.openboss.entity.EntityDetail;
 import gg.packetloss.openboss.entity.LocalControllable;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -36,7 +37,7 @@ public class BossBarControllerSync<T extends BossBarProvider & EntityDetail> {
     public void startWatching() {
         Validate.isTrue(bossBarPlayerSyncTask == null && bossBarProgressSyncTask == null);
 
-        bossBarPlayerSyncTask = CommandBook.server().getScheduler().runTaskTimer(
+        bossBarPlayerSyncTask = Bukkit.getScheduler().runTaskTimer(
             CommandBook.inst(),
             () -> {
                 controlled.values().forEach(this::updateBossBarPlayers);
@@ -44,7 +45,7 @@ public class BossBarControllerSync<T extends BossBarProvider & EntityDetail> {
             20 * 10,
             20 * 2
         );
-        bossBarProgressSyncTask = CommandBook.server().getScheduler().runTaskTimer(
+        bossBarProgressSyncTask = Bukkit.getScheduler().runTaskTimer(
             CommandBook.inst(),
             () -> {
                 controlled.values().forEach(this::updateBossBarProgress);

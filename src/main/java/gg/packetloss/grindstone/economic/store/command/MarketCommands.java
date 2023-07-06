@@ -26,6 +26,7 @@ import gg.packetloss.grindstone.util.item.ItemNameCalculator;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.item.inventory.*;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -126,7 +127,7 @@ public class MarketCommands {
             // FIXME: This should probably be abstracted as some kind of payment calculator
             PluginTaskExecutor.submitAsync(() -> {
                 MarketItemLookupInstance lookupInstance = getLookupInstanceFromStacksImmediately(items);
-                CommandBook.server().getScheduler().runTask(CommandBook.inst(), () -> {
+                Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
                     MarketTransactionBuilder transactionBuilder = new MarketTransactionBuilder();
                     BigDecimal payment = BigDecimal.ZERO;
 

@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.ranged.guild.ninja;
 
+import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
@@ -16,6 +17,7 @@ import gg.packetloss.grindstone.util.VectorUtil;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
 import gg.packetloss.grindstone.util.task.TaskBuilder;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -62,7 +64,7 @@ public class Ignition extends EntityAttack implements RangedSpecial {
             }
 
             if (owner instanceof Player) {
-                server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+                CommandBook.callEvent(new RapidHitEvent((Player) owner));
             }
 
             spawnParticles();
@@ -92,7 +94,7 @@ public class Ignition extends EntityAttack implements RangedSpecial {
             return;
         }
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             Location loc = it.next();
 
             for (int i = 0; i < 5 && it.hasNext(); ++i) {

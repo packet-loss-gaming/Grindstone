@@ -16,7 +16,7 @@ import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.player.attribute.TypedPlayerStateAttribute;
-import org.bukkit.Server;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -39,19 +39,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ComponentInformation(friendlyName = "Player State", desc = "Player state management")
 public class PlayerStateComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private NativeSerializerComponent serializer;
 
     private Path statesDir;
 
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
-    private Map<UUID, CompletableFuture<PlayerStateRecord>> loadingRecords = new ConcurrentHashMap<>();
+    private final Map<UUID, CompletableFuture<PlayerStateRecord>> loadingRecords = new ConcurrentHashMap<>();
 
-    private Map<UUID, PlayerStateRecord> recordMapping = new ConcurrentHashMap<>();
+    private final Map<UUID, PlayerStateRecord> recordMapping = new ConcurrentHashMap<>();
     private PlayerStatePersistenceManager cacheManager;
 
     @Override
@@ -59,14 +56,13 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
         cacheManager = new PlayerStatePersistenceManager(serializer);
 
         try {
-            Path baseDir = Path.of(inst.getDataFolder().getPath(), "state");
+            Path baseDir = Path.of(CommandBook.inst().getDataFolder().getPath(), "state");
             statesDir = Files.createDirectories(baseDir.resolve("states/players"));
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     private Path getStateRecord(UUID playerID) {
@@ -204,7 +200,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
             attribute.getWorkerFor(cacheManager).pushState(record, player);
         }
 
-        server.getPluginManager().callEvent(new PlayerStatePushEvent(player, kind));
+        CommandBook.callEvent(new PlayerStatePushEvent(player, kind));
 
         writeStateRecord(player.getUniqueId());
     }
@@ -214,7 +210,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
 
         record.beginPopKind(kind);
 
-        server.getPluginManager().callEvent(new PlayerStatePrePopEvent(player, kind));
+        CommandBook.callEvent(new PlayerStatePrePopEvent(player, kind));
 
         for (TypedPlayerStateAttribute attribute : kind.getAttributes()) {
             attribute.getWorkerFor(cacheManager).popState(record, player);
@@ -222,7 +218,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
 
         record.finishPopKind(kind);
 
-        server.getPluginManager().callEvent(new PlayerStatePopEvent(player, kind));
+        CommandBook.callEvent(new PlayerStatePopEvent(player, kind));
 
         writeStateRecord(player.getUniqueId());
     }
@@ -254,7 +250,7 @@ public class PlayerStateComponent extends BukkitComponent implements Listener {
 
     @EventHandler
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        server.getScheduler().runTask(inst, () -> {
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
             try {
                 tryPopTempKind(event.getPlayer());
             } catch (IOException e) {

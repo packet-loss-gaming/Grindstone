@@ -12,6 +12,7 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.grindstone.util.ChanceUtil;
 import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.region.RegionWalker;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -83,7 +84,7 @@ class SilverfishClusterListener implements Listener {
             world.spawn(block.getLocation().add(.5, 0, .5), Silverfish.class);
         }
 
-        CommandBook.server().getScheduler().runTaskLater(
+        Bukkit.getScheduler().runTaskLater(
             CommandBook.inst(),
             () -> createSilverfishCluster(world, WorldEditBridge.toBlockVec3(block)),
             1

@@ -8,6 +8,7 @@ package gg.packetloss.grindstone.prayer.effect.interactive;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.prayer.InteractTriggeredPrayerEffect;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.Player;
@@ -37,7 +38,7 @@ public class ThrownFireballEffect implements InteractTriggeredPrayerEffect {
         player.getWorld().spawn(loc, Fireball.class);
 
         cooldowns.add(playerID);
-        CommandBook.server().getScheduler().runTaskLater(CommandBook.inst(), () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             cooldowns.remove(playerID);
         }, 15);
     }

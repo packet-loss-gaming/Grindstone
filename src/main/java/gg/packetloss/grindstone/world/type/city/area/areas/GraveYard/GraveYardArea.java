@@ -36,10 +36,7 @@ import gg.packetloss.grindstone.util.item.ItemUtil;
 import gg.packetloss.grindstone.util.listener.FlightBlockingListener;
 import gg.packetloss.grindstone.util.region.RegionWalker;
 import gg.packetloss.grindstone.world.type.city.area.AreaComponent;
-import org.bukkit.Chunk;
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
@@ -148,7 +145,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             spectator.registerSpectatorKind(kind);
         }
 
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
 
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         String base = "carpe-diem-district-grave-yard";
@@ -395,7 +392,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private void spawnBlockBreakerTask() {
-        server.getScheduler().runTaskTimer(inst, () -> {
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), () -> {
             if (cachedEmpty()) return;
             for (LivingEntity e : getContained(LivingEntity.class)) {
                 // Auto break stuff
@@ -407,7 +404,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 if (!(e instanceof Player)) {
                     breakBlocks(e, belowLoc);
                 } else if (isParticipant((Player) e)) {
-                    server.getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         breakBlocks(e, belowLoc);
                     }, 5);
                 }
@@ -416,7 +413,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     }
 
     private void spawnTorchToggleTask() {
-        server.getScheduler().runTaskTimer(inst, () -> {
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), () -> {
             if (cachedEmpty()) {
                 return;
             }
@@ -435,8 +432,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         long nextRunDelay = TimeUtil.getTicksTill(nextEventHour);
 
         // Schedule an update task for every hour
-        server.getScheduler().runTaskTimer(
-                inst, this::regenParkour, nextRunDelay, TimeUtil.convertHoursToTicks(1)
+        Bukkit.getScheduler().runTaskTimer(
+                CommandBook.inst(), this::regenParkour, nextRunDelay, TimeUtil.convertHoursToTicks(1)
         );
     }
 
@@ -978,7 +975,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
         // Check sign validity
         if (!(blockState instanceof Sign)) {
-            log.warning("Valid sign not found at: "
+            CommandBook.logger().warning("Valid sign not found at: "
                     + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
             return false;
         }
@@ -992,7 +989,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
         // Find a chest to put items into
         Chest chest = findChestForHeadstone(signState);
         if (chest == null) {
-            log.warning("Valid grave not found for sign: "
+            CommandBook.logger().warning("Valid grave not found for sign: "
                     + blockState.getX() + ", " + blockState.getY() + ", " + blockState.getZ());
             return false;
         }
@@ -1022,7 +1019,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             String itemName = ItemNameCalculator.computeItemName(stack).orElse("UNKNOWN ITEM");
             String itemDescription = " (" + itemName + " x" + stack.getAmount() + (destroy ? " -- destroyed" : "") + ')';
 
-            log.warning("Failed to create complete grave for " + playerName + itemDescription + '.');
+            CommandBook.logger().warning("Failed to create complete grave for " + playerName + itemDescription + '.');
 
             if (destroy) {
                 continue;
@@ -1297,7 +1294,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 delay *= .75;
             }
 
-            server.getScheduler().runTaskLater(inst, () -> {
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                 if (!AUTO_BREAKABLE.contains(aBlock.getType())) {
                     return;
                 }

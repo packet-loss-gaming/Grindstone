@@ -14,6 +14,7 @@ import de.diddiz.LogBlock.Consumer;
 import de.diddiz.LogBlock.LogBlock;
 import gg.packetloss.grindstone.util.EnvironmentUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
@@ -71,7 +72,7 @@ public class RestorationUtil extends BukkitComponent {
 
                 final int amt = player.getItemInHand().getAmount();
                 final boolean isWater = EnvironmentUtil.isWater(block);
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
 
                     if (amt > 1) {
                         player.setItemInHand(new ItemStack(Material.BUCKET, amt));
@@ -101,7 +102,7 @@ public class RestorationUtil extends BukkitComponent {
 
     public static void handleToolDamage(final Player player) {
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             ItemStack held = player.getItemInHand();
             if (!ItemUtil.isTool(held.getType())) return;
             short newDurability = (short) (held.getDurability() + 1);

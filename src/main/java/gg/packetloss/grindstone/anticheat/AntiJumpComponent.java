@@ -13,8 +13,8 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.LocationUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -23,28 +23,18 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 
-import java.util.logging.Logger;
-
 @ComponentInformation(friendlyName = "Anti Jump", desc = "Stop the jump hackers")
 public class AntiJumpComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private LocalConfiguration config;
 
     @Override
     public void enable() {
-
         config = configure(new LocalConfiguration());
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @Override
     public void reload() {
-
         super.reload();
         configure(config);
     }
@@ -71,7 +61,7 @@ public class AntiJumpComponent extends BukkitComponent implements Listener {
             final int blockY = blockLoc.getBlockY();
 
             if (Math.abs(player.getVelocity().getY()) > config.upwardsVelocity && playerLoc.getY() > blockY) {
-                server.getScheduler().runTaskLater(inst, () -> {
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                     if (player.getLocation().getY() >= (blockY + config.leapDistance)) {
 
                         if (LocationUtil.distanceSquared2D(playerLoc, blockLoc) > config.radius * config.radius) {
@@ -105,7 +95,7 @@ public class AntiJumpComponent extends BukkitComponent implements Listener {
             return;
         }
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             player.teleport(LocationUtil.findFreePosition(startingLocation, false), PlayerTeleportEvent.TeleportCause.UNKNOWN);
         }, 20);
     }

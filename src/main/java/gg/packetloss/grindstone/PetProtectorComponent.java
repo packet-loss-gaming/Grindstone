@@ -18,7 +18,6 @@ import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.ItemUtil;
 import org.bukkit.Material;
-import org.bukkit.Server;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -29,24 +28,17 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Logger;
 
 
 @ComponentInformation(friendlyName = "Pet Protector", desc = "Protectin dem petz.")
 @Depend(components = {AdminComponent.class})
 public class PetProtectorComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private AdminComponent admin;
 
     @Override
     public void enable() {
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     @EventHandler

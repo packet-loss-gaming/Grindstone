@@ -30,7 +30,7 @@ import gg.packetloss.grindstone.util.bridge.WorldGuardBridge;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
-import org.bukkit.Server;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -47,30 +47,23 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 @ComponentInformation(friendlyName = "PvP", desc = "Skelril PvP management.")
 @Depend(components = {SessionComponent.class, PrayerComponent.class}, plugins = "WorldGuard")
 public class PvPComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private static SessionComponent sessions;
     @InjectComponent
     private PrayerComponent prayers;
 
-    private static List<PvPScope> pvpLimitors = new ArrayList<>();
+    private static final List<PvPScope> pvpLimitors = new ArrayList<>();
 
     @Override
     public void enable() {
         registerCommands(Commands.class);
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     public class Commands {
@@ -120,7 +113,7 @@ public class PvPComponent extends BukkitComponent implements Listener {
                 1000 * 60 * 3
             );
 
-            server.getScheduler().runTaskLater(inst,
+            Bukkit.getScheduler().runTaskLater(CommandBook.inst(),
                     () -> ChatUtil.sendWarning(player,
                             "You ran from a fight, the Giant Chicken does not approve!"), 1
             );
@@ -152,7 +145,7 @@ public class PvPComponent extends BukkitComponent implements Listener {
         session.setPvP(false);
     }
 
-    private static EDBEExtractor<Player, Player, Projectile> extractor = new EDBEExtractor<>(
+    private static final EDBEExtractor<Player, Player, Projectile> extractor = new EDBEExtractor<>(
             Player.class,
             Player.class,
             Projectile.class

@@ -15,20 +15,13 @@ import gg.packetloss.grindstone.util.task.TaskBuilder;
 import gg.packetloss.grindstone.util.timer.TimerUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Shutdown", desc = "Shutdown system")
 public class ShutdownComponent extends BukkitComponent {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     public static final String DEFAULT_DOWN_TIME = "30 seconds";
 
     @Override
@@ -54,7 +47,7 @@ public class ShutdownComponent extends BukkitComponent {
     private CountdownHandle shutdownHandle;
 
     private boolean checkForEarlyShutdown(@Nullable Player requester) {
-        Collection<? extends Player> players = server.getOnlinePlayers();
+        Collection<? extends Player> players = Bukkit.getOnlinePlayers();
         if (players.isEmpty() || isRequesterOnlyPlayerOnline(players, requester)) {
             return true;
         }
@@ -63,18 +56,18 @@ public class ShutdownComponent extends BukkitComponent {
     }
 
     private void doFinalShutdown() {
-        server.getPluginManager().callEvent(new ServerShutdownEvent(0));
+        CommandBook.callEvent(new ServerShutdownEvent(0));
 
         Bukkit.getOnlinePlayers().forEach((player) -> {
             player.sendActionBar(ChatColor.RED + "Shutting down!");
         });
 
-        server.shutdown();
+        Bukkit.shutdown();
     }
 
     public void shutdown(@Nullable Player requester, int assignedSeconds, String givenDowntime) {
         if (assignedSeconds < 1) {
-            server.shutdown();
+            Bukkit.shutdown();
             return;
         }
 
@@ -100,10 +93,10 @@ public class ShutdownComponent extends BukkitComponent {
                     player.sendActionBar(ChatColor.RED + message);
                 });
 
-                log.info(message);
+                CommandBook.logger().info(message);
             }
 
-            server.getPluginManager().callEvent(new ServerShutdownEvent(seconds));
+            CommandBook.callEvent(new ServerShutdownEvent(seconds));
 
             return true;
         });
@@ -125,7 +118,7 @@ public class ShutdownComponent extends BukkitComponent {
         taskBuilder.setAction((seconds) -> {
             if (checkForEarlyShutdown(null)) {
                 String message = "Honoring idle shutdown request in " + seconds + " seconds.";
-                log.info(message);
+                CommandBook.logger().info(message);
                 return true;
             }
 

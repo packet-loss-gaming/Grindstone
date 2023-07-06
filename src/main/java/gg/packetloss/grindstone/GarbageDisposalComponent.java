@@ -16,7 +16,7 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.item.PlayerDropMapping;
 import gg.packetloss.grindstone.util.particle.SingleBlockParticleEffect;
-import org.bukkit.Server;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -27,22 +27,16 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Garbage Disposal", desc = "Get rid of that unwanted trash.")
 public class GarbageDisposalComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private PlayerDropMapping dropMapping = new PlayerDropMapping();
 
     @Override
     public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
         registerCommands(Commands.class);
-        server.getScheduler().scheduleSyncRepeatingTask(inst, dropMapping, 0, 20 * 15);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), dropMapping, 0, 20 * 15);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

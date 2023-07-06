@@ -37,18 +37,12 @@ import org.bukkit.inventory.meta.FireworkMeta;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
 @ComponentInformation(friendlyName = "Fun of Doom", desc = "Fun of Doom")
 @Depend(components = {SacrificeComponent.class})
 public class FunComponentOfDoom extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private HighScoresComponent highScoresComponent;
 
@@ -56,11 +50,8 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
     @Override
     public void enable() {
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
-        //noinspection AccessStaticViaInstance
-        //inst.registerEvents(new ChristmasGhast());
+        CommandBook.registerEvents(this);
+        //CommandBook.registerEvents(new ChristmasGhast());
 
         registerCommands(Commands.class);
     }
@@ -74,7 +65,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
             Entity e = event.getEntity();
             if (e.getType().equals(EntityType.FIREBALL)) {
-                for (ItemStack aDrop : SacrificeComponent.getCalculatedLoot(server.getConsoleSender(), 16, 1500)) {
+                for (ItemStack aDrop : SacrificeComponent.getCalculatedLoot(Bukkit.getConsoleSender(), 16, 1500)) {
                     Item item = e.getWorld().dropItem(event.getLocation(), aDrop);
                     item.setVelocity(new org.bukkit.util.Vector(
                       r.nextDouble() * 2 - 1,
@@ -176,7 +167,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
                     times = args.getFlagInteger('t');
                 }
                 for (int i = 0; i < times; i++) {
-                    server.getScheduler().runTaskLater(inst,
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(),
                             () -> ((Player) sender).performCommand(args.getJoinedStrings(0)), 1);
                 }
             }
@@ -189,7 +180,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
         public void fireworkCmd(CommandContext args, CommandSender sender) throws CommandException {
 
             final String name = sender.getName();
-            if (!inst.hasPermission(sender, "aurora.fireworks.unlimited")) {
+            if (!sender.hasPermission("aurora.fireworks.unlimited")) {
                 if (players.contains(name)) {
                     throw new CommandException("This command is still on cool down.");
                 }
@@ -253,8 +244,8 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
 
             final int amount;
             if (args.argsLength() > 4) {
-                int cap = inst.hasPermission(sender, "aurora.fireworks.big") ? 200 : 50;
-                cap = inst.hasPermission(sender, "aurora.fireworks.mega") ? 1000 : cap;
+                int cap = sender.hasPermission("aurora.fireworks.big") ? 200 : 50;
+                cap = sender.hasPermission("aurora.fireworks.mega") ? 1000 : cap;
                 amount = Math.max(0, Math.min(cap, args.getInteger(4)));
             } else {
                 amount = 12;
@@ -263,7 +254,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
             final List<Location> playerLocList;
             if (args.argsLength() > 5) {
 
-                inst.checkPermission(sender, "aurora.fireworks.other");
+                CommandBook.inst().checkPermission(sender, "aurora.fireworks.other");
 
                 List<Player> players = InputUtil.PlayerParser.matchPlayers(sender, args.getString(5));
                 playerLocList = players.stream().map(Entity::getLocation).collect(Collectors.toList());
@@ -278,7 +269,7 @@ public class FunComponentOfDoom extends BukkitComponent implements Listener {
             for (final Location playerLoc : playerLocList) {
                 for (int i = 0; i < amount; i++) {
                     final int finalI = i;
-                    server.getScheduler().runTaskLater(inst, () -> {
+                    Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
                         Location targetLocation = playerLoc.clone();
                         if (random) {
                             targetLocation = LocationUtil.findRandomLoc(playerLoc, 7, true, false);

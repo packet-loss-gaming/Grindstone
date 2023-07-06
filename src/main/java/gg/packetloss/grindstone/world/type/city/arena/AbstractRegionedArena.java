@@ -9,8 +9,8 @@ package gg.packetloss.grindstone.world.type.city.arena;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.util.LocationUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -18,15 +18,9 @@ import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public abstract class AbstractRegionedArena {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     private boolean empty = true;
     private World world;
     private ProtectedRegion region;
@@ -78,9 +72,7 @@ public abstract class AbstractRegionedArena {
     }
 
     public boolean isEmpty() {
-
-        for (Player player : server.getOnlinePlayers()) {
-
+        for (Player player : Bukkit.getOnlinePlayers()) {
             if (contains(player)) {
                 empty = false;
                 return false;
@@ -139,6 +131,6 @@ public abstract class AbstractRegionedArena {
 
     public File getWorkingDir() {
 
-        return new File(inst.getDataFolder() + "/area/" + region.getId() + "/");
+        return new File(CommandBook.inst().getDataFolder() + "/area/" + region.getId() + "/");
     }
 }

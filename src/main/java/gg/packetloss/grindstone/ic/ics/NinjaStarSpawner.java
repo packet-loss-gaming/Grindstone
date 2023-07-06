@@ -12,6 +12,7 @@ import com.sk89q.craftbook.mechanics.ic.*;
 import com.sk89q.craftbook.util.LocationUtil;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.block.BlockFace;
@@ -72,7 +73,7 @@ public class NinjaStarSpawner extends AbstractSelfTriggeredIC {
 
         Location k = LocationUtil.getCenterOfBlock(LocationUtil.getNextFreeSpace(getBackBlock(), BlockFace.UP));
         final Item item = k.getWorld().dropItem(k, CustomItemCenter.build(CustomItems.NINJA_STAR, quantity));
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             if (item.isValid()) {
                 item.remove();
             }

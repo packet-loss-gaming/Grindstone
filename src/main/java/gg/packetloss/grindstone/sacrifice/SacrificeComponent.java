@@ -105,7 +105,7 @@ public class SacrificeComponent extends BukkitComponent implements Listener, Run
         });
 
         CommandBook.registerEvents(this);
-        CommandBook.server().getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(CommandBook.inst(), this, 20 * 2, 20);
     }
 
     @Override

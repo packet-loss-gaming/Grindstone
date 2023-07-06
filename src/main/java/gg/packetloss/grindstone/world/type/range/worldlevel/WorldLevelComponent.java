@@ -99,7 +99,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
 
         packetInterceptor.addListener(new HeartPacketFilter(this));
 
-        CommandBook.server().getScheduler().runTaskTimer(
+        Bukkit.getScheduler().runTaskTimer(
             CommandBook.inst(),
             this::degradeWorldLevel,
             0,
@@ -151,7 +151,7 @@ public class WorldLevelComponent extends BukkitComponent implements Listener {
             minibossCheckTask.cancel();
         }
 
-        minibossCheckTask = CommandBook.server().getScheduler().runTaskTimer(
+        minibossCheckTask = Bukkit.getScheduler().runTaskTimer(
             CommandBook.inst(),
             this::tryPromoteMiniBosses,
             0,

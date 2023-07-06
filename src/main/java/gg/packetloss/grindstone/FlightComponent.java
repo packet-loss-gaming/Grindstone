@@ -16,27 +16,18 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.util.ChatUtil;
 import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import org.bukkit.Server;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import java.util.logging.Logger;
-
 @ComponentInformation(friendlyName = "Wing", desc = "Fly like the wind!")
 public class FlightComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = CommandBook.logger();
-    private final Server server = CommandBook.server();
-
     @Override
     public void enable() {
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
         registerCommands(Commands.class);
     }
 
@@ -69,9 +60,9 @@ public class FlightComponent extends BukkitComponent implements Listener {
 
         final Player player = event.getPlayer();
 
-        server.getScheduler().runTaskLater(inst, () -> {
+        Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
             //noinspection deprecation
-            if (inst.hasPermission(player, "aurora.fly.auto") && !player.isOnGround()) {
+            if (player.hasPermission("aurora.fly.auto") && !player.isOnGround()) {
                 player.setAllowFlight(true);
                 player.setFlying(true);
             }
@@ -88,10 +79,10 @@ public class FlightComponent extends BukkitComponent implements Listener {
             // Get the target
             Player target;
             if (args.argsLength() > 0) {
-                inst.checkPermission(sender, "aurora.fly.other.wing");
+                CommandBook.inst().checkPermission(sender, "aurora.fly.other.wing");
                 target = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
             } else {
-                inst.checkPermission(sender, "aurora.fly.self.wing");
+                CommandBook.inst().checkPermission(sender, "aurora.fly.self.wing");
                 target = PlayerUtil.checkPlayer(sender);
 
             }
@@ -136,10 +127,10 @@ public class FlightComponent extends BukkitComponent implements Listener {
             // Get the Target
             Player target;
             if (args.argsLength() > 0) {
-                inst.checkPermission(sender, "aurora.fly.other.dewing");
+                CommandBook.inst().checkPermission(sender, "aurora.fly.other.dewing");
                 target = InputUtil.PlayerParser.matchSinglePlayer(sender, args.getString(0));
             } else {
-                inst.checkPermission(sender, "aurora.fly.self.dewing");
+                CommandBook.inst().checkPermission(sender, "aurora.fly.self.dewing");
                 target = PlayerUtil.checkPlayer(sender);
             }
 

@@ -20,9 +20,9 @@ import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.LocationUtil;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
@@ -35,37 +35,32 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Spectator", desc = "Spectate away.")
 public class SpectatorComponent extends BukkitComponent implements Listener {
-
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private PlayerStateComponent playerState;
 
-    private Set<PlayerStateKind> registeredSpectatorKinds = new HashSet<>();
+    private final Set<PlayerStateKind> registeredSpectatorKinds = new HashSet<>();
 
-    private Map<PlayerStateKind, ProtectedRegion> spectatedRegion = new HashMap<>();
-    private Map<Player, PlayerStateKind> playerSpectatorKind = new HashMap<>();
-    private BiMap<PlayerStateKind, Location> skullLocations = HashBiMap.create();
-    private List<SpectatorSkull> spectatorSkulls = new ArrayList<>();
+    private final Map<PlayerStateKind, ProtectedRegion> spectatedRegion = new HashMap<>();
+    private final Map<Player, PlayerStateKind> playerSpectatorKind = new HashMap<>();
+    private final BiMap<PlayerStateKind, Location> skullLocations = HashBiMap.create();
+    private final List<SpectatorSkull> spectatorSkulls = new ArrayList<>();
 
     @Override
     public void enable() {
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
-        server.getScheduler().runTaskTimer(inst, this::popIfOutOfBounds, 11, 1);
-        server.getScheduler().runTaskTimer(inst, this::glowSkulls, 0, 7);
+        BukkitScheduler scheduler = Bukkit.getScheduler();
+        scheduler.runTaskTimer(CommandBook.inst(), this::popIfOutOfBounds, 11, 1);
+        scheduler.runTaskTimer(CommandBook.inst(), this::glowSkulls, 0, 7);
     }
 
     public void registerSpectatorKind(PlayerStateKind kind) {
@@ -148,7 +143,7 @@ public class SpectatorComponent extends BukkitComponent implements Listener {
 
         // Delay by 1 tick, players are getting teleported back because of some spectator related
         // net code in MC 1.15.1.
-        server.getScheduler().runTask(inst, () -> {
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
             try {
                 playerState.pushState(stateKind, player);
             } catch (IOException | ConflictingPlayerStateException e) {

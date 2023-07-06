@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.world.type.city.area.areas.Bessi;
 
+import com.sk89q.commandbook.CommandBook;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -71,7 +72,7 @@ public class Bessi extends AreaComponent<BessiConfig> {
         listener = new BessiListener(this);
         config = new BessiConfig();
 
-        server.getScheduler().runTaskTimer(inst, this::updateBossBarProgress, 0, 5);
+        Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::updateBossBarProgress, 0, 5);
 
         setupDropTable();
     }

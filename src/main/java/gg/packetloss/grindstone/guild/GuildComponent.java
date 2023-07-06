@@ -42,7 +42,6 @@ import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -52,7 +51,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.logging.Logger;
 
 @ComponentInformation(friendlyName = "Guild Management", desc = "Guild core systems and services")
 @Depend(components = {
@@ -60,10 +58,6 @@ import java.util.logging.Logger;
     ChatBridgeComponent.class, ManagedWorldComponent.class
 })
 public class GuildComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
     @InjectComponent
     private AdminComponent admin;
     @InjectComponent
@@ -73,9 +67,9 @@ public class GuildComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private ManagedWorldComponent managedWorld;
 
-    private PlayerGuildDatabase database = new SQLPlayerGuildDatabase();
-    private Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
-    private Map<GuildType, GuildBase> guildBaseMap = new EnumMap<>(GuildType.class);
+    private final PlayerGuildDatabase database = new SQLPlayerGuildDatabase();
+    private final Map<UUID, InternalGuildState> guildStateMap = new HashMap<>();
+    private final Map<GuildType, GuildBase> guildBaseMap = new EnumMap<>(GuildType.class);
 
     private static GuildComponent guildInst;
 
@@ -83,20 +77,19 @@ public class GuildComponent extends BukkitComponent implements Listener {
         return guildInst;
     }
 
-    @SuppressWarnings("AccessStaticViaInstance")
     @Override
     public void enable() {
         guildInst = this;
 
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
 
-        inst.registerEvents(new GuildCombatXPListener(this::getState));
+        CommandBook.registerEvents(new GuildCombatXPListener(this::getState));
 
-        inst.registerEvents(new NinjaListener(this::internalGetState));
-        inst.registerEvents(new RogueListener(this::internalGetState));
+        CommandBook.registerEvents(new NinjaListener(this::internalGetState));
+        CommandBook.registerEvents(new RogueListener(this::internalGetState));
 
-        server.getScheduler().scheduleSyncRepeatingTask(
-                inst,
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(
+                CommandBook.inst(),
                 new PotionMetabolizer(this::internalGetState),
                 20 * 2,
                 11

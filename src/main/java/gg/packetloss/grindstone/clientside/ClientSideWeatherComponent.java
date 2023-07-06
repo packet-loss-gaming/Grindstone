@@ -15,7 +15,6 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.util.ChatUtil;
-import org.bukkit.Server;
 import org.bukkit.WeatherType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -26,24 +25,17 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static gg.packetloss.grindstone.betterweather.WeatherType.THUNDERSTORM;
 
 @ComponentInformation(friendlyName = "Client Side Weather Manager", desc = "Turn off the storm!")
 public class ClientSideWeatherComponent extends BukkitComponent implements Listener {
-    private final CommandBook inst = CommandBook.inst();
-    private final Logger log = inst.getLogger();
-    private final Server server = CommandBook.server();
-
-    private List<Player> enabledFor = new ArrayList<>();
+    private final List<Player> enabledFor = new ArrayList<>();
 
     @Override
     public void enable() {
         registerCommands(Commands.class);
-
-        //noinspection AccessStaticViaInstance
-        inst.registerEvents(this);
+        CommandBook.registerEvents(this);
     }
 
     public class Commands {

@@ -89,7 +89,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
     public void setUp() {
         spectator.registerSpectatorKind(PlayerStateKind.FREAKY_FOUR_SPECTATOR);
 
-        world = server.getWorlds().get(0);
+        world = Bukkit.getWorlds().get(0);
         entrance = new Location(world, 401.5, GROUND_LEVEL, -304, 270, 0);
         RegionManager manager = WorldGuardBridge.getManagerFor(world);
         String base = "oblitus-district-freaky-four";
@@ -287,7 +287,7 @@ public class FreakyFourArea extends AreaComponent<FreakyFourConfig> {
             }
         };
         TimedRunnable timedRunnable = new TimedRunnable(integratedRunnable, initialTimes);
-        BukkitTask task = server.getScheduler().runTaskTimer(inst, timedRunnable, 0, 5);
+        BukkitTask task = Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), timedRunnable, 0, 5);
         timedRunnable.setTask(task);
     }
 

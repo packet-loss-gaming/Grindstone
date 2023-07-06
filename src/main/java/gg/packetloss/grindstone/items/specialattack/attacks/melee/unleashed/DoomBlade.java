@@ -6,6 +6,7 @@
 
 package gg.packetloss.grindstone.items.specialattack.attacks.melee.unleashed;
 
+import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.RapidHitEvent;
 import gg.packetloss.grindstone.items.specialattack.EntityAttack;
 import gg.packetloss.grindstone.items.specialattack.attacks.melee.MeleeSpecial;
@@ -32,7 +33,7 @@ public class DoomBlade extends EntityAttack implements MeleeSpecial {
         inform("Your weapon releases a huge burst of energy.");
 
         if (owner instanceof Player) {
-            server.getPluginManager().callEvent(new RapidHitEvent((Player) owner));
+            CommandBook.callEvent(new RapidHitEvent((Player) owner));
         }
 
         Class<? extends Entity> filterType = target.getClass();
