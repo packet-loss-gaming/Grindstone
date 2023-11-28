@@ -21,7 +21,6 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import gg.packetloss.bukkittext.Text;
 import gg.packetloss.grindstone.events.DumpPlayerInventoryEvent;
 import gg.packetloss.grindstone.events.PlayerAdminModeChangeEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.state.player.PlayerStateComponent;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
@@ -280,13 +279,6 @@ public class AdminComponent extends BukkitComponent implements Listener {
             event.setDroppedExp(0);
 
             EnvironmentUtil.generateRadialEffect(player.getLocation(), Effect.POTION_BREAK);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypsePersonalSpawnEvent event) {
-        if (isAdmin(event.getPlayer())) {
-            event.setCancelled(true);
         }
     }
 

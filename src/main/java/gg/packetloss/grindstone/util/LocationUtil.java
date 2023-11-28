@@ -217,7 +217,6 @@ public class LocationUtil {
     }
 
     public static boolean containsPlayer(World world, ProtectedRegion region) {
-
         for (Player player : world.getPlayers()) {
             if (isInRegion(region, player)) return true;
         }
@@ -225,23 +224,19 @@ public class LocationUtil {
     }
 
     public static boolean isInRegion(ProtectedRegion region, Entity entity) {
-
         return isInRegion(region, entity.getLocation());
     }
 
     public static boolean isInRegion(ProtectedRegion region, Location loc) {
-
         return region.contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
     }
 
     public static boolean isInRegion(World world, ProtectedRegion region, Entity entity) {
-
         return isInRegion(world, region, entity.getLocation());
     }
 
     public static boolean isInRegion(World world, ProtectedRegion region, Location loc) {
-
         return world.equals(loc.getWorld()) && region.contains(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 
     }

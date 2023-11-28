@@ -17,7 +17,6 @@ import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.events.PrayerTriggerEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
 import gg.packetloss.grindstone.util.ChatUtil;
@@ -374,13 +373,6 @@ public class JailComponent extends BukkitComponent implements Listener, Runnable
     @EventHandler(ignoreCancelled = true)
     public void onPrayerApplication(PrayerTriggerEvent event) {
 
-        if (isJailed(event.getPlayer())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypsePersonalSpawnEvent event) {
         if (isJailed(event.getPlayer())) {
             event.setCancelled(true);
         }

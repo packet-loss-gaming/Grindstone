@@ -103,6 +103,7 @@ public enum CustomItems {
     PHANTOM_SABRE(ChatColor.DARK_RED, "Phantom Sabre"),
     PHANTOM_LINK(ChatColor.DARK_RED, "Phantom Link"),
     PHANTOM_CLOCK(ChatColor.DARK_RED, "Phantom Clock"),
+    PHANTOM_ASHES(ChatColor.DARK_RED, "Phantom Ashes"),
     PHANTOM_HYMN(ChatColor.DARK_RED, "Phantom Hymn"),
     PHANTOM_POTION(ChatColor.DARK_RED, "Phantom Potion"),
     NEWBIE_PHANTOM_POTION(ChatColor.DARK_RED, "Newbie Phantom Potion", true),

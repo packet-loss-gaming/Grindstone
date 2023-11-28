@@ -14,6 +14,7 @@ import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
 import gg.packetloss.grindstone.admin.AdminComponent;
+import gg.packetloss.grindstone.apocalypse.ApocalypseComponent;
 import gg.packetloss.grindstone.economic.store.MarketComponent;
 import gg.packetloss.grindstone.economic.store.MarketItemLookupInstance;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
@@ -70,13 +71,19 @@ import static gg.packetloss.grindstone.util.EnvironmentUtil.isNightTime;
 import static org.bukkit.block.data.type.Chest.Type;
 
 @ComponentInformation(friendlyName = "Grave Yard", desc = "The home of the undead")
-@Depend(components = {
-        AdminComponent.class, PlayerStateComponent.class,
-        SpectatorComponent.class, BlockStateComponent.class,
-        HighScoresComponent.class, WalletComponent.class},
-        plugins = {"WorldGuard"})
+@Depend(
+    components = {
+        AdminComponent.class,
+        ApocalypseComponent.class,
+        PlayerStateComponent.class,
+        SpectatorComponent.class,
+        BlockStateComponent.class,
+        HighScoresComponent.class,
+        WalletComponent.class
+    },
+    plugins = {"WorldGuard"}
+)
 public class GraveYardArea extends AreaComponent<GraveYardConfig> {
-
     protected static List<PlayerStateKind> GRAVE_YARD_SPECTATOR_KINDS = List.of(
             PlayerStateKind.GRAVE_YARD_SPECTATOR,
             PlayerStateKind.GRAVE_YARD_NORTH_SPECTATOR,
@@ -85,6 +92,8 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
 
     @InjectComponent
     protected AdminComponent admin;
+    @InjectComponent
+    protected ApocalypseComponent apocalypse;
     @InjectComponent
     protected PlayerStateComponent playerState;
     @InjectComponent
@@ -97,7 +106,13 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
     protected WalletComponent wallet;
 
     // Temple regions
-    protected ProtectedRegion temple, pressurePlateLockArea, torchArea, creepers, parkour, rewards, rewardsDoor;
+    protected ProtectedRegion temple;
+    protected ProtectedRegion pressurePlateLockArea;
+    protected ProtectedRegion torchArea;
+    protected ProtectedRegion creepers;
+    protected ProtectedRegion parkour;
+    protected ProtectedRegion rewards;
+    protected ProtectedRegion rewardsDoor;
     protected ProtectedRegion[] parkourGen;
 
     // Block information

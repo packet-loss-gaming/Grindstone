@@ -7,8 +7,8 @@
 package gg.packetloss.grindstone.apocalypse;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.commandbook.component.session.PersistentSession;
 import com.sk89q.commandbook.component.session.SessionComponent;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.zachsthings.libcomponents.ComponentInformation;
 import com.zachsthings.libcomponents.Depend;
 import com.zachsthings.libcomponents.InjectComponent;
@@ -16,7 +16,6 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.grindstone.ProjectileWatchingComponent;
-import gg.packetloss.grindstone.admin.AdminComponent;
 import gg.packetloss.grindstone.betterweather.WeatherType;
 import gg.packetloss.grindstone.bosses.manager.apocalypse.*;
 import gg.packetloss.grindstone.buff.Buff;
@@ -37,28 +36,32 @@ import gg.packetloss.grindstone.items.specialattack.SpecType;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttack;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.items.specialattack.SpecialAttackSelector;
-import gg.packetloss.grindstone.jail.JailComponent;
 import gg.packetloss.grindstone.optimization.OptimizedZombieFactory;
-import gg.packetloss.grindstone.util.ChanceUtil;
-import gg.packetloss.grindstone.util.ChatUtil;
-import gg.packetloss.grindstone.util.EntityUtil;
-import gg.packetloss.grindstone.util.LocationUtil;
+import gg.packetloss.grindstone.util.*;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
+import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
 import gg.packetloss.grindstone.util.extractor.entity.EDBEExtractor;
 import gg.packetloss.grindstone.util.item.EffectUtil;
 import gg.packetloss.grindstone.util.item.ItemUtil;
-import gg.packetloss.grindstone.util.player.GeneralPlayerUtil;
-import gg.packetloss.grindstone.warps.WarpsComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldComponent;
+import gg.packetloss.grindstone.world.managed.ManagedWorldGetQuery;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.weather.LightningStrikeEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
@@ -78,21 +81,21 @@ import static gg.packetloss.grindstone.util.EnvironmentUtil.hasThunderstorm;
 
 
 @ComponentInformation(friendlyName = "Apocalypse", desc = "Sends an invasion force after the residents of the server.")
-@Depend(components = {BuffComponent.class, JailComponent.class, AdminComponent.class,
-        WarpsComponent.class, HighScoresComponent.class})
+@Depend(components = {
+    BuffComponent.class,
+    HighScoresComponent.class,
+    ManagedWorldComponent.class,
+    SessionComponent.class
+})
 public class ApocalypseComponent extends BukkitComponent implements Listener {
     @InjectComponent
     private BuffComponent buffComponent;
     @InjectComponent
-    private JailComponent jailComponent;
+    private HighScoresComponent highScores;
     @InjectComponent
-    private AdminComponent adminComponent;
+    private ManagedWorldComponent managedWorld;
     @InjectComponent
-    private WarpsComponent warpsComponent;
-    @InjectComponent
-    private SessionComponent sessions;
-    @InjectComponent
-    private HighScoresComponent highScoresComponent;
+    private SessionComponent session;
 
     private LocalConfiguration config;
     private ThorZombie thorBossManager;
@@ -101,6 +104,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     private ZombieExecutioner executionerBossManager;
     private StickyZombie stickyBossManager;
     private ChuckerZombie chuckerBossManager;
+
+    private ApocalypseState apocalypseState = null;
 
     @Override
     public void enable() {
@@ -115,6 +120,12 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         CommandBook.registerEvents(this);
 
         Bukkit.getScheduler().runTaskTimer(CommandBook.inst(), this::upgradeToMerciless, 0, 20 * 5);
+
+        Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
+            if (EnvironmentUtil.hasThunderstorm(getApocalypseWorldTarget())) {
+                startNewApocalypse();
+            }
+        });
     }
 
     @Override
@@ -124,7 +135,24 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
     }
 
     private static class LocalConfiguration extends ConfigurationBase {
-
+        @Setting("region.test-points.num-tested")
+        public int regionTestPointCount = 3;
+        @Setting("region.test-points.max-tests")
+        public int regionTestMaxTests = 10;
+        @Setting("region.min.x")
+        public int regionMinX = 100;
+        @Setting("region.min.z")
+        public int regionMinZ = 100;
+        @Setting("region.max.x")
+        public int regionMaxX = 500;
+        @Setting("region.max.z")
+        public int regionMaxZ = 500;
+        @Setting("region.spawns-per-strike.min")
+        public int regionSpawnsPerStrikeMin = 2;
+        @Setting("region.spawns-per-strike.max")
+        public int regionSpawnsPerStrikeMax = 6;
+        @Setting("spawn-chance-falloff-interval")
+        public int spawnChanceFalloff = 50;
         @Setting("boss-chance.thor")
         public int thorBossChance = 100;
         @Setting("boss-chance.zapper")
@@ -145,24 +173,18 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public int amplificationDescale = 3;
         @Setting("strike-multiplier")
         public int strikeMultiplier = 5;
-        @Setting("bed-multiplier")
-        public int bedMultiplier = 3;
-        @Setting("local-multiplier")
-        public int localMultiplier = 1;
-        @Setting("local-spawn-chance")
-        public int localSpawnChance = 3;
-        @Setting("max-mobs.entry")
-        public int maxMobsEntry = 600;
         @Setting("max-mobs.hard-cap")
         public int maxMobsHardCap = 1000;
-        @Setting("enable-safe-respawn-location")
+        @Setting("safe-respawn.enabled")
         public boolean enableSafeRespawn = true;
-        @Setting("safe-respawn-radius")
+        @Setting("safe-respawn.radius")
         public int safeRespawnRadius = 10;
-        @Setting("death-grace")
-        public long deathGrace = 60000 * 5;
         @Setting("buff-chance")
         public int buffChance = 15;
+    }
+
+    private World getApocalypseWorldTarget() {
+        return managedWorld.get(ManagedWorldGetQuery.CITY);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -171,9 +193,8 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         Entity target = event.getTarget();
         Entity targeter = event.getEntity();
 
-        if (!(target instanceof Player) || !targeter.isValid() || !(targeter instanceof Zombie)) return;
+        if (!(target instanceof Player player) || !targeter.isValid() || !(targeter instanceof Zombie)) return;
 
-        Player player = (Player) target;
         if (checkEntity(targeter) && ItemUtil.hasAncientArmor(player) && ChanceUtil.getChance(8)) {
             targeter.setFireTicks(ChanceUtil.getRandom(20 * 60));
         }
@@ -243,7 +264,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                 return;
             }
 
-            new SpecialAttackFactory(sessions).process(player, optSpecial.get(), SpecType.OVERLORD, (specEvent) -> {
+            new SpecialAttackFactory(session).process(player, optSpecial.get(), SpecType.OVERLORD, (specEvent) -> {
                 specEvent.setContextCooldown(specEvent.getContextCoolDown() + (1000 * overlordCooldown));
             });
         }
@@ -280,9 +301,7 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             }
 
             default: {
-                if (attacker instanceof Player && checkEntity(target)) {
-                    Player player = (Player) attacker;
-
+                if (attacker instanceof Player player && checkEntity(target)) {
                     Projectile projectile = result.getProjectile();
                     if (projectile != null && !isProjectileBowFired(projectile)) {
                         return;
@@ -343,7 +362,29 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
             cleanupRespawnPoint(event.getRespawnLocation());
             boostPlayer(event.getPlayer(), event.getRespawnLocation());
         }
-        sessions.getSession(ApocalypseSession.class, event.getPlayer()).updateDeath(config.deathGrace);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInteract(PlayerInteractEvent event) {
+        final Player player = event.getPlayer();
+        ItemStack stack = player.getItemInHand();
+        Action action = event.getAction();
+
+        if (action == Action.RIGHT_CLICK_BLOCK && ItemUtil.isItem(stack, CustomItems.PHANTOM_ASHES)) {
+            if (isActive()) {
+                player.teleport(getRandomStrikePoint(), PlayerTeleportEvent.TeleportCause.UNKNOWN);
+                final int amt = stack.getAmount() - 1;
+                Bukkit.getScheduler().runTaskLater(CommandBook.inst(), () -> {
+                    ItemStack newStack = null;
+                    if (amt > 0) {
+                        newStack = CustomItemCenter.build(CustomItems.PHANTOM_ASHES, amt);
+                    }
+                    player.setItemInHand(newStack);
+                }, 1);
+            } else {
+                ChatUtil.sendError(player, "There's no apocalypse currently.");
+            }
+        }
     }
 
     private void maybeIncreaseBuff(Player player) {
@@ -365,23 +406,9 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityDeath(EntityDeathEvent event) {
-
         LivingEntity ent = event.getEntity();
-        World world = ent.getWorld();
 
         Player killer = ent.getKiller();
-        if (ent instanceof Skeleton &&  killer != null) {
-            ItemStack held = ent.getEquipment().getItemInHand();
-            if (ItemUtil.isBow(held)) {
-                if (hasThunderstorm(world) && ChanceUtil.getChance(5)) {
-                    event.getDrops().add(new ItemStack(Material.ARROW, (ChanceUtil.getRandom(8) * 2)));
-                } else {
-                    event.getDrops().add(new ItemStack(Material.ARROW, (ChanceUtil.getRandom(8))));
-
-                }
-            }
-        }
-
         if (checkEntity(ent)) {
             event.getDrops().removeIf(next -> next != null && next.getType() == Material.ROTTEN_FLESH);
 
@@ -396,11 +423,15 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
                     EntityUtil.heal(killer, level);
                 });
 
-                highScoresComponent.update(killer, ScoreTypes.APOCALYPSE_MOBS_SLAIN, BigInteger.ONE);
+                highScores.update(killer, ScoreTypes.APOCALYPSE_MOBS_SLAIN, BigInteger.ONE);
             }
 
             if (ChanceUtil.getChance(5)) {
                 event.getDrops().add(new ItemStack(Material.GOLD_INGOT, ChanceUtil.getRandomNTimes(16, 7)));
+            }
+
+            if (ChanceUtil.getChance(100)) {
+                event.getDrops().add(CustomItemCenter.build(CustomItems.PHANTOM_ASHES));
             }
 
             if (ChanceUtil.getChance(10000)) {
@@ -437,115 +468,106 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
-    // Thunderstorm Attack
+    public boolean isActive() {
+        return apocalypseState != null;
+    }
+
+    private Location getRandomStrikePoint(ApocalypseState state) {
+        World world = state.getWorld();
+        Location rawLocation = LocationUtil.pickLocation(
+            world,
+            world.getMaxHeight() - 1,
+            new RegionChecker(state.getAsRegion())
+        );
+
+        Block relative = world.getHighestBlockAt(rawLocation.getBlockX(), rawLocation.getBlockZ());
+        while (!EnvironmentUtil.isSolidBlock(relative) && !EnvironmentUtil.isLiquid(relative)) {
+            relative = relative.getRelative(BlockFace.DOWN);
+        }
+        return relative.getRelative(BlockFace.UP).getLocation().add(0.5, 0, 0.5);
+    }
+
+    public Location getRandomStrikePoint() {
+        return getRandomStrikePoint(apocalypseState);
+    }
+
+    public List<Location> getSpawnPoints(int minQuantity, int maxQuantity) {
+        List<Location> spawnLocations = new ArrayList<>();
+
+        int numSpawns = ChanceUtil.getRangedRandom(minQuantity, maxQuantity);
+        for (int i = 0; i < numSpawns; ++i) {
+            Location spawnLocation = getRandomStrikePoint();
+            spawnLocations.add(spawnLocation);
+        }
+
+        return spawnLocations;
+    }
+
+    public void spawnBatchInRegion(Location initialStrikeLoc, List<Location> spawnLocations) {
+        ApocalypsePreSpawnEvent event = new ApocalypsePreSpawnEvent(initialStrikeLoc, spawnLocations);
+        CommandBook.callEvent(event);
+        event.getLightningStrikePoints().forEach((strikeLoc) -> performStrikeSpawn(initialStrikeLoc, strikeLoc));
+    }
+
+    public boolean isAtMaximumZombieLimit() {
+        World world = apocalypseState.getWorld();
+
+        int mobCount = world.getEntitiesByClasses(Zombie.class).size();
+        int mobCountMax = config.maxMobsHardCap;
+
+        return mobCount >= mobCountMax || world.getEntities().size() > (mobCountMax * 2);
+    }
+
+    private boolean isInitialStrikeASpawnPoint(Location strikeLocation) {
+        if (!strikeLocation.getWorld().equals(apocalypseState.getWorld())) {
+            return false;
+        }
+
+        long distance = (long)LocationUtil.distanceSquared2D(strikeLocation, apocalypseState.getCentralPoint());
+        int chance = (int) (distance / config.spawnChanceFalloff);
+
+        return ChanceUtil.getChance(chance);
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onLightningStrikeEvent(LightningStrikeEvent event) {
         LightningStrike lightning = event.getLightning();
 
-        // Effect lightning is ignored
+        // Effect lightning is always ignored.
         if (lightning.isEffect()) {
             return;
         }
 
-        World world = lightning.getWorld();
-
-        // Get the mob count
-        final int mobCount = world.getEntitiesByClasses(Zombie.class).size();
-        final int mobCountMax = config.maxMobsHardCap;
-
-        // Lets not flood the world farther
-        if (mobCount >= mobCountMax || world.getEntities().size() > (mobCountMax * 2)) return;
-
-        // Do we care?
-        if (hasThunderstorm(world)) {
-            Location lightningStrikeLoc = lightning.getLocation();
-            lightning(lightningStrikeLoc);
-        }
-    }
-
-    public void lightning(Location location) {
-
-        Location strikeLoc = LocationUtil.findFreePosition(location);
-
-        if (strikeLoc == null) return;
-
-        ApocalypsePreSpawnEvent event = new ApocalypsePreSpawnEvent(strikeLoc);
-        CommandBook.callEvent(event);
-
-        // Spawn zombies at the strike location.
-        strikeSpawn(event);
-
-        // Get players on this world.
-        List<Player> applicable = location.getWorld().getPlayers();
-
-        // Kill the flight of all players. They've been "startled" by the lighting strike.
-        disableFlight(applicable);
-
-        // Remove any players that have recently died from the list of applicable players.
-        applicable.removeIf((player) -> sessions.getSession(ApocalypseSession.class, player).recentlyDied());
-
-        // Remove any players that have the undead tome perk
-        applicable.removeIf((player -> player.hasPermission("aurora.tome.undead")));
-
-        // Spawn to all remaining players.
-        bedSpawn(applicable);
-        localSpawn(applicable);
-    }
-
-    private void disableFlight(List<Player> applicable) {
-        applicable.stream().filter(
-            p -> !ItemUtil.hasPeacefulWarriorArmor(p)
-        ).filter(
-            GeneralPlayerUtil::takeFlightSafely
-        ).forEach(player -> {
-            ChatUtil.sendWarning(player, "The lightning hinders your ability to fly.");
-        });
-    }
-
-    public void bedSpawn(Player player, int multiplier) {
-        // Find a free position at or near the player's bed.
-        Optional<Location> bedLocation = warpsComponent.getRawBedLocation(player);
-        if (bedLocation.isEmpty()) {
-            return;
-        }
-        Optional<Location> freeBedLocation = warpsComponent.getBedLocation(player);
-
-        // If the player has a bed location, but there's no "free" location, redirect and give them
-        // an extra local spawn, they probably tried to out smart the mechanic.
-        if (freeBedLocation.isEmpty()) {
-            ChatUtil.sendWarning(player, "The zombies spawning at your bed couldn't find anywhere to spawn!");
-            ChatUtil.sendWarning(player, "So... Instead they came to you!");
-
-            localSpawn(player, multiplier);
-
+        if (!isActive()) {
             return;
         }
 
-        // Fire an event for the bed spawn.
-        ApocalypseBedSpawnEvent apocalypseEvent = new ApocalypseBedSpawnEvent(
-          player, freeBedLocation.get(), ChanceUtil.getRandom(multiplier)
+        if (isAtMaximumZombieLimit()) {
+            return;
+        }
+
+        List<Location> spawnLocations = getSpawnPoints(
+            config.regionSpawnsPerStrikeMin,
+            config.regionSpawnsPerStrikeMax
         );
-        CommandBook.callEvent(apocalypseEvent);
-        if (apocalypseEvent.isCancelled()) {
-            return;
+
+        Location lightningLocation = lightning.getLocation();
+        if (isInitialStrikeASpawnPoint(lightningLocation)) {
+            spawnLocations.add(lightningLocation);
         }
 
-        // Spawn however many zombies we determined need spawned.
-        ZombieSpawnConfig bedSpawnConfig = new ZombieSpawnConfig();
-        for (int i = 0; i < apocalypseEvent.getNumberOfZombies(); i++) {
-            spawn(apocalypseEvent.getLocation(), bedSpawnConfig);
-        }
+        spawnBatchInRegion(event.getLightning().getLocation(), spawnLocations);
     }
 
     public int getAmplification() {
         return ChanceUtil.getRandomNTimes(config.amplificationNoise, config.amplificationDescale);
     }
 
-    private void strikeSpawn(Location initialStrikeLoc, Location strikeLoc) {
+    private void performStrikeSpawn(Location initialStrikeLoc, Location strikeLoc) {
         var event = new ApocalypseLightningStrikeSpawnEvent(
                 initialStrikeLoc,
                 strikeLoc,
-                config.strikeMultiplier * config.amplificationNoise
+                config.strikeMultiplier * getAmplification()
         );
         CommandBook.callEvent(event);
         if (event.isCancelled()) {
@@ -564,46 +586,6 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         for (int i = 0; i < event.getNumberOfZombies(); ++i) {
             spawn(strikeLoc, strikeSpawnConfig);
         }
-    }
-
-    public void strikeSpawn(ApocalypsePreSpawnEvent event) {
-        Location initialStrikeLoc = event.getInitialLightningStrikePoint();
-        event.getLightningStrikePoints().forEach((strikeLoc) -> strikeSpawn(initialStrikeLoc, strikeLoc));
-    }
-
-    public void bedSpawn(List<Player> players) {
-        for (Player player : players) {
-            bedSpawn(player, config.bedMultiplier * getAmplification());
-        }
-    }
-
-    public void localSpawn(Player player, int multiplier) {
-        ZombieSpawnConfig localSpawnConfig = new ZombieSpawnConfig();
-        for (int i = 0; i < multiplier; ++i) {
-            Location l = findLocation(player.getLocation());
-
-            ApocalypseLocalSpawnEvent apocalypseEvent = new ApocalypseLocalSpawnEvent(player, l);
-            CommandBook.callEvent(apocalypseEvent);
-            if (apocalypseEvent.isCancelled()) {
-                continue;
-            }
-
-            spawn(apocalypseEvent.getLocation(), localSpawnConfig);
-        }
-    }
-
-    public void localSpawn(List<Player> players) {
-        for (Player player : players) {
-            if (ChanceUtil.getChance(config.localSpawnChance))
-                continue;
-
-            localSpawn(player, config.localMultiplier * getAmplification());
-        }
-    }
-
-    public Location findLocation(Location origin) {
-        Location l = LocationUtil.findRandomLoc(origin, 8, true, false);
-        return l.getBlock().getType().isSolid() ? origin : l;
     }
 
     private Zombie spawnBase(Location location, ZombieSpawnConfig spawnConfig) {
@@ -747,6 +729,56 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         }
     }
 
+    /*
+    Since a lot of the city isn't fleshed out, try and find areas that have some structure/terrain.
+     */
+    private boolean looksLikeAnInterestingAreaForAnApocalypse(ApocalypseState trialState) {
+        int totalBlockPosition = 0;
+        for (int i = 0; i < config.regionTestPointCount; ++i) {
+            totalBlockPosition += getRandomStrikePoint(trialState).getY();
+        }
+        return totalBlockPosition / config.regionTestPointCount > 81;
+    }
+
+    public void startNewApocalypse() {
+        Validate.isTrue(apocalypseState == null);
+
+        World targetWorld = getApocalypseWorldTarget();
+        BlockVector2 boundingBox = null;
+        BlockVector2 centralPoint = null;
+
+        for (int i = 0; i < config.regionTestMaxTests; ++i) {
+            int xSize = ChanceUtil.getRangedRandom(config.regionMinX, config.regionMaxX);
+            int ySize = ChanceUtil.getRangedRandom(config.regionMinZ, config.regionMaxZ);
+            boundingBox = BlockVector2.at(xSize, ySize);
+
+            int largerBound = Math.max(boundingBox.getBlockX(), boundingBox.getBlockZ());
+            int midpointVariance = (int) ((targetWorld.getWorldBorder().getSize() / 2) - largerBound);
+
+            centralPoint = WorldEditBridge.toBlockVec2(targetWorld.getWorldBorder().getCenter()).add(
+                ChanceUtil.getRangedRandom(-midpointVariance, midpointVariance),
+                ChanceUtil.getRangedRandom(-midpointVariance, midpointVariance)
+            );
+
+            ApocalypseState trialState = new ApocalypseState(targetWorld, centralPoint, boundingBox);
+            if (looksLikeAnInterestingAreaForAnApocalypse(trialState)) {
+                break;
+            }
+        }
+
+        Validate.notNull(boundingBox);
+        Validate.notNull(centralPoint);
+
+        ApocalypseStartEvent startEvent = new ApocalypseStartEvent(targetWorld, centralPoint, boundingBox);
+        CommandBook.callEvent(startEvent);
+
+        apocalypseState = new ApocalypseState(
+            startEvent.getWorld(),
+            startEvent.getCentralPoint(),
+            startEvent.getBoundingBox()
+        );
+    }
+
     public void clearApocalypseMobs(World world) {
         List<Zombie> zombies = world.getEntitiesByClass(Zombie.class).stream()
                 .filter(ApocalypseHelper::checkEntity)
@@ -762,16 +794,30 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         });
     }
 
+    public void endApocalypse() {
+        Validate.isTrue(apocalypseState != null);
+
+        CommandBook.callEvent(new ApocalypseEndEvent());
+
+        buffComponent.clearBuffs(BuffCategory.APOCALYPSE);
+
+        ChatUtil.sendNotice(Bukkit.getOnlinePlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
+
+        clearApocalypseMobs(apocalypseState.getWorld());
+
+        apocalypseState = null;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onThunderChange(BetterWeatherChangeEvent event) {
-        if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
-            buffComponent.clearBuffs(BuffCategory.APOCALYPSE);
+        if (!event.getWorld().equals(getApocalypseWorldTarget())) {
+            return;
+        }
 
-            World world = event.getWorld();
-
-            ChatUtil.sendNotice(world.getPlayers(), ChatColor.DARK_RED, "Rawwwgggggghhhhhhhhhh......");
-
-            clearApocalypseMobs(world);
+        if (event.getNewWeatherType() == WeatherType.THUNDERSTORM) {
+            startNewApocalypse();
+        } else if (event.getOldWeatherType() == WeatherType.THUNDERSTORM) {
+            endApocalypse();
         }
     }
 
@@ -780,22 +826,5 @@ public class ApocalypseComponent extends BukkitComponent implements Listener {
         public boolean allowMiniBoss = false;
 
         public ZombieSpawnConfig() { }
-    }
-
-    private static class ApocalypseSession extends PersistentSession {
-
-        private long nextAttack = 0;
-
-        protected ApocalypseSession() {
-            super(THIRTY_MINUTES);
-        }
-
-        public boolean recentlyDied() {
-            return nextAttack != 0 && nextAttack < System.currentTimeMillis();
-        }
-
-        public void updateDeath(long time) {
-            nextAttack = System.currentTimeMillis() + time;
-        }
     }
 }

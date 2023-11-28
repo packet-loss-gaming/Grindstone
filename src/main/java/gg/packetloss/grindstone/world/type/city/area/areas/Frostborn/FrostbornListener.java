@@ -8,7 +8,6 @@ package gg.packetloss.grindstone.world.type.city.area.areas.Frostborn;
 
 import com.sk89q.commandbook.CommandBook;
 import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
 import gg.packetloss.grindstone.exceptions.UnstorableBlockStateException;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -309,13 +308,6 @@ public class FrostbornListener extends AreaListener<FrostbornArea> {
             // Allow players to keep their experience
             event.setKeepLevel(true);
             event.setDeathMessage(player.getName() + CollectionUtil.getElement(DEATH_MESSAGES));
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseLocalSpawnEvent(ApocalypseLocalSpawnEvent event) {
-        if (parent.contains(event.getPlayer())) {
-            event.setCancelled(true);
         }
     }
 

@@ -7,9 +7,10 @@
 package gg.packetloss.grindstone.world.type.city.area.areas.GraveYard;
 
 import com.sk89q.commandbook.CommandBook;
-import com.sk89q.worldedit.math.BlockVector3;
 import gg.packetloss.grindstone.events.*;
-import gg.packetloss.grindstone.events.apocalypse.*;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
+import gg.packetloss.grindstone.events.apocalypse.ApocalypsePreSpawnEvent;
+import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.RepairItemEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackEvent;
@@ -26,7 +27,6 @@ import gg.packetloss.grindstone.items.specialattack.SpecialAttackFactory;
 import gg.packetloss.grindstone.state.block.BlockStateKind;
 import gg.packetloss.grindstone.state.player.PlayerStateKind;
 import gg.packetloss.grindstone.util.*;
-import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.checker.RegionChecker;
 import gg.packetloss.grindstone.util.explosion.ExplosionStateFactory;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
@@ -97,66 +97,6 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
         if (ItemUtil.isInItemFamily(event.getSpec().getUsedItem(), ItemFamily.MASTER)) {
             event.setContextCooldown(event.getContext().getDelay() / 2);
-        }
-    }
-
-    @EventHandler
-    public void onApocalypsePreSpawn(ApocalypsePreSpawnEvent event) {
-        World graveWorld = parent.getWorld();
-        if (graveWorld != event.getInitialLightningStrikePoint().getWorld()) {
-            return;
-        }
-
-        for (BlockVector3 headStone : parent.headStones) {
-            if (!ChanceUtil.getChance(parent.getConfig().apocalypseChanceOfGraveSpawn)) {
-                continue;
-            }
-
-            if (!LocationUtil.isChunkLoadedAt(graveWorld, headStone)) {
-                continue;
-            }
-
-            event.getLightningStrikePoints().add(WorldEditBridge.toLocation(graveWorld, headStone));
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseLightningSpawn(ApocalypseLightningStrikeSpawnEvent event) {
-        if (!parent.contains(event.getLocation())) {
-            return;
-        }
-
-        // Don't mess with strikes that weren't added/at a grave site
-        if (event.getLocation().equals(event.getTriggeringLocation())) {
-            return;
-        }
-
-        GraveYardConfig config = parent.getConfig();
-        event.setNumberOfZombies(ChanceUtil.getRangedRandom(
-                config.apocalypseNumZombiesMin,
-                config.apocalypseNumZombiesMax
-        ));
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypsePurge(ApocalypsePurgeEvent event) {
-        Iterator<Zombie> it = event.getZombies().iterator();
-        while (it.hasNext()) {
-            Location entityLoc = it.next().getLocation();
-            if (!parent.contains(entityLoc)) {
-                continue;
-            }
-
-            // Don't kill all the zombies in the grave yard
-            if (!ChanceUtil.getChance(parent.getConfig().apocalypseChanceOfPurge)) {
-                it.remove();
-                continue;
-            }
-
-            // Only kill zombies not in the dungeon
-            if (parent.isHostileTempleArea(entityLoc)) {
-                it.remove();
-            }
         }
     }
 
@@ -459,6 +399,11 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
         }
     }
 
+    @EventHandler
+    public void onApocalypsePreSpawn(ApocalypsePreSpawnEvent event) {
+        event.getLightningStrikePoints().removeIf(parent::contains);
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
     public void onApocalypseBlockDamage(ApocalypseBlockDamagePreventionEvent event) {
         if (parent.contains(event.getBlock())) {
@@ -509,7 +454,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     public void onPlayerPortal(EntityPortalReadyEvent event) {
         Entity entity = event.getEntity();
 
-        if (parent.isHostileTempleArea(entity.getLocation()) && event.getPortalType() == PortalType.NETHER) {
+        if (parent.isRewardsArea(entity.getLocation()) && event.getPortalType() == PortalType.NETHER) {
             event.setCancelled(true);
 
             if (entity instanceof Player player) {

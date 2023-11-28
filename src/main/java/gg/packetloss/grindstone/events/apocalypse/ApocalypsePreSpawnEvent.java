@@ -10,18 +10,16 @@ import org.bukkit.Location;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ApocalypsePreSpawnEvent extends Event {
     private static final HandlerList handlers = new HandlerList();
     private final Location initialStrikePoint;
-    private final List<Location> strikePoints = new ArrayList<>();
+    private final List<Location> strikePoints;
 
-    public ApocalypsePreSpawnEvent(Location initialStrikePoint) {
+    public ApocalypsePreSpawnEvent(Location initialStrikePoint, List<Location> strikePoints) {
         this.initialStrikePoint = initialStrikePoint;
-
-        this.strikePoints.add(getInitialLightningStrikePoint());
+        this.strikePoints = strikePoints;
     }
 
     public Location getInitialLightningStrikePoint() {

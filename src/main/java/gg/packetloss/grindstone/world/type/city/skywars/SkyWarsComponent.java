@@ -30,7 +30,6 @@ import gg.packetloss.grindstone.chatbridge.ChatBridgeComponent;
 import gg.packetloss.grindstone.economic.wallet.WalletComponent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePushEvent;
@@ -1190,14 +1189,6 @@ public class SkyWarsComponent extends BukkitComponent implements Runnable {
         @EventHandler(ignoreCancelled = true)
         public void onApocalypseLightningStrikeSpawn(ApocalypseLightningStrikeSpawnEvent event) {
             if (anythingContains(event.getLocation())) {
-                event.setCancelled(true);
-            }
-        }
-
-        @EventHandler(ignoreCancelled = true)
-        public void onApocalypsePersonSpawn(ApocalypsePersonalSpawnEvent event) {
-            Player player = event.getPlayer();
-            if (gameState.containsPlayer(player)) {
                 event.setCancelled(true);
             }
         }

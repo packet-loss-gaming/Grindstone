@@ -6,6 +6,9 @@
 
 package gg.packetloss.grindstone.util;
 
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.math.Vector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
@@ -17,12 +20,16 @@ import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import gg.packetloss.grindstone.util.bridge.WorldEditBridge;
 import gg.packetloss.grindstone.util.region.RegionValueEvaluator;
 import gg.packetloss.grindstone.util.region.RegionValueReport;
+import org.apache.commons.lang3.Validate;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,22 +64,60 @@ public class RegionUtil {
         return true;
     }
 
-    public static Optional<Region> convert(ProtectedRegion region) {
-        if (region instanceof ProtectedCuboidRegion) {
-            ProtectedCuboidRegion cuboid = (ProtectedCuboidRegion)region;
+    public static Region makeRegion(World world, BlockVector2 centralPoint, BlockVector2 boundingBox) {
+        return new CuboidRegion(
+            BukkitAdapter.adapt(world),
+            centralPoint.subtract(boundingBox).toBlockVector3(world.getMinHeight()),
+            centralPoint.add(boundingBox).toBlockVector3(world.getMaxHeight())
+        );
+    }
+
+    public static Optional<Region> convert(World world, ProtectedRegion region) {
+        com.sk89q.worldedit.world.World bukkitWorld = world == null ? null : BukkitAdapter.adapt(world);
+
+        if (region instanceof ProtectedCuboidRegion cuboid) {
             BlockVector3 pt1 = cuboid.getMinimumPoint();
             BlockVector3 pt2 = cuboid.getMaximumPoint();
-            return Optional.of(new CuboidRegion(pt1, pt2));
-        } else if (region instanceof ProtectedPolygonalRegion) {
-            ProtectedPolygonalRegion poly2d = (ProtectedPolygonalRegion)region;
+            return Optional.of(new CuboidRegion(bukkitWorld, pt1, pt2));
+        } else if (region instanceof ProtectedPolygonalRegion poly2d) {
             return Optional.of(new Polygonal2DRegion(
-                    null, poly2d.getPoints(),
-                    poly2d.getMinimumPoint().getBlockY(),
-                    poly2d.getMaximumPoint().getBlockY())
-            );
+                bukkitWorld,
+                poly2d.getPoints(),
+                poly2d.getMinimumPoint().getBlockY(),
+                poly2d.getMaximumPoint().getBlockY()
+            ));
         } else {
             return Optional.empty();
         }
+    }
+
+    public static Optional<Region> convert(ProtectedRegion region) {
+        return convert(null, region);
+    }
+
+    public static List<Player> getPlayersInRegion(Region region) {
+        List<Player> players = new ArrayList<>();
+
+        Validate.notNull((BukkitWorld)region.getWorld());
+        World world = ((BukkitWorld)region.getWorld()).getWorld();
+        for (Player player : world.getPlayers()) {
+            if (!region.contains(WorldEditBridge.toBlockVec3(player.getLocation()))) {
+                continue;
+            }
+            players.add(player);
+        }
+        return players;
+    }
+
+    public static boolean isInRegions(Region region, Location location) {
+        Validate.notNull((BukkitWorld)region.getWorld());
+
+        World world = ((BukkitWorld)region.getWorld()).getWorld();
+        if (!world.equals(location.getWorld())) {
+            return false;
+        }
+
+        return region.contains(WorldEditBridge.toBlockVec3(location));
     }
 
     public static Stream<ProtectedRegion> getHouseStream(LocalPlayer player, RegionManager manager) {

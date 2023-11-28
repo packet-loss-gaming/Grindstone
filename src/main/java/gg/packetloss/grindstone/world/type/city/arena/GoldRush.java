@@ -10,7 +10,6 @@ import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import gg.packetloss.grindstone.events.PrayerTriggerEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.exceptions.ConflictingPlayerStateException;
 import gg.packetloss.grindstone.guild.GuildComponent;
 import gg.packetloss.grindstone.guild.state.GuildState;
@@ -517,14 +516,6 @@ public class GoldRush extends AbstractRegionedArena implements MonitoredArena, L
 
             event.setCancelled(true);
             ChatUtil.sendWarning(event.getPlayer(), "You cannot teleport to that location.");
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onLocalSpawn(ApocalypseLocalSpawnEvent event) {
-
-        if (players.contains(event.getPlayer().getName())) {
-            event.setCancelled(true);
         }
     }
 

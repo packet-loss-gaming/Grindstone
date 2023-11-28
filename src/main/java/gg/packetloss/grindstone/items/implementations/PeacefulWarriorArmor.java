@@ -7,7 +7,6 @@
 package gg.packetloss.grindstone.items.implementations;
 
 import gg.packetloss.grindstone.apocalypse.ApocalypseHelper;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.items.generic.AbstractItemFeatureImpl;
 import gg.packetloss.grindstone.util.EntityUtil;
 import gg.packetloss.grindstone.util.extractor.entity.CombatantPair;
@@ -71,13 +70,6 @@ public class PeacefulWarriorArmor extends AbstractItemFeatureImpl {
             if (attacker instanceof Mob monster) {
                 monster.setTarget(null);
             }
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseEvent(ApocalypsePersonalSpawnEvent event) {
-        if (ItemUtil.hasPeacefulWarriorArmor(event.getPlayer())) {
-            event.setCancelled(true);
         }
     }
 }

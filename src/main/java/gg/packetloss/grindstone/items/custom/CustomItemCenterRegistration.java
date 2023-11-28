@@ -576,8 +576,13 @@ public class CustomItemCenterRegistration {
         CustomItem phantomClock = new CustomItem(PHANTOM_CLOCK, Material.CLOCK);
         phantomClock.addSource(ItemSource.GRAVE_YARD);
         phantomClock.addSource(ItemSource.FREAKY_FOUR);
-        phantomClock.addUse("Teleports the player strait to the rewards room of the Grave Yard.");
+        phantomClock.addUse("Teleports the player straight to the rewards room of the Grave Yard.");
         itemConsumer.accept(phantomClock);
+
+        CustomItem phantomAshes = new CustomItem(PHANTOM_ASHES, Material.BLAZE_POWDER);
+        phantomAshes.addSource(ItemSource.APOCALYPSE);
+        phantomAshes.addUse("Teleports the player to the epicenter of the Apocalypse.");
+        itemConsumer.accept(phantomAshes);
 
         CustomItem phantomLink = new CustomItem(PHANTOM_LINK, Material.PHANTOM_MEMBRANE);
         phantomLink.addSource(ItemSource.FREAKY_FOUR);

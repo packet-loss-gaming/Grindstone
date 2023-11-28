@@ -9,7 +9,6 @@ package gg.packetloss.grindstone.world.type.city.area.areas.PatientX;
 import com.sk89q.commandbook.CommandBook;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import gg.packetloss.grindstone.events.PrayerTriggerEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseLocalSpawnEvent;
 import gg.packetloss.grindstone.events.apocalypse.GemOfLifeUsageEvent;
 import gg.packetloss.grindstone.events.custom.item.HymnSingEvent;
 import gg.packetloss.grindstone.events.custom.item.SpecialAttackSelectEvent;
@@ -80,19 +79,12 @@ public class PatientXListener extends AreaListener<PatientXArea> {
 
     @EventHandler(ignoreCancelled = true)
     public void onPrayerApplication(PrayerTriggerEvent event) {
-
         if (parent.contains(event.getPlayer()) && event.getPrayer().isHoly()) event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onCreepSpeak(CreepSpeakEvent event) {
-
         if (parent.contains(event.getPlayer()) || parent.contains(event.getTargeter())) event.setCancelled(true);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseLocalSpawn(ApocalypseLocalSpawnEvent event) {
-        if (parent.contains(event.getPlayer())) event.setCancelled(true);
     }
 
     private static final int REQUIRED_PHANTOM_ESSENCE = 20;

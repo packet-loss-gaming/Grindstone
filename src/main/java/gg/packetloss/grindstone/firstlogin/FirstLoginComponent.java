@@ -15,14 +15,8 @@ import com.zachsthings.libcomponents.bukkit.BukkitComponent;
 import com.zachsthings.libcomponents.config.ConfigurationBase;
 import com.zachsthings.libcomponents.config.Setting;
 import gg.packetloss.bukkittext.Text;
-import gg.packetloss.grindstone.betterweather.WeatherType;
-import gg.packetloss.grindstone.buff.Buff;
-import gg.packetloss.grindstone.buff.BuffComponent;
-import gg.packetloss.grindstone.events.BetterWeatherChangeEvent;
 import gg.packetloss.grindstone.events.PlayerDeathDropRedirectEvent;
 import gg.packetloss.grindstone.events.PortalRecordEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypseOverflowEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.invite.PlayerInviteComponent;
 import gg.packetloss.grindstone.items.custom.CustomItemCenter;
 import gg.packetloss.grindstone.items.custom.CustomItems;
@@ -45,7 +39,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -61,11 +54,9 @@ import java.util.stream.Stream;
 import static gg.packetloss.grindstone.util.bridge.WorldEditBridge.toBlockVec3;
 
 @ComponentInformation(friendlyName = "First Login", desc = "Get stuff the first time you come.")
-@Depend(components = {ManagedWorldComponent.class, BuffComponent.class, PlayerHistoryComponent.class,
+@Depend(components = {ManagedWorldComponent.class, PlayerHistoryComponent.class,
                       PlayerInviteComponent.class, WarpsComponent.class})
 public class FirstLoginComponent extends BukkitComponent implements Listener {
-    @InjectComponent
-    private BuffComponent buffs;
     @InjectComponent
     private ManagedWorldComponent managedWorld;
     @InjectComponent
@@ -182,67 +173,6 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypsePersonalSpawnEvent event) {
-        Player player = event.getPlayer();
-
-        if (isNewerPlayer(player)) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onApocalypseSpawn(ApocalypseOverflowEvent event) {
-        if (event.getSpawnKind() == ApocalypseOverflowEvent.SpawnKind.NONE) {
-            return;
-        }
-
-        Player player = event.getPlayer();
-        if (!isNewerPlayer(player)) {
-            return;
-        }
-
-        event.setKillChance(3);
-        event.setSpawnKind(ApocalypseOverflowEvent.SpawnKind.NONE);
-
-        ChatUtil.sendNotice(player, ChatColor.GOLD, "[Friendly Spirit] I've protected you from a great evil!");
-        ChatUtil.sendNotice(player, ChatColor.GOLD, "[Friendly Spirit] Try to keep the number of zombies down!");
-    }
-
-    private void applyNewPlayerBuffs(Player player) {
-        buffs.notifyFillToLevel(Buff.APOCALYPSE_DAMAGE_BOOST, player, 20);
-        buffs.notifyFillToLevel(Buff.APOCALYPSE_MAGIC_SHIELD, player, 20);
-        buffs.notifyFillToLevel(Buff.APOCALYPSE_LIFE_LEACH, player, 3);
-        buffs.notifyFillToLevel(Buff.APOCALYPSE_OVERLORD, player, 1);
-
-        ChatUtil.sendNotice(player, ChatColor.GOLD, "[Friendly Spirit] Here, have some of my strength new one!");
-        ChatUtil.sendNotice(player, ChatColor.GOLD, "New player assistance applied.");
-    }
-
-    private void maybeApplyNewPlayerBuffs(Player player) {
-        if (isNewerPlayer(player) && player.getWorld().isThundering()) {
-            applyNewPlayerBuffs(player);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onThunderChange(BetterWeatherChangeEvent event) {
-        if (event.getNewWeatherType() == WeatherType.THUNDERSTORM) {
-            Bukkit.getScheduler().runTask(CommandBook.inst(), () -> {
-                for (Player player : event.getWorld().getPlayers()) {
-                    maybeApplyNewPlayerBuffs(player);
-                }
-            });
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerWorldChange(PlayerChangedWorldEvent event) {
-        if (!event.getFrom().isThundering()) {
-            maybeApplyNewPlayerBuffs(event.getPlayer());
-        }
-    }
-
     private final Set<UUID> freePhantomPotion = new HashSet<>();
 
     @EventHandler
@@ -315,8 +245,6 @@ public class FirstLoginComponent extends BukkitComponent implements Listener {
         if (isInSafeRoom(player.getLocation())) {
             welcome(player);
         }
-
-        maybeApplyNewPlayerBuffs(player);
     }
 
     private final Set<UUID> playersBeingTeleportedToFirstLoc = new HashSet<>();

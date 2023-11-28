@@ -39,7 +39,6 @@ import gg.packetloss.grindstone.events.anticheat.FallBlockerEvent;
 import gg.packetloss.grindstone.events.anticheat.ThrowPlayerEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseBlockDamagePreventionEvent;
 import gg.packetloss.grindstone.events.apocalypse.ApocalypseLightningStrikeSpawnEvent;
-import gg.packetloss.grindstone.events.apocalypse.ApocalypsePersonalSpawnEvent;
 import gg.packetloss.grindstone.events.egg.EggDropEvent;
 import gg.packetloss.grindstone.events.guild.GuildPowersEnableEvent;
 import gg.packetloss.grindstone.events.playerstate.PlayerStatePrePopEvent;
@@ -1649,13 +1648,6 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
 
         @EventHandler(ignoreCancelled = true)
         public void onApocalypseLightningStrikeSpawn(ApocalypseLightningStrikeSpawnEvent event) {
-            if (anythingContains(event.getLocation())) {
-                event.setCancelled(true);
-            }
-        }
-
-        @EventHandler(ignoreCancelled = true)
-        public void onApocalypsePersonSpawn(ApocalypsePersonalSpawnEvent event) {
             if (anythingContains(event.getLocation())) {
                 event.setCancelled(true);
             }
