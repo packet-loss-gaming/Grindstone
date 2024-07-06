@@ -183,7 +183,7 @@ public abstract class RadialExecutor {
 
         // callEvent(new RapidBlockBreakEvent(player));
         short degradation = 0;
-        int unbreakingLevel = item.getEnchantmentLevel(Enchantment.DURABILITY);
+        int unbreakingLevel = item.getEnchantmentLevel(Enchantment.UNBREAKING);
         short curDur = item.getDurability();
         short maxDur = item.getType().getMaxDurability();
         blockBreaker:

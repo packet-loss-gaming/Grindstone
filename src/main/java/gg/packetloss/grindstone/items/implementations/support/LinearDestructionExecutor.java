@@ -125,7 +125,7 @@ public abstract class LinearDestructionExecutor {
 
         ItemStack item = player.getInventory().getItemInMainHand();
         short degradation = 0;
-        int unbreakingLevel = item.getEnchantmentLevel(Enchantment.DURABILITY);
+        int unbreakingLevel = item.getEnchantmentLevel(Enchantment.UNBREAKING);
         short curDur = item.getDurability();
         short maxDur = item.getType().getMaxDurability();
         for (int dist = getDist(item); dist > 0;) {

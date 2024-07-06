@@ -126,7 +126,7 @@ public class MercilessZombie {
         return false;
     }
 
-    private static final ParticleBuilder PASSIVE_PARTICLE_EFFECT = new ParticleBuilder(Particle.ENCHANTMENT_TABLE).allPlayers();
+    private static final ParticleBuilder PASSIVE_PARTICLE_EFFECT = new ParticleBuilder(Particle.ENCHANT).allPlayers();
 
     private void distanceTrap(LivingEntity boss, LivingEntity toHit) {
         toHit.teleport(boss);
@@ -203,7 +203,7 @@ public class MercilessZombie {
                     // Gear them up
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();
                     ItemStack weapon = new ItemStack(Material.GOLDEN_SWORD);
-                    weapon.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+                    weapon.addUnsafeEnchantment(Enchantment.SHARPNESS, 1);
                     equipment.setItemInMainHand(weapon);
                     equipment.setArmorContents(ItemUtil.GOLD_ARMOR);
                 }

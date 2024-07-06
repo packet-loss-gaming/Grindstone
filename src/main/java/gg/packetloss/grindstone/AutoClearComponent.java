@@ -77,7 +77,7 @@ public class AutoClearComponent extends BukkitComponent implements Listener {
     private static Set<EntityType> checkedEntities = new HashSet<>();
 
     static {
-        checkedEntities.add(EntityType.DROPPED_ITEM);
+        checkedEntities.add(EntityType.ITEM);
         checkedEntities.add(EntityType.ARROW);
         checkedEntities.add(EntityType.EXPERIENCE_ORB);
     }

@@ -27,7 +27,7 @@ public enum Prayers {
     RACKET(35, false, ImmutableList.of(PrayerEffects.RACKET)),
     SMOKE(35, false, ImmutableList.of(PrayerEffects.SMOKE)),
     TNT(35, false, ImmutableList.of(PrayerEffects.TNT)),
-    WALK(35, false, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.SLOW, 2))),
+    WALK(35, false, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.SLOWNESS, 2))),
     SLAP(35, false, ImmutableList.of(PrayerEffects.SLAP)),
     BUTTER_FINGERS(35, false, ImmutableList.of(PrayerEffects.BUTTER_FINGERS)),
     ARROW(35, false, ImmutableList.of(PrayerEffects.ARROW)),
@@ -43,7 +43,7 @@ public enum Prayers {
     ),
     POISON(35, false, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.POISON, 2))),
     BLINDNESS(35, false, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.BLINDNESS, 1))),
-    MUSHROOM(35, false, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.CONFUSION, 1))),
+    MUSHROOM(35, false, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.NAUSEA, 1))),
     CANNON(35, false, ImmutableList.of(PrayerEffects.CANNON)),
     MERLIN(
         35,
@@ -52,7 +52,7 @@ public enum Prayers {
             PrayerEffects.FIRE,
             PrayerEffects.SMOKE,
             PrayerEffects.BUTTER_FINGERS,
-            new PotionPrayerEffect(PotionEffectType.CONFUSION, 1)
+            new PotionPrayerEffect(PotionEffectType.NAUSEA, 1)
         )
     ),
     ROCKET(35, false, ImmutableList.of(PrayerEffects.ROCKET)),
@@ -70,15 +70,15 @@ public enum Prayers {
         ImmutableList.of(
             PrayerEffects.INFINITE_FOOD,
             new PotionPrayerEffect(PotionEffectType.REGENERATION, 0),
-            new PotionPrayerEffect(PotionEffectType.INCREASE_DAMAGE, 0),
-            new PotionPrayerEffect(PotionEffectType.DAMAGE_RESISTANCE, 0),
+            new PotionPrayerEffect(PotionEffectType.STRENGTH, 0),
+            new PotionPrayerEffect(PotionEffectType.RESISTANCE, 0),
             new PotionPrayerEffect(PotionEffectType.WATER_BREATHING, 0),
             new PotionPrayerEffect(PotionEffectType.FIRE_RESISTANCE, 0),
-            new PotionPurgePrayerEffect(PotionEffectType.CONFUSION),
+            new PotionPurgePrayerEffect(PotionEffectType.NAUSEA),
             new PotionPurgePrayerEffect(PotionEffectType.BLINDNESS),
             new PotionPurgePrayerEffect(PotionEffectType.WEAKNESS),
             new PotionPurgePrayerEffect(PotionEffectType.POISON),
-            new PotionPurgePrayerEffect(PotionEffectType.SLOW)
+            new PotionPurgePrayerEffect(PotionEffectType.SLOWNESS)
         )
     ),
     GOD(
@@ -89,15 +89,15 @@ public enum Prayers {
             PrayerEffects.INFINITE_FOOD,
             new PotionPrayerEffect(PotionEffectType.INVISIBILITY, 0),
             new PotionPrayerEffect(PotionEffectType.REGENERATION, 1),
-            new PotionPrayerEffect(PotionEffectType.INCREASE_DAMAGE, 1),
-            new PotionPrayerEffect(PotionEffectType.DAMAGE_RESISTANCE, 1),
+            new PotionPrayerEffect(PotionEffectType.STRENGTH, 1),
+            new PotionPrayerEffect(PotionEffectType.RESISTANCE, 1),
             new PotionPrayerEffect(PotionEffectType.WATER_BREATHING, 0),
             new PotionPrayerEffect(PotionEffectType.FIRE_RESISTANCE, 0),
-            new PotionPurgePrayerEffect(PotionEffectType.CONFUSION),
+            new PotionPurgePrayerEffect(PotionEffectType.NAUSEA),
             new PotionPurgePrayerEffect(PotionEffectType.BLINDNESS),
             new PotionPurgePrayerEffect(PotionEffectType.WEAKNESS),
             new PotionPurgePrayerEffect(PotionEffectType.POISON),
-            new PotionPurgePrayerEffect(PotionEffectType.SLOW)
+            new PotionPurgePrayerEffect(PotionEffectType.SLOWNESS)
         )
     ),
     NIGHT_VISION(30, true, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.NIGHT_VISION, 1, 20 * 15))),
@@ -111,14 +111,14 @@ public enum Prayers {
     ),
     INVISIBILITY(30, true, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.INVISIBILITY, 1))),
     DEADLYDEFENSE(75, true, ImmutableList.of(PrayerEffects.DEADLY_DEFENSE)),
-    DIGGYDIGGY(30, true, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.FAST_DIGGING, 1))),
+    DIGGYDIGGY(30, true, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.HASTE, 1))),
     HULK(
         50,
         true,
         ImmutableList.of(
             PrayerEffects.INFINITE_FOOD,
-            new PotionPrayerEffect(PotionEffectType.INCREASE_DAMAGE, 1),
-            new PotionPrayerEffect(PotionEffectType.DAMAGE_RESISTANCE, 0)
+            new PotionPrayerEffect(PotionEffectType.STRENGTH, 1),
+            new PotionPrayerEffect(PotionEffectType.RESISTANCE, 0)
         )
     ),
     HEALTH_BOOST(15, true, ImmutableList.of(new PotionPrayerEffect(PotionEffectType.HEALTH_BOOST, 4))),

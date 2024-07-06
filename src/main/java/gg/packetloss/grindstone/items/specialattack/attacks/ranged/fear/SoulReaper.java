@@ -52,7 +52,7 @@ public class SoulReaper extends EntityAttack implements RangedSpecial {
         double animationZ = (RADIUS - radiusProgress) * Math.sin(circleProgress);
 
         lockedLocation.getWorld().spawnParticle(
-                Particle.ENCHANTMENT_TABLE,
+                Particle.ENCHANT,
                 lockedLocation.getX() + animationX,
                 lockedLocation.getY() + .5,
                 lockedLocation.getZ() + animationZ,
@@ -78,7 +78,7 @@ public class SoulReaper extends EntityAttack implements RangedSpecial {
                 double animationZ = RADIUS * Math.sin(progress);
 
                 lockedLocation.getWorld().spawnParticle(
-                        Particle.ENCHANTMENT_TABLE,
+                        Particle.ENCHANT,
                         lockedLocation.getX() + animationX,
                         lockedLocation.getY() + .5,
                         lockedLocation.getZ() + animationZ,

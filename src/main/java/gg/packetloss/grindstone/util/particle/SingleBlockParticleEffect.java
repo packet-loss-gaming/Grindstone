@@ -15,7 +15,7 @@ public class SingleBlockParticleEffect {
     public static void puffOfSmoke(Location loc) {
         for (int i = 0; i < 10; ++i) {
             loc.getWorld().spawnParticle(
-                Particle.SMOKE_NORMAL,
+                Particle.SMOKE,
                 loc.getX(),
                 loc.getY(),
                 loc.getZ(),
@@ -29,7 +29,7 @@ public class SingleBlockParticleEffect {
 
     public static void randomStar(Location loc) {
         loc.getWorld().spawnParticle(
-            Particle.VILLAGER_HAPPY,
+            Particle.HAPPY_VILLAGER,
             loc.getX() + ChanceUtil.getRangedRandom(0D, 1D),
             loc.getY() + ChanceUtil.getRangedRandom(0D, 1D),
             loc.getZ() + ChanceUtil.getRangedRandom(0D, 1D),

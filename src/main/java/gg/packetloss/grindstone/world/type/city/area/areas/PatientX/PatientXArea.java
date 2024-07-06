@@ -379,7 +379,7 @@ public class PatientXArea extends AreaComponent<PatientXConfig> {
                 break;
             case 6:
                 for (Player player : contained) {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 60, 2));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 60, 2));
                 }
                 attackDur = System.currentTimeMillis() + 20000;
                 ChatUtil.sendWarning(audible, "What's the matter, got cold feet?");

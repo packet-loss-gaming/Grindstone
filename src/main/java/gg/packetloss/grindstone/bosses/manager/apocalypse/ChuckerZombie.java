@@ -82,7 +82,7 @@ public class ChuckerZombie {
                     // Gear them up
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();
                     ItemStack weapon = new ItemStack(Material.FEATHER);
-                    weapon.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+                    weapon.addUnsafeEnchantment(Enchantment.SHARPNESS, 1);
                     equipment.setItemInMainHand(weapon);
                     equipment.setArmorContents(ItemUtil.GOLD_ARMOR);
                 }

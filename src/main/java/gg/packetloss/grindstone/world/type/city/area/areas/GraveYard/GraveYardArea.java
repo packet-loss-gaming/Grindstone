@@ -731,12 +731,12 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
             ItemStack sword = new ItemStack(Material.IRON_SWORD);
             if (ChanceUtil.getChance(35)) sword = new ItemStack(Material.DIAMOND_SWORD);
             ItemMeta meta = sword.getItemMeta();
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_ALL, ChanceUtil.getRandom(5), false);
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_ARTHROPODS, ChanceUtil.getRandom(5), false);
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.DAMAGE_UNDEAD, ChanceUtil.getRandom(5), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.SHARPNESS, ChanceUtil.getRandom(5), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.BANE_OF_ARTHROPODS, ChanceUtil.getRandom(5), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.SMITE, ChanceUtil.getRandom(5), false);
             if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.FIRE_ASPECT, ChanceUtil.getRandom(2), false);
             if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.KNOCKBACK, ChanceUtil.getRandom(2), false);
-            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.LOOT_BONUS_MOBS, ChanceUtil.getRandom(3), false);
+            if (ChanceUtil.getChance(2)) meta.addEnchant(Enchantment.LOOTING, ChanceUtil.getRandom(3), false);
             sword.setItemMeta(meta);
             equipment.setItemInHand(sword);
         }
@@ -1167,7 +1167,7 @@ public class GraveYardArea extends AreaComponent<GraveYardConfig> {
                 continue;
             }
 
-            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 5 * 20, 3));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 5 * 20, 3));
         }
     }
 

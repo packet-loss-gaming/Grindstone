@@ -42,8 +42,8 @@ public class PotionMetabolizer implements Runnable {
 
     private void metabolizeBadPotions(Player player) {
         List<PotionEffectType> affectedTypes = Arrays.asList(
-                PotionEffectType.SLOW_DIGGING, PotionEffectType.BLINDNESS, PotionEffectType.POISON,
-                PotionEffectType.CONFUSION, PotionEffectType.WEAKNESS, PotionEffectType.WITHER
+                PotionEffectType.MINING_FATIGUE, PotionEffectType.BLINDNESS, PotionEffectType.POISON,
+                PotionEffectType.NAUSEA, PotionEffectType.WEAKNESS, PotionEffectType.WITHER
         );
 
         for (PotionEffect effect : player.getActivePotionEffects()) {

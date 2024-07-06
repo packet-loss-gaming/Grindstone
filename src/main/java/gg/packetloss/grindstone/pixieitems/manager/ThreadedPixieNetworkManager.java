@@ -456,7 +456,7 @@ public class ThreadedPixieNetworkManager implements PixieNetworkManager {
         return Optional.empty();
     }
 
-    private static final ParticleBuilder PARTICLE_EFFECT = new ParticleBuilder(Particle.SPELL_INSTANT).count(0).allPlayers();
+    private static final ParticleBuilder PARTICLE_EFFECT = new ParticleBuilder(Particle.INSTANT_EFFECT).count(0).allPlayers();
 
     private void playEffect(Inventory inv) {
         if (inv instanceof DoubleChestInventory) {

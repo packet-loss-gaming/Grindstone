@@ -20,8 +20,8 @@ import java.util.List;
 
 public class OPCombatPotionNerfMigration implements Migration {
     private static final List<PotionEffectType> EFFECT_TYPES = List.of(
-        PotionEffectType.INCREASE_DAMAGE, PotionEffectType.REGENERATION,
-        PotionEffectType.DAMAGE_RESISTANCE, PotionEffectType.WATER_BREATHING,
+        PotionEffectType.STRENGTH, PotionEffectType.REGENERATION,
+        PotionEffectType.RESISTANCE, PotionEffectType.WATER_BREATHING,
         PotionEffectType.FIRE_RESISTANCE
     );
 

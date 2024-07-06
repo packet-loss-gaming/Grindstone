@@ -90,7 +90,7 @@ public class CursedMineListener extends AreaListener<CursedMineArea> {
     }
 
     private boolean hasFortune(ItemStack item) {
-        return item.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS);
+        return item.containsEnchantment(Enchantment.FORTUNE);
     }
 
     private void getMiningResult(Player player, Material blockType, Consumer<ItemStack> result) {

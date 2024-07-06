@@ -123,7 +123,7 @@ public class ZombieExecutioner {
                     // Gear them up
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();
                     ItemStack weapon = new ItemStack(Material.GOLDEN_AXE);
-                    weapon.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+                    weapon.addUnsafeEnchantment(Enchantment.SHARPNESS, 1);
                     equipment.setItemInMainHand(weapon);
                     equipment.setArmorContents(ItemUtil.GOLD_ARMOR);
                 }
@@ -172,8 +172,8 @@ public class ZombieExecutioner {
 
                 int finalCount = totalAllies;
                 if (finalCount > 0) {
-                    ((Zombie) boss).addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 20, finalCount));
-                    ((Zombie) boss).addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20, finalCount));
+                    ((Zombie) boss).addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 20, finalCount));
+                    ((Zombie) boss).addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 20, finalCount));
                 }
 
                 TaskBuilder.Countdown taskBuilder = TaskBuilder.countdown();
@@ -186,7 +186,7 @@ public class ZombieExecutioner {
                     for (int i = 0; i < finalCount * 2.5; ++i) {
                         Location bossLoc = boss.getLocation();
                         bossLoc.getWorld().spawnParticle(
-                            Particle.SMOKE_LARGE,
+                            Particle.LARGE_SMOKE,
                             bossLoc.getX() + ChanceUtil.getRangedRandom(-.5, .5),
                             bossLoc.getY(),
                             bossLoc.getZ() + ChanceUtil.getRangedRandom(-.5, .5),

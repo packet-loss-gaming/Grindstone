@@ -77,7 +77,7 @@ public class StickyZombie {
                     // Gear them up
                     EntityEquipment equipment = ((LivingEntity) anEntity).getEquipment();
                     ItemStack weapon = new ItemStack(Material.SLIME_BALL);
-                    weapon.addUnsafeEnchantment(Enchantment.DAMAGE_ALL, 1);
+                    weapon.addUnsafeEnchantment(Enchantment.SHARPNESS, 1);
                     equipment.setItemInMainHand(weapon);
                     equipment.setArmorContents(ItemUtil.GOLD_ARMOR);
                 }
@@ -93,7 +93,7 @@ public class StickyZombie {
             @Override
             public InstructionResult<GenericDetail, DamageInstruction<GenericDetail>> process(LocalControllable<GenericDetail> controllable, LocalEntity entity, AttackDamage damage) {
                 final Entity toHit = BukkitUtil.getBukkitEntity(entity);
-                ((LivingEntity) toHit).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 15 * 20, 2));
+                ((LivingEntity) toHit).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 15 * 20, 2));
                 return null;
             }
         });

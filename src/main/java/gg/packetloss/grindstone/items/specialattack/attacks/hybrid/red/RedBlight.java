@@ -139,7 +139,7 @@ public class RedBlight extends EntityAttack implements MeleeSpecial, RangedSpeci
                     for (int i = 0; i < 30; ++i) {
                         // note red can never be 0 for alternative colors
                         entityLoc.getWorld().spawnParticle(
-                            Particle.REDSTONE,
+                            Particle.DUST,
                             entityLoc.clone().add(
                                 ChanceUtil.getRangedRandom(-.5, .5),
                                 ChanceUtil.getRangedRandom(0, .5),

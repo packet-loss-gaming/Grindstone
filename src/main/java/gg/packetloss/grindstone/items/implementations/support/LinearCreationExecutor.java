@@ -111,7 +111,7 @@ public class LinearCreationExecutor {
 
         ItemStack item = player.getInventory().getItemInOffHand();
         short degradation = 0;
-        int unbreakingLevel = item.getEnchantmentLevel(Enchantment.DURABILITY);
+        int unbreakingLevel = item.getEnchantmentLevel(Enchantment.UNBREAKING);
         short curDur = item.getDurability();
         short maxDur = item.getType().getMaxDurability();
         BlockFace oppositeFace = clickedFace.getOppositeFace();

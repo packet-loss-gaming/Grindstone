@@ -194,7 +194,7 @@ class DemonicRuneListener implements Listener {
                     double animationZ = radiusZ * Math.sin(progress);
 
                     portalLocation.getWorld().spawnParticle(
-                        Particle.ENCHANTMENT_TABLE,
+                        Particle.ENCHANT,
                         portalLocation.getX() + animationX,
                         portalLocation.getY() + .5,
                         portalLocation.getZ() + animationZ,

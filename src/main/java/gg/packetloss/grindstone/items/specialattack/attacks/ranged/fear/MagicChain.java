@@ -22,8 +22,8 @@ public class MagicChain extends EntityAttack implements RangedSpecial {
     @Override
     public void activate() {
 
-        target.removePotionEffect(PotionEffectType.SLOW);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, (int) (owner.getHealth() * 18), 2));
+        target.removePotionEffect(PotionEffectType.SLOWNESS);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, (int) (owner.getHealth() * 18), 2));
         target.removePotionEffect(PotionEffectType.WEAKNESS);
         target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (int) (owner.getHealth() * 18), 2));
 

@@ -103,7 +103,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     private static Set<PotionEffectType> excludedTypes = new HashSet<>();
 
     static {
-        excludedTypes.add(PotionEffectType.SLOW);
+        excludedTypes.add(PotionEffectType.SLOWNESS);
         excludedTypes.add(PotionEffectType.POISON);
         excludedTypes.add(PotionEffectType.WEAKNESS);
         excludedTypes.add(PotionEffectType.REGENERATION);
@@ -117,7 +117,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
 
     private void degradeGoodPotions(Player player) {
         List<PotionEffectType> affectedTypes = Arrays.asList(
-                PotionEffectType.INCREASE_DAMAGE, PotionEffectType.REGENERATION, PotionEffectType.DAMAGE_RESISTANCE,
+                PotionEffectType.STRENGTH, PotionEffectType.REGENERATION, PotionEffectType.RESISTANCE,
                 PotionEffectType.WATER_BREATHING, PotionEffectType.FIRE_RESISTANCE, PotionEffectType.ABSORPTION,
                 PotionEffectType.HEALTH_BOOST
         );
@@ -361,7 +361,7 @@ public class GraveYardListener extends AreaListener<GraveYardArea> {
     @EventHandler(ignoreCancelled = true)
     public void onBlockSpread(BlockSpreadEvent event) {
         Material fromType = event.getSource().getType();
-        if (fromType == Material.GRASS && parent.contains(event.getBlock())) {
+        if (fromType == Material.SHORT_GRASS && parent.contains(event.getBlock())) {
             event.setCancelled(true);
         }
     }

@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static gg.packetloss.grindstone.items.custom.CustomItems.*;
+import static org.bukkit.Material.*;
 
 public class CustomItemCenterRegistration {
     public static void register(Consumer<CustomItem> itemConsumer) {
@@ -30,13 +31,13 @@ public class CustomItemCenterRegistration {
 
         // Ancient Armor
         CustomEquipment ancientCrown = new CustomEquipment(ANCIENT_CROWN, Material.GOLDEN_HELMET);
-        ancientCrown.addEnchant(Enchantment.DURABILITY, 3);
-        ancientCrown.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientCrown.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientCrown.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientCrown.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        ancientCrown.addEnchant(Enchantment.OXYGEN, 3);
-        ancientCrown.addEnchant(Enchantment.WATER_WORKER, 1);
+        ancientCrown.addEnchant(Enchantment.UNBREAKING, 3);
+        ancientCrown.addEnchant(Enchantment.PROTECTION, 4);
+        ancientCrown.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientCrown.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientCrown.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        ancientCrown.addEnchant(Enchantment.RESPIRATION, 3);
+        ancientCrown.addEnchant(Enchantment.AQUA_AFFINITY, 1);
         ancientCrown.addSource(ItemSource.MARKET);
         ancientCrown.addSource(ItemSource.GIANT_BOSS);
         ancientCrown.addUse("Set Effect: Ancient Armor");
@@ -50,12 +51,12 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(ancientCrown);
 
         CustomEquipment ancientRoyalHelmet = new CustomEquipment(ANCIENT_ROYAL_HELMET, Material.CHAINMAIL_HELMET);
-        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        ancientRoyalHelmet.addEnchant(Enchantment.OXYGEN, 3);
-        ancientRoyalHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        ancientRoyalHelmet.addEnchant(Enchantment.PROTECTION, 4);
+        ancientRoyalHelmet.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientRoyalHelmet.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientRoyalHelmet.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        ancientRoyalHelmet.addEnchant(Enchantment.RESPIRATION, 3);
+        ancientRoyalHelmet.addEnchant(Enchantment.AQUA_AFFINITY, 1);
         ancientRoyalHelmet.addSource(ItemSource.FREAKY_FOUR);
         ancientRoyalHelmet.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientRoyalHelmet.addSource(ItemSource.GRAVE_YARD);
@@ -66,10 +67,10 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(ancientRoyalHelmet);
 
         CustomEquipment ancientRoyalChestplate = new CustomEquipment(ANCIENT_ROYAL_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE);
-        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientRoyalChestplate.addEnchant(Enchantment.PROTECTION, 4);
+        ancientRoyalChestplate.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientRoyalChestplate.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientRoyalChestplate.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         ancientRoyalChestplate.addSource(ItemSource.FREAKY_FOUR);
         ancientRoyalChestplate.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientRoyalChestplate.addSource(ItemSource.GRAVE_YARD);
@@ -80,10 +81,10 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(ancientRoyalChestplate);
 
         CustomEquipment ancientRoyalLeggings = new CustomEquipment(ANCIENT_ROYAL_LEGGINGS, Material.CHAINMAIL_LEGGINGS);
-        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientRoyalLeggings.addEnchant(Enchantment.PROTECTION, 4);
+        ancientRoyalLeggings.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientRoyalLeggings.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientRoyalLeggings.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         ancientRoyalLeggings.addSource(ItemSource.FREAKY_FOUR);
         ancientRoyalLeggings.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientRoyalLeggings.addSource(ItemSource.GRAVE_YARD);
@@ -94,11 +95,11 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(ancientRoyalLeggings);
 
         CustomEquipment ancientRoyalBoots = new CustomEquipment(ANCIENT_ROYAL_BOOTS, Material.CHAINMAIL_BOOTS);
-        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.PROTECTION, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        ancientRoyalBoots.addEnchant(Enchantment.FEATHER_FALLING, 4);
         ancientRoyalBoots.addSource(ItemSource.FREAKY_FOUR);
         ancientRoyalBoots.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientRoyalBoots.addSource(ItemSource.GRAVE_YARD);
@@ -109,12 +110,12 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(ancientRoyalBoots);
 
         CustomEquipment ancientHelmet = new CustomEquipment(ANCIENT_HELMET, Material.CHAINMAIL_HELMET);
-        ancientHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        ancientHelmet.addEnchant(Enchantment.OXYGEN, 3);
-        ancientHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        ancientHelmet.addEnchant(Enchantment.PROTECTION, 4);
+        ancientHelmet.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientHelmet.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientHelmet.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        ancientHelmet.addEnchant(Enchantment.RESPIRATION, 3);
+        ancientHelmet.addEnchant(Enchantment.AQUA_AFFINITY, 1);
         ancientHelmet.addSource(ItemSource.FREAKY_FOUR);
         ancientHelmet.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientHelmet.addSource(ItemSource.GRAVE_YARD);
@@ -124,10 +125,10 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(ancientHelmet);
 
         CustomEquipment ancientChestplate = new CustomEquipment(ANCIENT_CHESTPLATE, Material.CHAINMAIL_CHESTPLATE);
-        ancientChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientChestplate.addEnchant(Enchantment.PROTECTION, 4);
+        ancientChestplate.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientChestplate.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientChestplate.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         ancientChestplate.addSource(ItemSource.FREAKY_FOUR);
         ancientChestplate.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientChestplate.addSource(ItemSource.GRAVE_YARD);
@@ -137,10 +138,10 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(ancientChestplate);
 
         CustomEquipment ancientLeggings = new CustomEquipment(ANCIENT_LEGGINGS, Material.CHAINMAIL_LEGGINGS);
-        ancientLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        ancientLeggings.addEnchant(Enchantment.PROTECTION, 4);
+        ancientLeggings.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientLeggings.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientLeggings.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         ancientLeggings.addSource(ItemSource.FREAKY_FOUR);
         ancientLeggings.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientLeggings.addSource(ItemSource.GRAVE_YARD);
@@ -150,11 +151,11 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(ancientLeggings);
 
         CustomEquipment ancientBoots = new CustomEquipment(ANCIENT_BOOTS, Material.CHAINMAIL_BOOTS);
-        ancientBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        ancientBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        ancientBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        ancientBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        ancientBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        ancientBoots.addEnchant(Enchantment.PROTECTION, 4);
+        ancientBoots.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        ancientBoots.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        ancientBoots.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        ancientBoots.addEnchant(Enchantment.FEATHER_FALLING, 4);
         ancientBoots.addSource(ItemSource.FREAKY_FOUR);
         ancientBoots.addSource(ItemSource.SACRIFICIAL_PIT);
         ancientBoots.addSource(ItemSource.GRAVE_YARD);
@@ -178,43 +179,43 @@ public class CustomItemCenterRegistration {
 
         // Nectric Armor
         CustomEquipment nectricHelmet = new CustomEquipment(NECTRIC_HELMET, Material.DIAMOND_HELMET);
-        nectricHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        nectricHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        nectricHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        nectricHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        nectricHelmet.addEnchant(Enchantment.OXYGEN, 3);
-        nectricHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        nectricHelmet.addEnchant(Enchantment.PROTECTION, 4);
+        nectricHelmet.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        nectricHelmet.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        nectricHelmet.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        nectricHelmet.addEnchant(Enchantment.RESPIRATION, 3);
+        nectricHelmet.addEnchant(Enchantment.AQUA_AFFINITY, 1);
         nectricHelmet.addSource(ItemSource.MARKET);
         nectricHelmet.addSource(ItemSource.PATIENT_X);
         nectricHelmet.addUse("Set Effect: Necrotic Armor");
         itemConsumer.accept(nectricHelmet);
 
         CustomEquipment nectricChestplate = new CustomEquipment(NECTRIC_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
-        nectricChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        nectricChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        nectricChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        nectricChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        nectricChestplate.addEnchant(Enchantment.PROTECTION, 4);
+        nectricChestplate.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        nectricChestplate.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        nectricChestplate.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         nectricChestplate.addSource(ItemSource.MARKET);
         nectricChestplate.addSource(ItemSource.PATIENT_X);
         nectricChestplate.addUse("Set Effect: Necrotic Armor");
         itemConsumer.accept(nectricChestplate);
 
         CustomEquipment nectricLeggings = new CustomEquipment(NECTRIC_LEGGINGS, Material.DIAMOND_LEGGINGS);
-        nectricLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        nectricLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        nectricLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        nectricLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        nectricLeggings.addEnchant(Enchantment.PROTECTION, 4);
+        nectricLeggings.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        nectricLeggings.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        nectricLeggings.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         nectricLeggings.addSource(ItemSource.MARKET);
         nectricLeggings.addSource(ItemSource.PATIENT_X);
         nectricLeggings.addUse("Set Effect: Necrotic Armor");
         itemConsumer.accept(nectricLeggings);
 
         CustomEquipment nectricBoots = new CustomEquipment(NECTRIC_BOOTS, Material.DIAMOND_BOOTS);
-        nectricBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        nectricBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        nectricBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        nectricBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        nectricBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        nectricBoots.addEnchant(Enchantment.PROTECTION, 4);
+        nectricBoots.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        nectricBoots.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        nectricBoots.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        nectricBoots.addEnchant(Enchantment.FEATHER_FALLING, 4);
         nectricBoots.addSource(ItemSource.MARKET);
         nectricBoots.addSource(ItemSource.PATIENT_X);
         nectricBoots.addUse("Set Effect: Necrotic Armor");
@@ -222,12 +223,12 @@ public class CustomItemCenterRegistration {
 
         // Necros Armor
         CustomEquipment necrosHelmet = new CustomEquipment(NECROS_HELMET, Material.DIAMOND_HELMET);
-        necrosHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        necrosHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        necrosHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        necrosHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        necrosHelmet.addEnchant(Enchantment.OXYGEN, 3);
-        necrosHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        necrosHelmet.addEnchant(Enchantment.PROTECTION, 4);
+        necrosHelmet.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        necrosHelmet.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        necrosHelmet.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        necrosHelmet.addEnchant(Enchantment.RESPIRATION, 3);
+        necrosHelmet.addEnchant(Enchantment.AQUA_AFFINITY, 1);
         necrosHelmet.addSource(ItemSource.MARKET);
         necrosHelmet.addSource(ItemSource.PATIENT_X);
         necrosHelmet.addUse("Set Effect: Necrotic Armor");
@@ -235,10 +236,10 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(necrosHelmet);
 
         CustomEquipment necrosChestplate = new CustomEquipment(NECROS_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
-        necrosChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        necrosChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        necrosChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        necrosChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        necrosChestplate.addEnchant(Enchantment.PROTECTION, 4);
+        necrosChestplate.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        necrosChestplate.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        necrosChestplate.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         necrosChestplate.addSource(ItemSource.MARKET);
         necrosChestplate.addSource(ItemSource.PATIENT_X);
         necrosChestplate.addUse("Set Effect: Necrotic Armor");
@@ -246,10 +247,10 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(necrosChestplate);
 
         CustomEquipment necrosLeggings = new CustomEquipment(NECROS_LEGGINGS, Material.DIAMOND_LEGGINGS);
-        necrosLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        necrosLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        necrosLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        necrosLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        necrosLeggings.addEnchant(Enchantment.PROTECTION, 4);
+        necrosLeggings.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        necrosLeggings.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        necrosLeggings.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         necrosLeggings.addSource(ItemSource.MARKET);
         necrosLeggings.addSource(ItemSource.PATIENT_X);
         necrosLeggings.addUse("Set Effect: Necrotic Armor");
@@ -257,11 +258,11 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(necrosLeggings);
 
         CustomEquipment necrosBoots = new CustomEquipment(NECROS_BOOTS, Material.DIAMOND_BOOTS);
-        necrosBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        necrosBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        necrosBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        necrosBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        necrosBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        necrosBoots.addEnchant(Enchantment.PROTECTION, 4);
+        necrosBoots.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        necrosBoots.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        necrosBoots.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        necrosBoots.addEnchant(Enchantment.FEATHER_FALLING, 4);
         necrosBoots.addSource(ItemSource.MARKET);
         necrosBoots.addSource(ItemSource.PATIENT_X);
         necrosBoots.addUse("Set Effect: Necrotic Armor");
@@ -371,43 +372,43 @@ public class CustomItemCenterRegistration {
 
         // God Armor
         CustomEquipment godHelmet = new CustomEquipment(GOD_HELMET, Material.DIAMOND_HELMET);
-        godHelmet.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        godHelmet.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        godHelmet.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        godHelmet.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        godHelmet.addEnchant(Enchantment.OXYGEN, 3);
-        godHelmet.addEnchant(Enchantment.WATER_WORKER, 1);
+        godHelmet.addEnchant(Enchantment.PROTECTION, 4);
+        godHelmet.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        godHelmet.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        godHelmet.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        godHelmet.addEnchant(Enchantment.RESPIRATION, 3);
+        godHelmet.addEnchant(Enchantment.AQUA_AFFINITY, 1);
         godHelmet.addSource(ItemSource.SACRIFICIAL_PIT);
         godHelmet.addSource(ItemSource.GRAVE_YARD);
         godHelmet.addSource(ItemSource.MARKET);
         itemConsumer.accept(godHelmet);
 
         CustomEquipment godChestplate = new CustomEquipment(GOD_CHESTPLATE, Material.DIAMOND_CHESTPLATE);
-        godChestplate.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        godChestplate.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        godChestplate.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        godChestplate.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        godChestplate.addEnchant(Enchantment.PROTECTION, 4);
+        godChestplate.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        godChestplate.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        godChestplate.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         godChestplate.addSource(ItemSource.SACRIFICIAL_PIT);
         godChestplate.addSource(ItemSource.GRAVE_YARD);
         godChestplate.addSource(ItemSource.MARKET);
         itemConsumer.accept(godChestplate);
 
         CustomEquipment godLeggings = new CustomEquipment(GOD_LEGGINGS, Material.DIAMOND_LEGGINGS);
-        godLeggings.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        godLeggings.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        godLeggings.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        godLeggings.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
+        godLeggings.addEnchant(Enchantment.PROTECTION, 4);
+        godLeggings.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        godLeggings.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        godLeggings.addEnchant(Enchantment.BLAST_PROTECTION, 4);
         godLeggings.addSource(ItemSource.SACRIFICIAL_PIT);
         godLeggings.addSource(ItemSource.GRAVE_YARD);
         godLeggings.addSource(ItemSource.MARKET);
         itemConsumer.accept(godLeggings);
 
         CustomEquipment godBoots = new CustomEquipment(GOD_BOOTS, Material.DIAMOND_BOOTS);
-        godBoots.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
-        godBoots.addEnchant(Enchantment.PROTECTION_PROJECTILE, 4);
-        godBoots.addEnchant(Enchantment.PROTECTION_FIRE, 4);
-        godBoots.addEnchant(Enchantment.PROTECTION_EXPLOSIONS, 4);
-        godBoots.addEnchant(Enchantment.PROTECTION_FALL, 4);
+        godBoots.addEnchant(Enchantment.PROTECTION, 4);
+        godBoots.addEnchant(Enchantment.PROJECTILE_PROTECTION, 4);
+        godBoots.addEnchant(Enchantment.FIRE_PROTECTION, 4);
+        godBoots.addEnchant(Enchantment.BLAST_PROTECTION, 4);
+        godBoots.addEnchant(Enchantment.FEATHER_FALLING, 4);
         godBoots.addSource(ItemSource.SACRIFICIAL_PIT);
         godBoots.addSource(ItemSource.GRAVE_YARD);
         godBoots.addSource(ItemSource.MARKET);
@@ -434,25 +435,25 @@ public class CustomItemCenterRegistration {
 
         // God Tools
         CustomEquipment godAxe = new CustomEquipment(GOD_AXE, Material.DIAMOND_AXE);
-        godAxe.addEnchant(Enchantment.DIG_SPEED, 4);
+        godAxe.addEnchant(Enchantment.EFFICIENCY, 4);
         godAxe.addSource(ItemSource.SACRIFICIAL_PIT);
         godAxe.addSource(ItemSource.GRAVE_YARD);
         godAxe.addSource(ItemSource.MARKET);
         itemConsumer.accept(godAxe);
 
         CustomEquipment legendaryGodAxe = new CustomEquipment(LEGENDARY_GOD_AXE, Material.DIAMOND_AXE);
-        legendaryGodAxe.addEnchant(Enchantment.DAMAGE_ALL, 5);
-        legendaryGodAxe.addEnchant(Enchantment.DAMAGE_ARTHROPODS, 5);
-        legendaryGodAxe.addEnchant(Enchantment.DAMAGE_UNDEAD, 5);
-        legendaryGodAxe.addEnchant(Enchantment.DIG_SPEED, 5);
-        legendaryGodAxe.addEnchant(Enchantment.DURABILITY, 3);
+        legendaryGodAxe.addEnchant(Enchantment.SHARPNESS, 5);
+        legendaryGodAxe.addEnchant(Enchantment.BANE_OF_ARTHROPODS, 5);
+        legendaryGodAxe.addEnchant(Enchantment.SMITE, 5);
+        legendaryGodAxe.addEnchant(Enchantment.EFFICIENCY, 5);
+        legendaryGodAxe.addEnchant(Enchantment.UNBREAKING, 3);
         legendaryGodAxe.addSource(ItemSource.SACRIFICIAL_PIT);
         legendaryGodAxe.addSource(ItemSource.GRAVE_YARD);
         legendaryGodAxe.addSource(ItemSource.MARKET);
         itemConsumer.accept(legendaryGodAxe);
 
         CustomEquipment godPickaxe = new CustomEquipment(GOD_PICKAXE, Material.DIAMOND_PICKAXE);
-        godPickaxe.addEnchant(Enchantment.DIG_SPEED, 4);
+        godPickaxe.addEnchant(Enchantment.EFFICIENCY, 4);
         godPickaxe.addEnchant(Enchantment.SILK_TOUCH, 1);
         godPickaxe.addSource(ItemSource.SACRIFICIAL_PIT);
         godPickaxe.addSource(ItemSource.GRAVE_YARD);
@@ -460,9 +461,9 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(godPickaxe);
 
         CustomEquipment legendaryGodPickaxe = new CustomEquipment(LEGENDARY_GOD_PICKAXE, Material.DIAMOND_PICKAXE);
-        legendaryGodPickaxe.addEnchant(Enchantment.DIG_SPEED, 5);
-        legendaryGodPickaxe.addEnchant(Enchantment.DURABILITY, 3);
-        legendaryGodPickaxe.addEnchant(Enchantment.LOOT_BONUS_BLOCKS, 3);
+        legendaryGodPickaxe.addEnchant(Enchantment.EFFICIENCY, 5);
+        legendaryGodPickaxe.addEnchant(Enchantment.UNBREAKING, 3);
+        legendaryGodPickaxe.addEnchant(Enchantment.FORTUNE, 3);
         legendaryGodPickaxe.addSource(ItemSource.SACRIFICIAL_PIT);
         legendaryGodPickaxe.addSource(ItemSource.GRAVE_YARD);
         legendaryGodPickaxe.addSource(ItemSource.MARKET);
@@ -472,8 +473,8 @@ public class CustomItemCenterRegistration {
         CustomPotion divineCombatPotion = new CustomPotion(DIVINE_COMBAT_POTION, Color.BLACK);
         divineCombatPotion.addEffect(PotionEffectType.REGENERATION, TimeUtil.convertSecondsToTicks(30), 1);
         divineCombatPotion.addEffect(PotionEffectType.ABSORPTION, TimeUtil.convertMinutesToTicks(5), 2);
-        divineCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, TimeUtil.convertMinutesToTicks(5), 1);
-        divineCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, TimeUtil.convertMinutesToTicks(5), 1);
+        divineCombatPotion.addEffect(PotionEffectType.STRENGTH, TimeUtil.convertMinutesToTicks(5), 1);
+        divineCombatPotion.addEffect(PotionEffectType.RESISTANCE, TimeUtil.convertMinutesToTicks(5), 1);
         divineCombatPotion.addEffect(PotionEffectType.SPEED, TimeUtil.convertMinutesToTicks(5), 1);
         divineCombatPotion.addSource(ItemSource.SACRIFICIAL_PIT);
         divineCombatPotion.addSource(ItemSource.GRAVE_YARD);
@@ -483,8 +484,8 @@ public class CustomItemCenterRegistration {
         CustomPotion holyCombatPotion = new CustomPotion(HOLY_COMBAT_POTION, Color.BLACK);
         holyCombatPotion.addEffect(PotionEffectType.REGENERATION, TimeUtil.convertSecondsToTicks(30), 1);
         holyCombatPotion.addEffect(PotionEffectType.ABSORPTION, TimeUtil.convertMinutesToTicks(1), 2);
-        holyCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, TimeUtil.convertMinutesToTicks(1), 1);
-        holyCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, TimeUtil.convertMinutesToTicks(1), 1);
+        holyCombatPotion.addEffect(PotionEffectType.STRENGTH, TimeUtil.convertMinutesToTicks(1), 1);
+        holyCombatPotion.addEffect(PotionEffectType.RESISTANCE, TimeUtil.convertMinutesToTicks(1), 1);
         holyCombatPotion.addEffect(PotionEffectType.SPEED, TimeUtil.convertMinutesToTicks(1), 1);
         holyCombatPotion.addSource(ItemSource.SACRIFICIAL_PIT);
         holyCombatPotion.addSource(ItemSource.GRAVE_YARD);
@@ -493,8 +494,8 @@ public class CustomItemCenterRegistration {
 
         CustomPotion extremeCombatPotion = new CustomPotion(EXTREME_COMBAT_POTION, Color.BLACK);
         extremeCombatPotion.addEffect(PotionEffectType.ABSORPTION, TimeUtil.convertMinutesToTicks(5), 1);
-        extremeCombatPotion.addEffect(PotionEffectType.INCREASE_DAMAGE, TimeUtil.convertMinutesToTicks(5), 0);
-        extremeCombatPotion.addEffect(PotionEffectType.DAMAGE_RESISTANCE, TimeUtil.convertMinutesToTicks(5), 0);
+        extremeCombatPotion.addEffect(PotionEffectType.STRENGTH, TimeUtil.convertMinutesToTicks(5), 0);
+        extremeCombatPotion.addEffect(PotionEffectType.RESISTANCE, TimeUtil.convertMinutesToTicks(5), 0);
         extremeCombatPotion.addEffect(PotionEffectType.SPEED, TimeUtil.convertMinutesToTicks(5), 0);
         extremeCombatPotion.addSource(ItemSource.SACRIFICIAL_PIT);
         extremeCombatPotion.addSource(ItemSource.GRAVE_YARD);
@@ -730,8 +731,8 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(goldenStick);
 
         CustomItem overSeerBow = new CustomItem(OVERSEER_BOW, Material.BOW);
-        overSeerBow.addEnchant(Enchantment.ARROW_DAMAGE, 2);
-        overSeerBow.addEnchant(Enchantment.ARROW_FIRE, 1);
+        overSeerBow.addEnchant(Enchantment.POWER, 2);
+        overSeerBow.addEnchant(Enchantment.FLAME, 1);
         overSeerBow.addSource(ItemSource.SACRIFICIAL_PIT);
         overSeerBow.addSource(ItemSource.MARKET);
         itemConsumer.accept(overSeerBow);
@@ -840,7 +841,7 @@ public class CustomItemCenterRegistration {
         itemConsumer.accept(goldenShortSword);
         CustomWeapon diamondShortSword = new CustomWeapon(DIAMOND_SHORT_SWORD, Material.DIAMOND_SWORD, 1, 4);
         itemConsumer.accept(diamondShortSword);
-        CustomWeapon netheriteShortSword = new CustomWeapon(NETHERITE_SHORT_SWORD, Material.NETHERITE_SWORD, 1, 4);
+        CustomWeapon netheriteShortSword = new CustomWeapon(NETHERITE_SHORT_SWORD, NETHERITE_SWORD, 1, 4);
         itemConsumer.accept(netheriteShortSword);
 
         // Miscellaneous

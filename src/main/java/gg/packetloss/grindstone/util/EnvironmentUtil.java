@@ -83,7 +83,7 @@ public class EnvironmentUtil {
 
     static {
         List<Material> newShrubBlocks = new ArrayList<>(List.of(
-            Material.DEAD_BUSH, Material.GRASS, Material.TALL_GRASS,
+            Material.DEAD_BUSH, Material.SHORT_GRASS, Material.TALL_GRASS,
             Material.RED_MUSHROOM, Material.BROWN_MUSHROOM
         ));
 

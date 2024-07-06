@@ -197,7 +197,7 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             case LUMBERJACK: {
                 ItemStack enchantedAxe = new ItemStack(Material.DIAMOND_AXE);
                 ItemMeta meta = enchantedAxe.getItemMeta();
-                meta.addEnchant(Enchantment.DAMAGE_ALL, 3, true);
+                meta.addEnchant(Enchantment.SHARPNESS, 3, true);
                 meta.addEnchant(Enchantment.KNOCKBACK, 2, true);
                 enchantedAxe.setItemMeta(meta);
 
@@ -207,14 +207,14 @@ public class JungleRaidComponent extends BukkitComponent implements Runnable {
             case ARCHER: {
                 ItemStack dmgBow = new ItemStack(Material.BOW);
                 ItemMeta dmgBowMeta = dmgBow.getItemMeta();
-                dmgBowMeta.addEnchant(Enchantment.ARROW_KNOCKBACK, 2, true);
+                dmgBowMeta.addEnchant(Enchantment.PUNCH, 2, true);
                 dmgBow.setItemMeta(dmgBowMeta);
 
                 gear.add(dmgBow);
 
                 ItemStack fireBow = new ItemStack(Material.BOW);
                 ItemMeta fireBowMeta = fireBow.getItemMeta();
-                fireBowMeta.addEnchant(Enchantment.ARROW_FIRE, 2, true);
+                fireBowMeta.addEnchant(Enchantment.FLAME, 2, true);
                 fireBow.setItemMeta(fireBowMeta);
 
                 gear.add(fireBow);

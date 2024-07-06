@@ -44,6 +44,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
@@ -226,12 +227,12 @@ public class NinjaListener implements Listener {
             return true;
         });
         taskBuilder.setFinishAction(() -> {
-            PotionData basePotionData = arrow.getBasePotionData();
+            PotionType basePotionType = arrow.getBasePotionType();
 
-            boolean isPotionArrow = basePotionData.getType() != PotionType.UNCRAFTABLE;
+            boolean isPotionArrow = basePotionType != null;
             if (isPotionArrow && state.hasPower(NinjaPower.POTION_ARROW_BOMBS)) {
                 AreaEffectCloud effectCloud = arrow.getWorld().spawn(arrow.getLocation(), AreaEffectCloud.class);
-                effectCloud.setBasePotionData(basePotionData);
+                effectCloud.setBasePotionType(basePotionType);
                 effectCloud.setDuration(20 * 10);
                 effectCloud.setSource(arrow.getShooter());
             } else {

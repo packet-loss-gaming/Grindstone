@@ -112,7 +112,7 @@ public class RegionPortal extends AbstractSelfTriggeredIC {
     }
 
     private void playEffect(Location location) {
-        new ParticleBuilder(Particle.SPELL_MOB).count(40).location(location).allPlayers().spawn();
+        new ParticleBuilder(Particle.ENTITY_EFFECT).count(40).location(location).allPlayers().spawn();
     }
 
     private void send(ProtectedRegion fromRegion, ProtectedRegion toRegion, Entity e) {

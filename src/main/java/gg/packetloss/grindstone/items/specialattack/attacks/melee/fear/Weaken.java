@@ -25,8 +25,8 @@ public class Weaken extends EntityAttack implements MeleeSpecial {
         int duration = (int) Math.min(20 * 60 * 5, owner.getHealth() * 18);
         target.removePotionEffect(PotionEffectType.WEAKNESS);
         target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, duration, 1));
-        owner.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
-        owner.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, duration, 1));
+        owner.removePotionEffect(PotionEffectType.STRENGTH);
+        owner.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, duration, 1));
 
         inform("Your sword leaches strength from its victim.");
     }

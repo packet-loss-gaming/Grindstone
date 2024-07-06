@@ -124,20 +124,20 @@ public class FactoryBrewer implements FactoryMachine {
                 target = PotionType.SLOWNESS;
                 using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionType.SPEED;
+                target = PotionType.SWIFTNESS;
             }
             using.add(Material.SUGAR);
         } else if (items.containsKey(Material.GLISTERING_MELON_SLICE)) {
             if (items.containsKey(Material.FERMENTED_SPIDER_EYE)) {
-                target = PotionType.INSTANT_DAMAGE;
+                target = PotionType.HARMING;
                 using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionType.INSTANT_HEAL;
+                target = PotionType.HEALING;
             }
             using.add(Material.GLISTERING_MELON_SLICE);
         } else if (items.containsKey(Material.SPIDER_EYE)) {
             if (items.containsKey(Material.FERMENTED_SPIDER_EYE)) {
-                target = PotionType.INSTANT_DAMAGE;
+                target = PotionType.HARMING;
                 using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
                 target = PotionType.POISON;
@@ -148,7 +148,7 @@ public class FactoryBrewer implements FactoryMachine {
                 target = PotionType.WEAKNESS;
                 using.add(Material.FERMENTED_SPIDER_EYE);
             } else {
-                target = PotionType.REGEN;
+                target = PotionType.REGENERATION;
             }
             using.add(Material.GHAST_TEAR);
         } else if (items.containsKey(Material.BLAZE_POWDER)) {

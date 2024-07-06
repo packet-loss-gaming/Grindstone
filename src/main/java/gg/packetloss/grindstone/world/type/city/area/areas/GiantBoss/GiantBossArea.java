@@ -360,7 +360,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
     private void spawnBabies(int chancePerSpawn, int numBabies) {
         final ItemStack weapon = new ItemStack(Material.BONE);
         ItemMeta weaponMeta = weapon.getItemMeta();
-        weaponMeta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
+        weaponMeta.addEnchant(Enchantment.SHARPNESS, 2, true);
         weapon.setItemMeta(weaponMeta);
 
         List<Player> participants = Lists.newArrayList(getContainedParticipants());
@@ -413,7 +413,7 @@ public class GiantBossArea extends AreaComponent<GiantBossConfig> {
         int potLevel = (int) (invertedPercentage * config.babyMaxPotLevel);
 
         PotionEffectType[] effectTypes = new PotionEffectType[] {
-                PotionEffectType.INCREASE_DAMAGE, PotionEffectType.DAMAGE_RESISTANCE
+                PotionEffectType.STRENGTH, PotionEffectType.RESISTANCE
         };
 
         for (Zombie baby : containedBabies) {

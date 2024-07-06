@@ -23,7 +23,7 @@ public enum SpawnEgg {
     DOLPHIN(EntityType.DOLPHIN, Material.DOLPHIN_SPAWN_EGG),
     FOX(EntityType.FOX, Material.FOX_SPAWN_EGG),
     FROG(EntityType.FROG, Material.FROG_SPAWN_EGG),
-    MUSHROOM_COW(EntityType.MUSHROOM_COW, Material.MOOSHROOM_SPAWN_EGG),
+    MUSHROOM_COW(EntityType.MOOSHROOM, Material.MOOSHROOM_SPAWN_EGG),
     OCELOT(EntityType.OCELOT, Material.OCELOT_SPAWN_EGG),
     PIG(EntityType.PIG, Material.PIG_SPAWN_EGG),
     SHEEP(EntityType.SHEEP, Material.SHEEP_SPAWN_EGG),

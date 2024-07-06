@@ -129,15 +129,15 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
         for (final Player player : getContained(Player.class)) {
             try {
 
-                player.removePotionEffect(PotionEffectType.CONFUSION);
+                player.removePotionEffect(PotionEffectType.NAUSEA);
                 player.removePotionEffect(PotionEffectType.BLINDNESS);
                 player.removePotionEffect(PotionEffectType.WEAKNESS);
                 player.removePotionEffect(PotionEffectType.POISON);
-                player.removePotionEffect(PotionEffectType.SLOW);
+                player.removePotionEffect(PotionEffectType.SLOWNESS);
 
                 player.removePotionEffect(PotionEffectType.REGENERATION);
                 player.removePotionEffect(PotionEffectType.SPEED);
-                player.removePotionEffect(PotionEffectType.JUMP);
+                player.removePotionEffect(PotionEffectType.JUMP_BOOST);
 
                 int divinityMod = 20;
                 if (player.hasPermission("aurora.tome.divinity")) {
@@ -147,7 +147,7 @@ public class HotSpringArena extends AbstractRegionedArena implements GenericAren
 
                 player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, divinityMod * 300, 2));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, divinityMod * 180, 1));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP, divinityMod * 180, 1));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, divinityMod * 180, 1));
 
                 Block downward = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
                 if (downward.getType() != Material.LAPIS_BLOCK) {

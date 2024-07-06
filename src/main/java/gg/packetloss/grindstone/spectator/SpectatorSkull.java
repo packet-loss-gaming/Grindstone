@@ -13,7 +13,7 @@ import org.bukkit.Particle;
 import java.util.function.Supplier;
 
 class SpectatorSkull {
-    private static final ParticleBuilder PASSIVE_PARTICLE_EFFECT = new ParticleBuilder(Particle.ENCHANTMENT_TABLE).allPlayers();
+    private static final ParticleBuilder PASSIVE_PARTICLE_EFFECT = new ParticleBuilder(Particle.ENCHANT).allPlayers();
 
     private final Location location;
     private final Supplier<Boolean> hasPlayers;

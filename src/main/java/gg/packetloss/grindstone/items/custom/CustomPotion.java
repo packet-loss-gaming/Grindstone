@@ -58,7 +58,7 @@ public class CustomPotion extends CustomItem {
     protected ItemStack build(CustomItems identity) {
         ItemStack base = super.build(identity);
         PotionMeta meta = (PotionMeta) base.getItemMeta();
-        meta.setBasePotionData(new PotionData(PotionType.UNCRAFTABLE));
+        meta.setBasePotionType(PotionType.MUNDANE);
         meta.setColor(color);
         for (Potion potion : effects) {
             meta.addCustomEffect(

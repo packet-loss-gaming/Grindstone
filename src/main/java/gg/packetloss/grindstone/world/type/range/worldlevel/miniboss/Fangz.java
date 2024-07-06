@@ -93,7 +93,7 @@ public class Fangz implements RangeWorldMinibossSpawner {
                 Entity boss = BukkitUtil.getBukkitEntity(controllable);
                 for (Entity aEntity : boss.getNearbyEntities(7, 4, 7)) {
                     if (!(aEntity instanceof LivingEntity)) continue;
-                    ((LivingEntity) aEntity).addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 30, 1));
+                    ((LivingEntity) aEntity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 30, 1));
                     ((LivingEntity) aEntity).addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 30, 1));
                 }
                 return null;
@@ -109,7 +109,7 @@ public class Fangz implements RangeWorldMinibossSpawner {
                 EntityUtil.heal(boss, attackDamage.getDamage());
 
                 LivingEntity attacked = (LivingEntity) BukkitUtil.getBukkitEntity(entity);
-                attacked.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 15, 0));
+                attacked.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * 15, 0));
                 attacked.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 20 * 15, 0));
                 return null;
             }

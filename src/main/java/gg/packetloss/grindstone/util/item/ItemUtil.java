@@ -508,8 +508,8 @@ public class ItemUtil {
 
     public static int fortuneLevel(ItemStack pickaxe) {
 
-        if (!pickaxe.containsEnchantment(Enchantment.LOOT_BONUS_BLOCKS)) return 0;
-        return pickaxe.getEnchantmentLevel(Enchantment.LOOT_BONUS_BLOCKS);
+        if (!pickaxe.containsEnchantment(Enchantment.FORTUNE)) return 0;
+        return pickaxe.getEnchantmentLevel(Enchantment.FORTUNE);
     }
 
     public static int fortuneModifier(Material type, int fortuneLevel) {

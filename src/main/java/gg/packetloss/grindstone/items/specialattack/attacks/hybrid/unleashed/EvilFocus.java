@@ -81,7 +81,7 @@ public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpeci
                 double animationZ = radius * Math.sin((animationY * loopAmplification) + runOffset);
 
                 lockedLocation.getWorld().spawnParticle(
-                        Particle.FIREWORKS_SPARK,
+                        Particle.FIREWORK,
                         lockedLocation.getX() + animationX,
                         lockedLocation.getY() + animationY,
                         lockedLocation.getZ() + animationZ,
@@ -97,8 +97,8 @@ public class EvilFocus extends EntityAttack implements MeleeSpecial, RangedSpeci
 
     @Override
     public void activate() {
-        target.removePotionEffect(PotionEffectType.SLOW);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * (numRuns + 3), 1));
+        target.removePotionEffect(PotionEffectType.SLOWNESS);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 20 * (numRuns + 3), 1));
         createCage();
 
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_GHAST_SCREAM, 1, .02F);

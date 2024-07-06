@@ -18,7 +18,7 @@ public class DeathUtil {
     private static final Random random = new Random();
 
     private static final PotionType[] thrownTypes = new PotionType[]{
-            PotionType.INSTANT_DAMAGE, PotionType.INSTANT_DAMAGE,
+            PotionType.HARMING, PotionType.HARMING,
             PotionType.POISON, PotionType.WEAKNESS
     };
 
